@@ -1,0 +1,35 @@
+[package]
+authors = ["Fabien Bellanger <valentil@gmail.com>"]
+description = "Axium boilerplate"
+edition = "2018"
+name = "axium-boilerplate"
+readme = "README.md"
+repository = "https://github.com/fabienbellanger/axium-boilerplate"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "api"
+path = "src/bin/api.rs"
+
+[dependencies]
+axum = "0.2"
+bytes = "1.0.1"
+chrono = {version = "0.4.19", features = ["serde"]}
+color-eyre = "0.5.10"
+config = "0.11.0"
+derive_more = "0.99.11"
+dotenv = "0.15"
+env_logger = "0.9.0"
+eyre = "0.6.3"
+futures = "0.3"
+log = "0.4.11"
+reqwest = "0.11.3"
+serde = "1.0"
+serde_json = "1.0"
+tokio = {version = "1.12.0", features = ["full"]}
+uuid = {version = "0.8", features = ["serde", "v4"]}
