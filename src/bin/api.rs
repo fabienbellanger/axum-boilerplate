@@ -19,20 +19,24 @@ async fn main() -> Result<()> {
     // ------------------
     color_eyre::install()?;
 
-    // TODO: Add .env file and custom logger formatter like actix-web
+    // TODO: Add custom logger formatter like actix-web
     // Load configuration
     // ------------------
-    let _settings = Config::from_env()?;
+    let settings = Config::from_env()?;
     tracing_subscriber::fmt::init();
 
     let middleware_stack = ServiceBuilder::new()
         .layer(
             TraceLayer::new_for_http()
-                .on_request(|_request: &Request<_>, _span: &Span| {
-                    info!("request={:?}", _request);
+                .make_span_with(|_request: &Request<_>| {
+                    tracing::info_span!("http-request", status_code = tracing::field::Empty,)
                 })
-                .on_response(|_response: &Response<_>, _latency: Duration, _span: &Span| {
-                    info!("response={:?}, latency={:?}", _response, _latency);
+                .on_request(|_request: &Request<_>, _span: &Span| {
+                    info!("{:?}", _request);
+                })
+                .on_response(|_response: &Response<_>, _latency: Duration, span: &Span| {
+                    span.record("status_code", &tracing::field::display(_response.status()));
+                    info!("{:?}, latency={:?}", _response, _latency);
                 })
                 .on_failure(|_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
                     error!("failure={:?}", _error);
@@ -45,10 +49,10 @@ async fn main() -> Result<()> {
         .route("/", get(|| async { "Hello, World!" }))
         .layer(middleware_stack);
 
-    // Run it with hyper on localhost:3000
-    // TODO: Use config var
-    info!("Starting server on 0.0.0.0:3000");
-    Ok(axum::Server::bind(&"0.0.0.0:3000".parse()?)
+    // Run it with hyper
+    let addr = format!("{}:{}", settings.server_url, settings.server_port);
+    info!("Starting server on {}", &addr);
+    Ok(axum::Server::bind(&addr.parse()?)
         .serve(app.into_make_service())
         .await?)
 }
