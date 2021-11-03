@@ -1,6 +1,6 @@
 use axum::{
-    handler::get,
     http::{Request, Response},
+    routing::get,
     Router,
 };
 use axum_boilerplate::config::Config;
