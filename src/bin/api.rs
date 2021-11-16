@@ -1,5 +1,6 @@
 use axum::{
-    http::{Request, Response},
+    http::{Method, Request, Response},
+    response::Headers,
     routing::get,
     Router,
 };
@@ -7,6 +8,7 @@ use axum_boilerplate::config::Config;
 use color_eyre::Result;
 use std::time::Duration;
 use tower::ServiceBuilder;
+use tower_http::cors::{any, CorsLayer};
 use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
 use tracing::Span;
 
@@ -44,8 +46,19 @@ async fn main() -> Result<()> {
         )
         .into_inner();
 
-    // build our application with a single route
+    let cors = CorsLayer::new()
+        .allow_methods(vec![
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::PATCH,
+            Method::DELETE,
+        ])
+        .allow_origin(any());
+
+    // Build our application with a single route
     let app = Router::new()
+        .layer(cors)
         .route("/", get(|| async { "Hello, World!" }))
         .layer(middleware_stack);
 
