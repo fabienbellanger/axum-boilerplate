@@ -1,6 +1,5 @@
 use axum::{
     http::{Method, Request, Response},
-    response::Headers,
     routing::get,
     Router,
 };
@@ -8,12 +7,15 @@ use axum_boilerplate::config::Config;
 use color_eyre::Result;
 use std::time::Duration;
 use tower::ServiceBuilder;
-use tower_http::cors::{any, CorsLayer};
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer};
 use tracing::Span;
 
 #[macro_use]
 extern crate tracing;
+
+// TODO:
+// - requestID : https://github.com/imbolc/tower-request-id/blob/main/src/lib.rs
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -34,11 +36,11 @@ async fn main() -> Result<()> {
                     tracing::info_span!("http-request", status_code = tracing::field::Empty,)
                 })
                 .on_request(|_request: &Request<_>, _span: &Span| {
-                    info!("{:?}", _request);
+                    info!("{:?}; span={:?}", _request, _span);
                 })
                 .on_response(|_response: &Response<_>, _latency: Duration, span: &Span| {
-                    span.record("status_code", &tracing::field::display(_response.status()));
-                    info!("{:?}, latency={:?}", _response, _latency);
+                    // span.record("status_code", &tracing::field::display(_response.status()));
+                    info!("{:?}, latency={:?}, span={:?}", _response, _latency, span);
                 })
                 .on_failure(|_error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
                     error!("failure={:?}", _error);
@@ -54,7 +56,7 @@ async fn main() -> Result<()> {
             Method::PATCH,
             Method::DELETE,
         ])
-        .allow_origin(any());
+        .allow_origin(Any);
 
     // Build our application with a single route
     let app = Router::new()

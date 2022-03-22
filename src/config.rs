@@ -1,7 +1,6 @@
 //! Configuration module
 
 use color_eyre::Result;
-use eyre::WrapErr;
 use serde::Deserialize;
 
 /// Represents configuration structure
@@ -17,9 +16,9 @@ impl Config {
     pub fn from_env() -> Result<Config> {
         dotenv::dotenv().ok();
 
-        let mut c = config::Config::new();
-        c.merge(config::Environment::default())?;
-
-        c.try_into().context("loading configuration from environment")
+        Ok(config::Config::builder()
+            .add_source(config::Environment::default())
+            .build()?
+            .try_deserialize()?)
     }
 }
