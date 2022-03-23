@@ -57,17 +57,17 @@ async fn main() -> Result<()> {
                 .on_request(|request: &Request<_>, _span: &Span| {
                     // TODO: Remove Option
                     info!(
-                        r#"[REQUEST] method: {}, uri: {}, host: {:?}, user_agent: {:?}, request_id: {:?}"#,
+                        r#"[REQUEST] method: {}, host: {:?}, uri: {}, request_id: {:?}, user_agent: {:?}"#,
                         request.method(),
-                        request.uri(),
                         request.headers().get("host").unwrap_or(&HeaderValue::from_static("")),
-                        request
-                            .headers()
-                            .get("user-agent")
-                            .unwrap_or(&HeaderValue::from_static("")),
+                        request.uri(),
                         request
                             .headers()
                             .get("x-request-id")
+                            .unwrap_or(&HeaderValue::from_static("")),
+                        request
+                            .headers()
+                            .get("user-agent")
                             .unwrap_or(&HeaderValue::from_static(""))
                     );
                 })
