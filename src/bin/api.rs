@@ -1,12 +1,11 @@
-use std::time::Duration;
-
 use axum::{
     http::{HeaderValue, Method, Request, Response},
-    routing::get,
     Router,
 };
-use axum_boilerplate::{config::Config, logger};
+use axum_boilerplate::{config::Config, logger, routes};
 use color_eyre::Result;
+use std::str::from_utf8;
+use std::time::Duration;
 use tower::ServiceBuilder;
 use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer, ServiceBuilderExt};
 use tower_http::{
@@ -31,6 +30,14 @@ impl MakeRequestId for MakeRequestUuid {
     }
 }
 
+/// Convert `HeaderValue` to `&str`
+fn header_value_to_str(value: Option<&HeaderValue>) -> &str {
+    match value {
+        Some(value) => from_utf8(value.as_bytes()).unwrap_or(""),
+        None => "",
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     // Install Color Eyre
@@ -46,41 +53,27 @@ async fn main() -> Result<()> {
 
     // Logger
     // ------
-    // TODO: Continue
     let logger_layer = ServiceBuilder::new()
         .set_x_request_id(MakeRequestUuid)
         .layer(
             TraceLayer::new_for_http()
-                // .make_span_with(|_request: &Request<_>| {
-                //     tracing::info_span!("HTTP", status_code = tracing::field::Empty)
-                // })
                 .on_request(|request: &Request<_>, _span: &Span| {
-                    // TODO: Remove Option
                     info!(
-                        r#"[REQUEST] method: {}, host: {:?}, uri: {}, request_id: {:?}, user_agent: {:?}"#,
+                        r#"[REQUEST] method: {}, host: {}, uri: {}, request_id: {}, user_agent: {}"#,
                         request.method(),
-                        request.headers().get("host").unwrap_or(&HeaderValue::from_static("")),
+                        header_value_to_str(request.headers().get("host")),
                         request.uri(),
-                        request
-                            .headers()
-                            .get("x-request-id")
-                            .unwrap_or(&HeaderValue::from_static("")),
-                        request
-                            .headers()
-                            .get("user-agent")
-                            .unwrap_or(&HeaderValue::from_static(""))
+                        header_value_to_str(request.headers().get("x-request-id")),
+                        header_value_to_str(request.headers().get("user-agent"))
                     );
                 })
                 .on_response(|response: &Response<_>, latency: Duration, _span: &Span| {
                     // _span.record("status_code", &tracing::field::display(_response.status()));
                     info!(
-                        "[RESPONSE] status_code: {}, request_id: {:?}, latency: {:?}",
+                        "[RESPONSE] status_code: {}, request_id: {}, latency: {:?}",
                         response.status().as_u16(),
-                        response
-                            .headers()
-                            .get("x-request-id")
-                            .unwrap_or(&HeaderValue::from_static("")),
-                        latency
+                        header_value_to_str(response.headers().get("x-request-id")),
+                        latency,
                     );
                 })
                 .on_failure(|error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
@@ -103,10 +96,7 @@ async fn main() -> Result<()> {
         .allow_origin(Any);
 
     // Build our application with a single route
-    let app = Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
-        .layer(cors)
-        .layer(logger_layer);
+    let app = Router::new().nest("/", routes::list()).layer(cors).layer(logger_layer);
 
     // Run it with hyper
     let addr = format!("{}:{}", settings.server_url, settings.server_port);
