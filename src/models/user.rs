@@ -42,7 +42,7 @@ impl User {
     }
 }
 
-#[derive(Deserialize, Debug, Validate)]
+#[derive(Deserialize, Serialize, Debug, Validate)]
 pub struct Login {
     #[validate(email)]
     pub username: String,

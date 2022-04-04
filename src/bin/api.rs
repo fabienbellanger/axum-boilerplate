@@ -100,6 +100,7 @@ async fn main() -> Result<()> {
 
     // Build our application with a single route
     let app = Router::new()
+        .nest("/api/v1", routes::api())
         .nest("/", routes::list())
         .layer(Extension(pool))
         .layer(cors)
