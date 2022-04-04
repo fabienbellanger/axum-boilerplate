@@ -1,8 +1,8 @@
 use axum::{
     http::{HeaderValue, Method, Request, Response},
-    Router,
+    Extension, Router,
 };
-use axum_boilerplate::{config::Config, logger, routes};
+use axum_boilerplate::{config::Config, database, logger, routes};
 use color_eyre::Result;
 use std::str::from_utf8;
 use std::time::Duration;
@@ -47,9 +47,12 @@ async fn main() -> Result<()> {
     // Load configuration
     // ------------------
     let settings = Config::from_env()?;
-    // tracing_subscriber::fmt::init();
     let subscriber = logger::get_subscriber("info".to_owned(), std::io::stdout);
     logger::init_subscriber(subscriber);
+
+    // Database
+    // --------
+    let pool = database::init(&settings).await?;
 
     // Logger
     // ------
@@ -96,7 +99,11 @@ async fn main() -> Result<()> {
         .allow_origin(Any);
 
     // Build our application with a single route
-    let app = Router::new().nest("/", routes::list()).layer(cors).layer(logger_layer);
+    let app = Router::new()
+        .nest("/", routes::list())
+        .layer(Extension(pool))
+        .layer(cors)
+        .layer(logger_layer);
 
     // Run it with hyper
     let addr = format!("{}:{}", settings.server_url, settings.server_port);

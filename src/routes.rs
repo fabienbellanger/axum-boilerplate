@@ -6,5 +6,5 @@ use axum::{routing::get, Router};
 pub fn list() -> Router {
     Router::new()
         .route("/", get(|| async { "Hello, World!" }))
-        .route("/hi", get(|| async { "Hi!" }))
+        .route("/helath-check", get(|| async { "OK" }))
 }
