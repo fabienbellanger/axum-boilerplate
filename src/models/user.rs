@@ -1,12 +1,11 @@
 //! User model module
 
+use serde::{Deserialize, Serialize};
+use sqlx::types::chrono::{DateTime, Utc};
 use std::{
     collections::{HashMap, HashSet},
     fmt::Display,
 };
-
-use serde::{Deserialize, Serialize};
-use sqlx::types::chrono::{DateTime, Utc};
 use uuid::Uuid;
 use validator::Validate;
 

@@ -52,7 +52,7 @@ sqlx migrate revert
 
 ## TODO:
 
-- [ ] Custom errors
+- [x   ] Custom errors
 - [ ] Add CLI
 - [ ] Add JWT ([Example](https://github.com/tokio-rs/axum/blob/main/examples/jwt/src/main.rs))
 - [ ] Add Sqlx / MySQL ([Example](https://github.com/tokio-rs/axum/blob/main/examples/sqlx-postgres/src/main.rs))

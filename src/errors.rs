@@ -44,8 +44,8 @@ impl AppError {
     }
 }
 
-// Actix-web errors
-// ----------------
+// Axum errors
+// ------------
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
         let status = match self {

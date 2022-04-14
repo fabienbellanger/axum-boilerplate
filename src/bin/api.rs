@@ -101,12 +101,12 @@ async fn main() -> Result<()> {
     // Build our application with a single route
     let app = Router::new()
         .nest("/api/v1", routes::api())
-        .nest("/", routes::list())
+        .nest("/", routes::web())
         .layer(Extension(pool))
         .layer(cors)
         .layer(logger_layer);
 
-    // Run it with hyper
+    // Start server
     let addr = format!("{}:{}", settings.server_url, settings.server_port);
     info!("Starting server on {}", &addr);
     Ok(axum::Server::bind(&addr.parse()?)
