@@ -41,7 +41,7 @@ pub async fn login(
                 user.firstname.to_owned(),
                 user.username.to_owned(),
                 roles.clone(),
-                secret.to_owned(),
+                secret,
                 jwt_lifetime,
             );
 

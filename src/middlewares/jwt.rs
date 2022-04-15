@@ -1,11 +1,12 @@
 //! JWT middleware
 
-use crate::{models::auth, states};
+use crate::{errors::AppErrorMessage, models::auth, states};
 use axum::{
-    body::{Body, BoxBody, Full},
-    http::{Request, StatusCode},
+    body::{Body, Full},
+    http::{HeaderValue, Request, StatusCode},
     response::Response,
 };
+use bytes::Bytes;
 use futures::future::BoxFuture;
 use std::task::{Context, Poll};
 use tower::{Layer, Service};
@@ -48,17 +49,32 @@ where
 
         let future = self.inner.call(request);
         Box::pin(async move {
-            let mut response: Response = future.await?;
+            let mut response = Response::default();
 
-            if !is_authorized {
-                let (mut parts, _body) = response.into_parts();
+            response = match is_authorized {
+                true => future.await?,
+                false => {
+                    let (mut parts, _body) = response.into_parts();
 
-                parts.headers.remove(axum::http::header::CONTENT_LENGTH);
-                parts.status = StatusCode::UNAUTHORIZED;
+                    // Status code
+                    parts.status = StatusCode::UNAUTHORIZED;
 
-                response = Response::from_parts(parts, BoxBody::default());
-                // response = Response::from_parts(parts, body::boxed(Full::from(body_bytes)));
-            }
+                    // Content Type
+                    parts.headers.insert(
+                        axum::http::header::CONTENT_TYPE,
+                        HeaderValue::from_static("application/json"),
+                    );
+
+                    // Body
+                    let msg = serde_json::json!(AppErrorMessage {
+                        code: StatusCode::UNAUTHORIZED.as_u16(),
+                        message: String::from("Unauthorized"),
+                    });
+                    let msg = Bytes::from(msg.to_string());
+
+                    Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
+                }
+            };
             Ok(response)
         })
     }
