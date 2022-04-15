@@ -23,7 +23,7 @@ axum = "0.5"
 
 # Tower
 tower = {version = "0.4", features = ["timeout", "limit"]}
-tower-http = {version = "0.2", features = ["trace", "cors", "request-id"]}
+tower-http = {version = "0.2", features = ["trace", "cors", "request-id", "auth"]}
 
 # Log
 log = "0.4"

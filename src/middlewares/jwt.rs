@@ -1,7 +1,11 @@
 //! JWT middleware
 
-use crate::{errors::AppError, models::auth};
-use axum::{body::Body, http::Request, response::Response};
+use crate::models::auth;
+use axum::{
+    body::{Body, BoxBody},
+    http::Request,
+    response::Response,
+};
 use futures::future::BoxFuture;
 use std::task::{Context, Poll};
 use tower::{Layer, Service};
@@ -36,17 +40,20 @@ where
         self.inner.poll_ready(cx)
     }
 
-    fn call(&mut self, mut request: Request<Body>) -> Self::Future {
-        // let mut is_authorized = false;
-
-        if let Some(claims) = auth::Claims::extract_from_request(request.headers(), "mySecretKey".to_owned()) {
-            warn!("{:?}", claims);
-            // is_authorized = true;
-        }
+    fn call(&mut self, request: Request<Body>) -> Self::Future {
+        let is_authorized = auth::Claims::extract_from_request(request.headers(), "mySecretKey".to_owned()).is_some();
 
         let future = self.inner.call(request);
         Box::pin(async move {
-            let response: Response = future.await?;
+            let mut response: Response = future.await?;
+            if !is_authorized {
+                let (mut parts, _body) = response.into_parts();
+
+                parts.headers.remove(axum::http::header::CONTENT_LENGTH);
+                parts.status = axum::http::StatusCode::UNAUTHORIZED;
+
+                response = Response::from_parts(parts, BoxBody::default());
+            }
             Ok(response)
         })
     }

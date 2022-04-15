@@ -1,6 +1,6 @@
 //! Routes list
 
-use crate::{handlers, middlewares::jwt::JwtLayer};
+use crate::handlers;
 use axum::{
     routing::{get, post},
     Router,
@@ -21,6 +21,6 @@ pub fn api() -> Router {
             "/",
             Router::new()
                 .route("/register", post(handlers::users::register))
-                .layer(JwtLayer),
+                .layer(crate::middlewares::jwt::JwtLayer),
         )
 }

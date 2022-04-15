@@ -1,14 +1,19 @@
 //! API users handlers
 
+use crate::models::auth::Jwt;
 use crate::models::user::Login;
 use crate::repositories::user::UserRepository;
 use crate::{errors::AppError, models::user::LoginResponse};
 use axum::{Extension, Json};
+use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use sqlx::{MySql, Pool};
 use validator::Validate;
 
 // Route: POST /api/v1/login
-pub async fn login(Json(payload): Json<Login>, Extension(pool): Extension<Pool<MySql>>) -> Result<String, AppError> {
+pub async fn login(
+    Json(payload): Json<Login>,
+    Extension(pool): Extension<Pool<MySql>>,
+) -> Result<Json<LoginResponse>, AppError> {
     // Result<Json<LoginResponse>, AppError> {
     // Payload validation
     // TODO: Return error with validator message
@@ -20,50 +25,47 @@ pub async fn login(Json(payload): Json<Login>, Extension(pool): Extension<Pool<M
 
     // Search user in database and return `LoginResponse`
     let user = UserRepository::login(&pool, payload).await?;
-    // match user {
-    //     None => Err(AppError::Unauthorized {}),
-    //     Some(user) => {
-    //         // Token generation
-    //         let secret = &data.jwt_secret_key;
-    //         let jwt_lifetime = data.jwt_lifetime;
-    //         let roles = match user.roles {
-    //             Some(roles) => roles,
-    //             None => String::new(),
-    //         };
-    //         let token = Jwt::generate(
-    //             user.id.to_owned(),
-    //             user.lastname.to_owned(),
-    //             user.firstname.to_owned(),
-    //             user.username.to_owned(),
-    //             roles.clone(),
-    //             secret.to_owned(),
-    //             jwt_lifetime,
-    //         );
+    match user {
+        None => Err(AppError::Unauthorized {}),
+        Some(user) => {
+            // Token generation
+            let secret = String::from("mySecretKey"); // &data.jwt_secret_key;
+            let jwt_lifetime = 24i64;
+            let roles = match user.roles {
+                Some(roles) => roles,
+                None => String::new(),
+            };
+            let token = Jwt::generate(
+                user.id.to_owned(),
+                user.lastname.to_owned(),
+                user.firstname.to_owned(),
+                user.username.to_owned(),
+                roles.clone(),
+                secret.to_owned(),
+                jwt_lifetime,
+            );
 
-    //         match token {
-    //             Ok(token) => {
-    //                 let expires_at = NaiveDateTime::from_timestamp(token.1, 0);
-    //                 let expires_at: DateTime<Utc> = DateTime::from_utc(expires_at, Utc);
+            match token {
+                Ok(token) => {
+                    let expires_at = NaiveDateTime::from_timestamp(token.1, 0);
+                    let expires_at: DateTime<Utc> = DateTime::from_utc(expires_at, Utc);
 
-    //                 Ok(HttpResponse::Ok().json(LoginResponse {
-    //                     id: user.id.to_owned(),
-    //                     lastname: user.lastname.to_owned(),
-    //                     firstname: user.firstname.to_owned(),
-    //                     username: user.username,
-    //                     roles,
-    //                     token: token.0,
-    //                     expires_at: expires_at.to_rfc3339_opts(SecondsFormat::Secs, true),
-    //                 }))
-    //             }
-    //             _ => Err(AppError::InternalError {
-    //                 message: String::from("error during JWT generation"),
-    //             }),
-    //         }
-    //     }
-    // }
-
-    // Ok(Json(LoginResponse { id: todo!(), lastname: todo!(), firstname: todo!(), username: todo!(), roles: todo!(), token: todo!(), expires_at: todo!() }))
-    Ok("Login route".to_string())
+                    Ok(Json(LoginResponse {
+                        id: user.id.to_owned(),
+                        lastname: user.lastname.to_owned(),
+                        firstname: user.firstname.to_owned(),
+                        username: user.username,
+                        roles,
+                        token: token.0,
+                        expires_at: expires_at.to_rfc3339_opts(SecondsFormat::Secs, true),
+                    }))
+                }
+                _ => Err(AppError::InternalError {
+                    message: String::from("error during JWT generation"),
+                }),
+            }
+        }
+    }
 }
 
 // Route: POST /api/v1/register
