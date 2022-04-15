@@ -2,7 +2,11 @@ use axum::{
     http::{HeaderValue, Method, Request, Response},
     Extension, Router,
 };
-use axum_boilerplate::{config::Config, database, logger, routes};
+use axum_boilerplate::{
+    config::Config,
+    database, logger, routes,
+    states::{SharedState, State},
+};
 use color_eyre::Result;
 use std::str::from_utf8;
 use std::time::Duration;
@@ -104,7 +108,8 @@ async fn main() -> Result<()> {
         .nest("/", routes::web())
         .layer(Extension(pool))
         .layer(cors)
-        .layer(logger_layer);
+        .layer(logger_layer)
+        .layer(Extension(SharedState::new(State::init(&settings))));
 
     // Start server
     let addr = format!("{}:{}", settings.server_url, settings.server_port);

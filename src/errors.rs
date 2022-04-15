@@ -76,7 +76,7 @@ impl From<sqlx::Error> for AppError {
     }
 }
 
-/// Custom Error
+/// Custom CLI Error
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum CliError {
     #[error("Panic: {0}")]

@@ -3,7 +3,7 @@
 use crate::models::auth::Jwt;
 use crate::models::user::Login;
 use crate::repositories::user::UserRepository;
-use crate::{errors::AppError, models::user::LoginResponse};
+use crate::{errors::AppError, models::user::LoginResponse, states::SharedState};
 use axum::{Extension, Json};
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use sqlx::{MySql, Pool};
@@ -13,8 +13,8 @@ use validator::Validate;
 pub async fn login(
     Json(payload): Json<Login>,
     Extension(pool): Extension<Pool<MySql>>,
+    Extension(state): Extension<SharedState>,
 ) -> Result<Json<LoginResponse>, AppError> {
-    // Result<Json<LoginResponse>, AppError> {
     // Payload validation
     // TODO: Return error with validator message
     let payload_validation = payload.validate();
@@ -29,8 +29,8 @@ pub async fn login(
         None => Err(AppError::Unauthorized {}),
         Some(user) => {
             // Token generation
-            let secret = String::from("mySecretKey"); // &data.jwt_secret_key;
-            let jwt_lifetime = 24i64;
+            let secret = state.jwt_secret_key.clone();
+            let jwt_lifetime = state.jwt_lifetime;
             let roles = match user.roles {
                 Some(roles) => roles,
                 None => String::new(),

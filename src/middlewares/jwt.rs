@@ -1,9 +1,9 @@
 //! JWT middleware
 
-use crate::models::auth;
+use crate::{models::auth, states};
 use axum::{
-    body::{Body, BoxBody},
-    http::Request,
+    body::{Body, BoxBody, Full},
+    http::{Request, StatusCode},
     response::Response,
 };
 use futures::future::BoxFuture;
@@ -41,18 +41,23 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let is_authorized = auth::Claims::extract_from_request(request.headers(), "mySecretKey".to_owned()).is_some();
+        let state = request.extensions().get::<states::SharedState>().unwrap(); // TODO: Remove unwrap()
+        let state = state.clone();
+        let is_authorized =
+            auth::Claims::extract_from_request(request.headers(), state.jwt_secret_key.clone()).is_some();
 
         let future = self.inner.call(request);
         Box::pin(async move {
             let mut response: Response = future.await?;
+
             if !is_authorized {
                 let (mut parts, _body) = response.into_parts();
 
                 parts.headers.remove(axum::http::header::CONTENT_LENGTH);
-                parts.status = axum::http::StatusCode::UNAUTHORIZED;
+                parts.status = StatusCode::UNAUTHORIZED;
 
                 response = Response::from_parts(parts, BoxBody::default());
+                // response = Response::from_parts(parts, body::boxed(Full::from(body_bytes)));
             }
             Ok(response)
         })
