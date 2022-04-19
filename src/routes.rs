@@ -2,7 +2,7 @@
 
 use crate::{handlers, layers};
 use axum::{
-    routing::{get, post},
+    routing::{delete, get, post, put},
     Router,
 };
 
@@ -27,5 +27,10 @@ fn api_protected() -> Router {
 
 /// Users API routes
 fn api_users() -> Router {
-    Router::new().route("/", post(handlers::users::register))
+    Router::new()
+        .route("/", post(handlers::users::register))
+        .route("/", get(handlers::users::get_all))
+        .route("/:id", get(handlers::users::get_by_id))
+        .route("/:id", delete(handlers::users::delete))
+        .route("/:id", put(handlers::users::update))
 }

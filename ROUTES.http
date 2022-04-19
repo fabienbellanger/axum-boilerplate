@@ -1,0 +1,64 @@
+# Variables
+# ---------
+@baseUrl = http://{{$dotenv SERVER_URL}}:{{$dotenv SERVER_PORT}}/api/v1
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0MzIzYTFiMS0yMDZiLTQyYzctYTdlNS1iY2I0NWY3ZjYzMzUiLCJleHAiOjE2NTA0ODE1MzQsImlhdCI6MTY1MDM5NTEzNCwibmJmIjoxNjUwMzk1MTM0LCJ1c2VyX2lkIjoiNDMyM2ExYjEtMjA2Yi00MmM3LWE3ZTUtYmNiNDVmN2Y2MzM1IiwidXNlcl9sYXN0bmFtZSI6IlRlc3QiLCJ1c2VyX2ZpcnN0bmFtZSI6IlRvdG8iLCJ1c2VyX2VtYWlsIjoidGVzdEBnbWFpbC5jb20iLCJ1c2VyX3JvbGVzIjoiQURNSU4ifQ.9kX5BFvhw-7cKioel8fA3Fwsm7R2vAlTGpF1j471IRR0jG65um0f32ae4aOD7twkREQqqVGN-nGSYa1G4yhwGg
+
+
+# Users
+# -----
+@userId = 4323a1b1-206b-42c7-a7e5-bcb45f7f6335
+@userIdToDelete = 7479d064-cbcf-41fd-bf75-649b670efe61
+
+# Login
+POST {{baseUrl}}/login
+Content-Type: application/json
+
+{
+    "username": "test@gmail.com",
+    "password": "00000000"
+}
+###
+
+# Register
+POST {{baseUrl}}/register
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "username": "test@gmail.com",
+    "password": "00000000",
+    "lastname": "Test",
+    "firstname": "Toto"
+}
+###
+
+# Users list
+GET {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+###
+
+# User information
+GET {{baseUrl}}/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+###
+
+# Update user
+PUT {{baseUrl}}/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "username": "test@gmail.com",
+    "password": "00000000",
+    "lastname": "Test",
+    "firstname": "Toto 2"
+}
+###
+
+# Delete user
+DELETE {{baseUrl}}/users/{{userIdToDelete}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+###

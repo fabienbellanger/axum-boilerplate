@@ -1,12 +1,15 @@
 //! API users handlers
 
 use crate::models::auth::Jwt;
-use crate::models::user::Login;
+use crate::models::user::{Login, User, UserCreation};
 use crate::repositories::user::UserRepository;
 use crate::{errors::AppError, layers::SharedState, models::user::LoginResponse};
-use axum::{Extension, Json};
+use axum::http::StatusCode;
+use axum::{extract::Path, Extension, Json};
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
+use futures::TryStreamExt;
 use sqlx::{MySql, Pool};
+use uuid::Uuid;
 use validator::Validate;
 
 // Route: POST /api/v1/login
@@ -68,7 +71,69 @@ pub async fn login(
     }
 }
 
-// Route: POST /api/v1/register
-pub async fn register() -> Result<String, AppError> {
-    Ok(String::from("Register route"))
+// Route: POST /api/v1/users
+pub async fn register(
+    Json(payload): Json<UserCreation>,
+    Extension(pool): Extension<Pool<MySql>>,
+) -> Result<Json<User>, AppError> {
+    let payload_validation = payload.validate();
+    if payload_validation.is_err() {
+        error!("{}", payload_validation.clone().err().unwrap());
+        payload_validation.err().map(|err| error!("{}", err));
+    }
+
+    let mut user = User::new(payload);
+    UserRepository::create(&pool, &mut user).await?;
+
+    Ok(Json(user))
+}
+
+// Route: GET /api/v1/users
+pub async fn get_all(Extension(pool): Extension<Pool<MySql>>) -> Result<Json<Vec<User>>, AppError> {
+    let mut stream = UserRepository::get_all(&pool);
+    let mut users: Vec<User> = Vec::new();
+    while let Some(row) = stream.try_next().await? {
+        users.push(row?);
+    }
+
+    Ok(Json(users))
+}
+
+// Route: GET "/v1/users/{id}"
+pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> Result<Json<User>, AppError> {
+    let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
+    match user {
+        Some(user) => Ok(Json(user)),
+        _ => Err(AppError::NotFound {
+            message: String::from("No user found"),
+        }),
+    }
+}
+
+// Route: DELETE "/v1/users/{id}"
+pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> Result<StatusCode, AppError> {
+    let result = UserRepository::delete(&pool, id.to_string()).await?;
+    match result {
+        1 => Ok(StatusCode::NO_CONTENT),
+        _ => Err(AppError::InternalError {
+            message: String::from("No user or user already deleted"),
+        }),
+    }
+}
+
+// Route: PUT "/v1/users/{id}"
+pub async fn update(
+    Path(id): Path<Uuid>,
+    Json(payload): Json<UserCreation>,
+    Extension(pool): Extension<Pool<MySql>>,
+) -> Result<Json<User>, AppError> {
+    UserRepository::update(&pool, id.to_string(), &payload).await?;
+
+    let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
+    match user {
+        Some(user) => Ok(Json(user)),
+        _ => Err(AppError::NotFound {
+            message: String::from("No user found"),
+        }),
+    }
 }
