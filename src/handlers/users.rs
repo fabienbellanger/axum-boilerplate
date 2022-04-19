@@ -3,7 +3,7 @@
 use crate::models::auth::Jwt;
 use crate::models::user::Login;
 use crate::repositories::user::UserRepository;
-use crate::{errors::AppError, models::user::LoginResponse, states::SharedState};
+use crate::{errors::AppError, layers::SharedState, models::user::LoginResponse};
 use axum::{Extension, Json};
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use sqlx::{MySql, Pool};

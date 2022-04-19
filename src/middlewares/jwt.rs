@@ -1,6 +1,6 @@
 //! JWT middleware
 
-use crate::{errors::AppErrorMessage, models::auth, states};
+use crate::{errors::AppErrorMessage, layers, models::auth};
 use axum::{
     body::{Body, Full},
     http::{HeaderValue, Request, StatusCode},
@@ -42,7 +42,7 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let state = request.extensions().get::<states::SharedState>().unwrap(); // TODO: Remove unwrap()
+        let state = request.extensions().get::<layers::SharedState>().unwrap(); // TODO: Remove unwrap()
         let state = state.clone();
         let is_authorized =
             auth::Claims::extract_from_request(request.headers(), state.jwt_secret_key.clone()).is_some();

@@ -1,46 +1,21 @@
 use axum::{
-    http::{HeaderValue, Method, Request, Response},
+    http::{Request, Response},
     Extension, Router,
 };
 use axum_boilerplate::{
     config::Config,
-    database, logger, routes,
-    states::{SharedState, State},
+    database,
+    layers::{self, header_value_to_str, MakeRequestUuid, SharedState, State},
+    logger, routes,
 };
 use color_eyre::Result;
-use std::str::from_utf8;
 use std::time::Duration;
 use tower::ServiceBuilder;
 use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer, ServiceBuilderExt};
-use tower_http::{
-    cors::{Any, CorsLayer},
-    request_id::{MakeRequestId, RequestId},
-};
 use tracing::Span;
-use uuid::Uuid;
 
 #[macro_use]
 extern crate tracing;
-
-// Request ID middleware
-// TODO: Put in middlewares module
-#[derive(Clone, Copy)]
-struct MakeRequestUuid;
-
-impl MakeRequestId for MakeRequestUuid {
-    fn make_request_id<B>(&mut self, _request: &Request<B>) -> Option<RequestId> {
-        let request_id = Uuid::new_v4().to_string().parse().unwrap();
-        Some(RequestId::new(request_id))
-    }
-}
-
-/// Convert `HeaderValue` to `&str`
-fn header_value_to_str(value: Option<&HeaderValue>) -> &str {
-    match value {
-        Some(value) => from_utf8(value.as_bytes()).unwrap_or(""),
-        None => "",
-    }
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -92,15 +67,7 @@ async fn main() -> Result<()> {
 
     // CORS
     // ----
-    let cors = CorsLayer::new()
-        .allow_methods(vec![
-            Method::GET,
-            Method::POST,
-            Method::PUT,
-            Method::PATCH,
-            Method::DELETE,
-        ])
-        .allow_origin(Any);
+    let cors = layers::cors();
 
     // Build our application with a single route
     let app = Router::new()

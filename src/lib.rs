@@ -2,12 +2,12 @@ pub mod config;
 pub mod database;
 pub mod errors;
 pub mod handlers;
+pub mod layers;
 pub mod logger;
 pub mod middlewares;
 pub mod models;
 pub mod repositories;
 pub mod routes;
-pub mod states;
 
 #[macro_use]
 extern crate tracing;
