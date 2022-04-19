@@ -1,6 +1,6 @@
 //! Routes list
 
-use crate::handlers;
+use crate::{handlers, layers};
 use axum::{
     routing::{get, post},
     Router,
@@ -17,10 +17,15 @@ pub fn api() -> Router {
         // Public routes
         .route("/login", post(handlers::users::login))
         // Protected routes
-        .nest(
-            "/",
-            Router::new()
-                .route("/register", post(handlers::users::register))
-                .layer(crate::middlewares::jwt::JwtLayer),
-        )
+        .nest("/", api_protected().layer(layers::jwt::JwtLayer))
+}
+
+/// Protected API routes
+fn api_protected() -> Router {
+    Router::new().nest("/users", api_users())
+}
+
+/// Users API routes
+fn api_users() -> Router {
+    Router::new().route("/", post(handlers::users::register))
 }

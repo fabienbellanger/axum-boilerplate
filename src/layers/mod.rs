@@ -1,4 +1,6 @@
-//! Application layers
+//! Application layers modules
+
+pub mod jwt;
 
 use crate::config::Config;
 use axum::http::{HeaderValue, Method, Request};
@@ -19,14 +21,6 @@ impl MakeRequestId for MakeRequestUuid {
     fn make_request_id<B>(&mut self, _request: &Request<B>) -> Option<RequestId> {
         let request_id = Uuid::new_v4().to_string().parse().unwrap();
         Some(RequestId::new(request_id))
-    }
-}
-
-/// Convert `HeaderValue` to `&str`
-pub fn header_value_to_str(value: Option<&HeaderValue>) -> &str {
-    match value {
-        Some(value) => from_utf8(value.as_bytes()).unwrap_or(""),
-        None => "",
     }
 }
 
@@ -64,4 +58,15 @@ pub fn cors() -> CorsLayer {
             Method::DELETE,
         ])
         .allow_origin(Any)
+}
+
+// =============== Utils ================
+
+/// Convert `HeaderValue` to `&str`
+// TODO: Create a module utils
+pub fn header_value_to_str(value: Option<&HeaderValue>) -> &str {
+    match value {
+        Some(value) => from_utf8(value.as_bytes()).unwrap_or(""),
+        None => "",
+    }
 }

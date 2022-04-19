@@ -4,7 +4,6 @@ pub mod errors;
 pub mod handlers;
 pub mod layers;
 pub mod logger;
-pub mod middlewares;
 pub mod models;
 pub mod repositories;
 pub mod routes;

@@ -26,12 +26,19 @@ async fn main() -> Result<()> {
     // Load configuration
     // ------------------
     let settings = Config::from_env()?;
+
+    // Tracing
+    // -------
     let subscriber = logger::get_subscriber("info".to_owned(), std::io::stdout);
     logger::init_subscriber(subscriber);
 
     // Database
     // --------
     let pool = database::init(&settings).await?;
+
+    // CORS
+    // ----
+    let cors = layers::cors();
 
     // Logger
     // ------
@@ -50,7 +57,6 @@ async fn main() -> Result<()> {
                     );
                 })
                 .on_response(|response: &Response<_>, latency: Duration, _span: &Span| {
-                    // _span.record("status_code", &tracing::field::display(_response.status()));
                     info!(
                         "[RESPONSE] status_code: {}, request_id: {}, latency: {:?}",
                         response.status().as_u16(),
@@ -65,16 +71,11 @@ async fn main() -> Result<()> {
         .propagate_x_request_id()
         .into_inner();
 
-    // CORS
-    // ----
-    let cors = layers::cors();
-
     // Build our application with a single route
     let app = Router::new()
-        .nest("/api/v1", routes::api())
+        .nest("/api/v1", routes::api().layer(cors))
         .nest("/", routes::web())
         .layer(Extension(pool))
-        .layer(cors)
         .layer(logger_layer)
         .layer(Extension(SharedState::new(State::init(&settings))));
 
