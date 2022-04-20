@@ -26,8 +26,7 @@ pub async fn start_server() -> Result<()> {
 
     // Tracing
     // -------
-    let subscriber = logger::get_subscriber("info".to_owned(), std::io::stdout);
-    logger::init_subscriber(subscriber);
+    logger::init(&settings.environment, &settings.logs_path, &settings.logs_file);
 
     // Database
     // --------
@@ -45,7 +44,7 @@ pub async fn start_server() -> Result<()> {
             TraceLayer::new_for_http()
                 .on_request(|request: &Request<_>, _span: &Span| {
                     info!(
-                        r#"[REQUEST] method: {}, host: {}, uri: {}, request_id: {}, user_agent: {}"#,
+                        r#"[REQ] method: {}, host: {}, uri: {}, request_id: {}, user_agent: {}"#,
                         request.method(),
                         header_value_to_str(request.headers().get("host")),
                         request.uri(),
@@ -55,7 +54,7 @@ pub async fn start_server() -> Result<()> {
                 })
                 .on_response(|response: &Response<_>, latency: Duration, _span: &Span| {
                     info!(
-                        "[RESPONSE] status_code: {}, request_id: {}, latency: {:?}",
+                        "[RES] status_code: {}, request_id: {}, latency: {:?}",
                         response.status().as_u16(),
                         header_value_to_str(response.headers().get("x-request-id")),
                         latency,

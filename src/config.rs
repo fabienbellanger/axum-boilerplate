@@ -6,7 +6,10 @@ use serde::Deserialize;
 /// Represents configuration structure
 #[derive(Deserialize, Clone, Debug)]
 pub struct Config {
+    pub environment: String,
     pub rust_log: String,
+    pub logs_path: String,
+    pub logs_file: String,
     pub server_url: String,
     pub server_port: String,
     pub jwt_secret_key: String,
