@@ -1,12 +1,12 @@
-use axum::{
-    http::{Request, Response},
-    Extension, Router,
-};
-use axum_boilerplate::{
+use crate::{
     config::Config,
     database,
     layers::{self, header_value_to_str, MakeRequestUuid, SharedState, State},
     logger, routes,
+};
+use axum::{
+    http::{Request, Response},
+    Extension, Router,
 };
 use color_eyre::Result;
 use std::time::Duration;
@@ -14,11 +14,8 @@ use tower::ServiceBuilder;
 use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer, ServiceBuilderExt};
 use tracing::Span;
 
-#[macro_use]
-extern crate tracing;
-
-#[tokio::main]
-async fn main() -> Result<()> {
+/// Starts API server
+pub async fn start_server() -> Result<()> {
     // Install Color Eyre
     // ------------------
     color_eyre::install()?;

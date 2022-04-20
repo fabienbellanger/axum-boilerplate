@@ -1,8 +1,8 @@
-# axum-boilerplate
+# Axum boilerplate
 
-[Axum web](https://github.com/tokio-rs/axum) framework boilerplate
+[Axum Repository](https://github.com/tokio-rs/axum) framework boilerplate
 
-[Doc](https://docs.rs/axum/latest/axum) d'Axum
+[Axum Doc](https://docs.rs/axum/latest/axum)
 
 ## Cargo watch
 
@@ -52,10 +52,11 @@ sqlx migrate revert
 
 ## TODO:
 
-- [x   ] Custom errors
-- [ ] Add CLI
-- [ ] Add JWT ([Example](https://github.com/tokio-rs/axum/blob/main/examples/jwt/src/main.rs))
-- [ ] Add Sqlx / MySQL ([Example](https://github.com/tokio-rs/axum/blob/main/examples/sqlx-postgres/src/main.rs))
+- [x] Custom errors
+- [x] Add CLI
+- [x] Add JWT ([Example](https://github.com/tokio-rs/axum/blob/main/examples/jwt/src/main.rs))
+- [x] Add Sqlx / MySQL ([Example](https://github.com/tokio-rs/axum/blob/main/examples/sqlx-postgres/src/main.rs))
 - [ ] Add Askama
 - [ ] Add Basic Auth
 - [ ] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs))
+- [ ] Add multiple writers to logger

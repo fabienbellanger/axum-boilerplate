@@ -28,7 +28,7 @@ fn api_protected() -> Router {
 /// Users API routes
 fn api_users() -> Router {
     Router::new()
-        .route("/", post(handlers::users::register))
+        .route("/", post(handlers::users::create))
         .route("/", get(handlers::users::get_all))
         .route("/:id", get(handlers::users::get_by_id))
         .route("/:id", delete(handlers::users::delete))

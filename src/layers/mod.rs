@@ -12,8 +12,7 @@ use uuid::Uuid;
 
 // ================ Request ID ================
 
-// Request ID middleware
-// TODO: Put in middlewares module
+/// Request ID middleware
 #[derive(Clone, Copy)]
 pub struct MakeRequestUuid;
 

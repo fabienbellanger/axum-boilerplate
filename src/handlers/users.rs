@@ -72,7 +72,7 @@ pub async fn login(
 }
 
 // Route: POST /api/v1/users
-pub async fn register(
+pub async fn create(
     Json(payload): Json<UserCreation>,
     Extension(pool): Extension<Pool<MySql>>,
 ) -> Result<Json<User>, AppError> {
@@ -99,7 +99,7 @@ pub async fn get_all(Extension(pool): Extension<Pool<MySql>>) -> Result<Json<Vec
     Ok(Json(users))
 }
 
-// Route: GET "/v1/users/{id}"
+// Route: GET "/v1/users/:id"
 pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> Result<Json<User>, AppError> {
     let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
     match user {
@@ -110,7 +110,7 @@ pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MyS
     }
 }
 
-// Route: DELETE "/v1/users/{id}"
+// Route: DELETE "/v1/users/:id"
 pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> Result<StatusCode, AppError> {
     let result = UserRepository::delete(&pool, id.to_string()).await?;
     match result {
@@ -121,7 +121,7 @@ pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>
     }
 }
 
-// Route: PUT "/v1/users/{id}"
+// Route: PUT "/v1/users/:id"
 pub async fn update(
     Path(id): Path<Uuid>,
     Json(payload): Json<UserCreation>,
