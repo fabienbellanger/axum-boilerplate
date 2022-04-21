@@ -13,6 +13,7 @@ use uuid::Uuid;
 use validator::Validate;
 
 // Route: POST /api/v1/login
+#[tracing::instrument(name = "Login", skip(pool, state), fields())]
 pub async fn login(
     Json(payload): Json<Login>,
     Extension(pool): Extension<Pool<MySql>>,
