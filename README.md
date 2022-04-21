@@ -56,7 +56,7 @@ sqlx migrate revert
 - [x] Add CLI
 - [x] Add JWT ([Example](https://github.com/tokio-rs/axum/blob/main/examples/jwt/src/main.rs))
 - [x] Add Sqlx / MySQL ([Example](https://github.com/tokio-rs/axum/blob/main/examples/sqlx-postgres/src/main.rs))
-- [ ] Add Askama
-- [ ] Add Basic Auth
+- [x] Add multiple writers to logger
 - [ ] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs))
-- [ ] Add multiple writers to logger
+- [ ] Add Basic Auth
+- [ ] Add Askama

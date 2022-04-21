@@ -44,24 +44,25 @@ pub async fn start_server() -> Result<()> {
             TraceLayer::new_for_http()
                 .on_request(|request: &Request<_>, _span: &Span| {
                     info!(
-                        r#"[REQ] method: {}, host: {}, uri: {}, request_id: {}, user_agent: {}"#,
+                        r#"[REQ] [{}] {} | {} | {} | {}"#,
+                        header_value_to_str(request.headers().get("x-request-id")),
                         request.method(),
                         header_value_to_str(request.headers().get("host")),
                         request.uri(),
-                        header_value_to_str(request.headers().get("x-request-id")),
                         header_value_to_str(request.headers().get("user-agent"))
                     );
                 })
                 .on_response(|response: &Response<_>, latency: Duration, _span: &Span| {
                     info!(
-                        "[RES] status_code: {}, request_id: {}, latency: {:?}",
-                        response.status().as_u16(),
+                        "[RES] [{}] {} | {:?} | {:?}",
                         header_value_to_str(response.headers().get("x-request-id")),
+                        response.status().as_u16(),
+                        response.version(),
                         latency,
                     );
                 })
                 .on_failure(|error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
-                    error!("[FAILURE] failure: {:?}", error);
+                    error!("[FAILURE] {:?}", error);
                 }),
         )
         .propagate_x_request_id()
