@@ -9,6 +9,7 @@ pub mod models;
 pub mod repositories;
 pub mod routes;
 pub mod server;
+pub mod utils;
 
 #[macro_use]
 extern crate tracing;

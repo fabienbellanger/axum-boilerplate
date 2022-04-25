@@ -19,7 +19,7 @@ path = "src/bin/main.rs"
 [dependencies]
 
 # Axum
-axum = "0.5"
+axum = {version = "0.5", features = ["headers"]}
 
 # Tower
 tower = {version = "0.4", features = ["timeout", "limit"]}

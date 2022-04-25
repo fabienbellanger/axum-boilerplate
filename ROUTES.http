@@ -1,13 +1,13 @@
 # Variables
 # ---------
 @baseUrl = http://{{$dotenv SERVER_URL}}:{{$dotenv SERVER_PORT}}/api/v1
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0MzIzYTFiMS0yMDZiLTQyYzctYTdlNS1iY2I0NWY3ZjYzMzUiLCJleHAiOjE2NTA0ODE1MzQsImlhdCI6MTY1MDM5NTEzNCwibmJmIjoxNjUwMzk1MTM0LCJ1c2VyX2lkIjoiNDMyM2ExYjEtMjA2Yi00MmM3LWE3ZTUtYmNiNDVmN2Y2MzM1IiwidXNlcl9sYXN0bmFtZSI6IlRlc3QiLCJ1c2VyX2ZpcnN0bmFtZSI6IlRvdG8iLCJ1c2VyX2VtYWlsIjoidGVzdEBnbWFpbC5jb20iLCJ1c2VyX3JvbGVzIjoiQURNSU4ifQ.9kX5BFvhw-7cKioel8fA3Fwsm7R2vAlTGpF1j471IRR0jG65um0f32ae4aOD7twkREQqqVGN-nGSYa1G4yhwGg
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJmMGMyMTgzNy1hMjFkLTRhNmItYjY3OS0yOTgxYzdiZmMxZjciLCJleHAiOjE2NTA5NzM3MDcsImlhdCI6MTY1MDg4NzMwNywibmJmIjoxNjUwODg3MzA3LCJ1c2VyX2lkIjoiZjBjMjE4MzctYTIxZC00YTZiLWI2NzktMjk4MWM3YmZjMWY3IiwidXNlcl9sYXN0bmFtZSI6IlRlc3QiLCJ1c2VyX2ZpcnN0bmFtZSI6IlRvdG8gMiIsInVzZXJfZW1haWwiOiJ0ZXN0QGdtYWlsLmNvbSIsInVzZXJfcm9sZXMiOiJBRE1JTiJ9.M_MyGmQpFPsIAiTFWTyYRGfEYMZQzBhOCjd1BV3cqc6i3rCnW51Y2fBSPDRqWOF955-w-d2ZFVYBVQQhJUczqQ
 
 
 # Users
 # -----
 @userId = 4323a1b1-206b-42c7-a7e5-bcb45f7f6335
-@userIdToDelete = 7479d064-cbcf-41fd-bf75-649b670efe61
+@userIdToDelete = f6a6ed37-d0fc-4e45-b97d-3bbc6924562e
 
 # Login
 POST {{baseUrl}}/login
@@ -20,12 +20,12 @@ Content-Type: application/json
 ###
 
 # Register
-POST {{baseUrl}}/register
+POST {{baseUrl}}/users
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "username": "test@gmail.com",
+    "username": "testgmail.com",
     "password": "00000000",
     "lastname": "Test",
     "firstname": "Toto"

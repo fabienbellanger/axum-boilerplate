@@ -10,6 +10,9 @@ use derive_more::{Display, Error};
 use serde::Serialize;
 use serde_json::json;
 
+/// Custom Result type for `AppError`
+pub type AppResult<T> = EyreResult<T, AppError>;
+
 /// Represents the custom error message
 #[derive(Serialize)]
 pub struct AppErrorMessage {
@@ -76,6 +79,9 @@ impl From<sqlx::Error> for AppError {
     }
 }
 
+/// Custom Result typefor `CliError`
+pub type CliResult<T> = EyreResult<T, CliError>;
+
 /// Custom CLI Error
 #[derive(Debug, Clone, PartialEq, thiserror::Error)]
 pub enum CliError {
@@ -94,6 +100,3 @@ pub enum CliError {
     #[error("Server error: {0}")]
     ServerError(String),
 }
-
-/// Custom Result type
-pub type CliResult<T> = EyreResult<T, CliError>;

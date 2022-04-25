@@ -3,29 +3,30 @@
 use crate::models::auth::Jwt;
 use crate::models::user::{Login, User, UserCreation};
 use crate::repositories::user::UserRepository;
-use crate::{errors::AppError, layers::SharedState, models::user::LoginResponse};
+use crate::utils::extractors::ExtractRequestId;
+use crate::utils::validation::validate_request;
+use crate::{
+    errors::{AppError, AppResult},
+    layers::SharedState,
+    models::user::LoginResponse,
+};
+use axum::extract::{Extension, Json, Path};
 use axum::http::StatusCode;
-use axum::{extract::Path, Extension, Json};
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use futures::TryStreamExt;
 use sqlx::{MySql, Pool};
+use tracing::instrument;
 use uuid::Uuid;
-use validator::Validate;
 
 // Route: POST /api/v1/login
-#[tracing::instrument(name = "Login", skip(pool, state), fields())]
+#[instrument(name = "Login", skip(pool, state))]
 pub async fn login(
     Json(payload): Json<Login>,
     Extension(pool): Extension<Pool<MySql>>,
     Extension(state): Extension<SharedState>,
-) -> Result<Json<LoginResponse>, AppError> {
-    // Payload validation
-    // TODO: Return error with validator message
-    let payload_validation = payload.validate();
-    if payload_validation.is_err() {
-        error!("{}", payload_validation.clone().err().unwrap());
-        payload_validation.err().map(|err| error!("{}", err));
-    }
+    ExtractRequestId(request_id): ExtractRequestId,
+) -> AppResult<Json<LoginResponse>> {
+    validate_request(&payload)?;
 
     // Search user in database and return `LoginResponse`
     let user = UserRepository::login(&pool, payload).await?;
@@ -73,15 +74,12 @@ pub async fn login(
 }
 
 // Route: POST /api/v1/users
+#[instrument(name = "User creation", skip(pool))]
 pub async fn create(
     Json(payload): Json<UserCreation>,
     Extension(pool): Extension<Pool<MySql>>,
-) -> Result<Json<User>, AppError> {
-    let payload_validation = payload.validate();
-    if payload_validation.is_err() {
-        error!("{}", payload_validation.clone().err().unwrap());
-        payload_validation.err().map(|err| error!("{}", err));
-    }
+) -> AppResult<Json<User>> {
+    validate_request(&payload)?;
 
     let mut user = User::new(payload);
     UserRepository::create(&pool, &mut user).await?;
@@ -90,7 +88,8 @@ pub async fn create(
 }
 
 // Route: GET /api/v1/users
-pub async fn get_all(Extension(pool): Extension<Pool<MySql>>) -> Result<Json<Vec<User>>, AppError> {
+#[instrument(name = "Users list", skip(pool))]
+pub async fn get_all(Extension(pool): Extension<Pool<MySql>>) -> AppResult<Json<Vec<User>>> {
     let mut stream = UserRepository::get_all(&pool);
     let mut users: Vec<User> = Vec::new();
     while let Some(row) = stream.try_next().await? {
@@ -101,7 +100,8 @@ pub async fn get_all(Extension(pool): Extension<Pool<MySql>>) -> Result<Json<Vec
 }
 
 // Route: GET "/v1/users/:id"
-pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> Result<Json<User>, AppError> {
+#[instrument(name = "User information", skip(pool))]
+pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> AppResult<Json<User>> {
     let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
     match user {
         Some(user) => Ok(Json(user)),
@@ -112,7 +112,8 @@ pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MyS
 }
 
 // Route: DELETE "/v1/users/:id"
-pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> Result<StatusCode, AppError> {
+#[instrument(name = "User deletion", skip(pool))]
+pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> AppResult<StatusCode> {
     let result = UserRepository::delete(&pool, id.to_string()).await?;
     match result {
         1 => Ok(StatusCode::NO_CONTENT),
@@ -123,11 +124,12 @@ pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>
 }
 
 // Route: PUT "/v1/users/:id"
+#[instrument(name = "User update", skip(pool))]
 pub async fn update(
     Path(id): Path<Uuid>,
     Json(payload): Json<UserCreation>,
     Extension(pool): Extension<Pool<MySql>>,
-) -> Result<Json<User>, AppError> {
+) -> AppResult<Json<User>> {
     UserRepository::update(&pool, id.to_string(), &payload).await?;
 
     let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
