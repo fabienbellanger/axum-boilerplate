@@ -2,6 +2,10 @@
 
 use tracing_subscriber::{prelude::*, EnvFilter, Registry};
 
+// TODO: try:
+// - https://github.com/gsson/mini-web-rs
+// - https://github.com/shanesveller/axum-rest-example
+
 /// Register a subscriber as global default to process span data.
 ///
 /// It should only be called once!
