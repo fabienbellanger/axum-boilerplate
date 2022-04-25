@@ -1,5 +1,7 @@
 # Axum boilerplate
 
+[![Build status](https://github.com/fabienbellanger/axum-boilerplate/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/fabienbellanger/axum-boilerplate/actions/workflows/rust.yml)
+
 [Axum Repository](https://github.com/tokio-rs/axum) framework boilerplate
 
 [Axum Doc](https://docs.rs/axum/latest/axum)
