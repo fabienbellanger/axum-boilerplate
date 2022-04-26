@@ -17,6 +17,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+    - name: Copy .env
+      run: cp .env.example .env
     - name: Build
       run: SQLX_OFFLINE=true cargo build --verbose
     - name: Run tests
