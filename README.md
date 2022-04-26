@@ -52,6 +52,12 @@ Revet migrations:
 sqlx migrate revert
 ```
 
+### Offline mode
+
+```bash
+SQLX_OFFLINE=true cargo sqlx prepare -- --bin <app name in Cargo.toml>
+```
+
 ## TODO:
 
 - [x] Custom errors
