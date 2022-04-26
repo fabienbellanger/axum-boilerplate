@@ -39,6 +39,7 @@ pub fn init(environment: &str, path: &str, filename: &str) {
         .compact();
     let dev_layer = tracing_subscriber::fmt::layer()
         .event_format(dev_format)
+        .with_ansi(true)
         .with_writer(std::io::stdout);
     let dev_subscriber = Registry::default().with(dev_filter).with(dev_layer);
 
