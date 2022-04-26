@@ -54,8 +54,18 @@ sqlx migrate revert
 
 ### Offline mode
 
+Used for Github Actions or Docker
+
 ```bash
-SQLX_OFFLINE=true cargo sqlx prepare -- --bin <app name in Cargo.toml>
+cargo sqlx prepare -- --bin <app name in Cargo.toml>
+```
+
+Then set env variable `SQLX_OFFLINE` to `true`.
+
+For example:
+
+```bash
+SQLX_OFFLINE=true cargo build
 ```
 
 ## TODO:
