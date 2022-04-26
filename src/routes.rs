@@ -1,10 +1,9 @@
 //! Routes list
 
-use crate::{handlers, layers};
-use axum::{
-    routing::{delete, get, post, put},
-    Router,
-};
+use crate::handlers;
+use crate::layers;
+use axum::routing::{delete, get, post, put};
+use axum::Router;
 
 /// Return web routes list
 pub fn web() -> Router {
