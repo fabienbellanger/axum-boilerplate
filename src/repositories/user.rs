@@ -9,7 +9,9 @@ pub struct UserRepository;
 
 impl UserRepository {
     /// Returns a User if credentials are right
+    #[instrument(skip_all, level = "warn")]
     pub async fn login(pool: &MySqlPool, input: Login) -> Result<Option<User>, sqlx::Error> {
+        warn!("LOGIN repo");
         let hashed_password = format!("{:x}", Sha512::digest(input.password.as_bytes()));
         let result = sqlx::query!(
             r#"
@@ -42,6 +44,7 @@ impl UserRepository {
     }
 
     /// Add a new user
+    #[tracing::instrument(skip(pool))]
     pub async fn create(pool: &MySqlPool, user: &mut User) -> Result<(), sqlx::Error> {
         user.password = format!("{:x}", Sha512::digest(user.password.as_bytes()));
 
@@ -67,6 +70,7 @@ impl UserRepository {
     }
 
     /// Returns all users not deleted
+    #[instrument(skip(pool))]
     pub fn get_all(pool: &MySqlPool) -> BoxStream<Result<Result<User, sqlx::Error>, sqlx::Error>> {
         sqlx::query(
             r#"
@@ -91,6 +95,7 @@ impl UserRepository {
     }
 
     /// Returns a user by its ID
+    #[instrument(skip(pool))]
     pub async fn get_by_id(pool: &MySqlPool, id: String) -> Result<Option<User>, sqlx::Error> {
         let result = sqlx::query!(
             r#"
@@ -121,6 +126,7 @@ impl UserRepository {
     }
 
     /// Delete a user
+    #[instrument(skip(pool))]
     pub async fn delete(pool: &MySqlPool, id: String) -> Result<u64, sqlx::Error> {
         let result = sqlx::query!(
             r#"
@@ -138,6 +144,7 @@ impl UserRepository {
     }
 
     /// Update a user
+    #[instrument(skip(pool))]
     pub async fn update(pool: &MySqlPool, id: String, user: &UserCreation) -> Result<(), sqlx::Error> {
         let hashed_password = format!("{:x}", Sha512::digest(user.password.as_bytes()));
         sqlx::query!(

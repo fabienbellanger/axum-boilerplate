@@ -1,6 +1,6 @@
 //! Logger module for customize `Tracing` logs
 
-use tracing_subscriber::{prelude::*, EnvFilter, Registry};
+use tracing_subscriber::{fmt::format::JsonFields, prelude::*, EnvFilter, Registry};
 
 // TODO: try:
 // - https://github.com/gsson/mini-web-rs
@@ -17,14 +17,16 @@ pub fn init(environment: &str, path: &str, filename: &str) {
         let prod_format = tracing_subscriber::fmt::format()
             .with_level(true) // don't include levels in formatted output
             .with_target(true) // don't include targets
-            .with_thread_ids(false) // include the thread ID of the current thread
-            .with_thread_names(false) // include the name of the current thread
+            .with_thread_ids(true) // include the thread ID of the current thread
+            .with_thread_names(true) // include the name of the current thread
             .with_file(true)
             .with_line_number(true)
             .json();
         let file_appender = tracing_appender::rolling::daily(path, filename);
         let prod_layer = tracing_subscriber::fmt::layer()
             .event_format(prod_format)
+            .with_ansi(false)
+            .fmt_fields(JsonFields::new())
             .with_writer(file_appender);
         let prod_subscriber = Registry::default().with(prod_filter).with(prod_layer);
 
@@ -34,12 +36,12 @@ pub fn init(environment: &str, path: &str, filename: &str) {
         let dev_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
         let dev_format = tracing_subscriber::fmt::format()
             .with_level(true) // don't include levels in formatted output
-            .with_target(false) // don't include targets
-            .with_thread_ids(false) // include the thread ID of the current thread
-            .with_thread_names(false) // include the name of the current thread
+            .with_target(true) // don't include targets
+            .with_thread_ids(true) // include the thread ID of the current thread
+            .with_thread_names(true) // include the name of the current thread
             .with_file(true)
             .with_line_number(true)
-            .compact();
+            .pretty();
         let dev_layer = tracing_subscriber::fmt::layer()
             .event_format(dev_format)
             .with_ansi(true)
