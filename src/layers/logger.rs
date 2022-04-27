@@ -24,11 +24,11 @@ struct LoggerMessage {
 
 impl Display for LoggerMessage {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "status_code: {}, method: {}, host: {}, uri: {}, request_id: {}, user_agent: {}, version: {}, latency: {:?}", 
+        write!(f, "status_code: {}, method: {}, uri: {}, host: {}, request_id: {}, user_agent: {}, version: {}, latency: {:?}", 
         self.status_code,
             self.method,
-            self.host,
             self.uri,
+            self.host,
             self.request_id,
             self.user_agent,
             self.version,
