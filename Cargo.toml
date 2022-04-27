@@ -26,6 +26,7 @@ tower = {version = "0.4", features = ["timeout", "limit"]}
 tower-http = {version = "0.3", features = ["trace", "cors", "request-id"]}
 
 # Log
+env_logger = "0.9"
 log = "0.4"
 tracing = "0.1"
 tracing-appender = "0.2"
@@ -46,7 +47,6 @@ clap = {version = "3", features = ["derive"]}
 config = "0.13"
 derive_more = "0.99"
 dotenv = "0.15"
-env_logger = "0.9"
 futures = "0.3"
 jsonwebtoken = "8"
 mailchecker = "4"
