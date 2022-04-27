@@ -1,4 +1,4 @@
-//! JWT middleware
+//! JWT layer
 
 use crate::{errors::AppErrorMessage, layers, models::auth};
 use axum::{

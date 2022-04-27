@@ -1,6 +1,7 @@
 //! Application layers modules
 
 pub mod jwt;
+pub mod logger;
 
 use crate::config::Config;
 use axum::http::{HeaderValue, Method, Request};

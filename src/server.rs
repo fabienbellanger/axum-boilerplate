@@ -1,18 +1,13 @@
 use crate::{
     config::Config,
     database,
-    layers::{self, header_value_to_str, MakeRequestUuid, SharedState, State},
+    layers::{self, MakeRequestUuid, SharedState, State},
     logger, routes,
 };
-use axum::{
-    http::{Request, Response},
-    Extension, Router,
-};
+use axum::{Extension, Router};
 use color_eyre::Result;
-use std::time::Duration;
 use tower::ServiceBuilder;
-use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer, ServiceBuilderExt};
-use tracing::Span;
+use tower_http::ServiceBuilderExt;
 
 /// Starts API server
 pub async fn start_server() -> Result<()> {
@@ -40,31 +35,7 @@ pub async fn start_server() -> Result<()> {
     // ------
     let logger_layer = ServiceBuilder::new()
         .set_x_request_id(MakeRequestUuid)
-        .layer(
-            TraceLayer::new_for_http()
-                .on_request(|request: &Request<_>, _span: &Span| {
-                    info!(
-                        r#"[REQ] [{}] {} | {} | {} | {}"#,
-                        header_value_to_str(request.headers().get("x-request-id")),
-                        request.method(),
-                        header_value_to_str(request.headers().get("host")),
-                        request.uri(),
-                        header_value_to_str(request.headers().get("user-agent"))
-                    );
-                })
-                .on_response(|response: &Response<_>, latency: Duration, _span: &Span| {
-                    info!(
-                        "[RES] [{}] {} | {:?} | {:?}",
-                        header_value_to_str(response.headers().get("x-request-id")),
-                        response.status().as_u16(),
-                        response.version(),
-                        latency,
-                    );
-                })
-                .on_failure(|error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
-                    error!("[FAILURE] {:?}", error);
-                }),
-        )
+        .layer(crate::layers::logger::LoggerLayer)
         .propagate_x_request_id()
         .into_inner();
 
