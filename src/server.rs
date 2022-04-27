@@ -36,11 +36,13 @@ pub async fn start_server() -> Result<()> {
     // ------
     let logger_layer = ServiceBuilder::new()
         .set_x_request_id(MakeRequestUuid)
+        //.timeout(Duration::from_secs(10)) // Does not work
         .layer(crate::layers::logger::LoggerLayer)
         .propagate_x_request_id()
         .into_inner();
 
-    // Build our application with a single route
+    // Routing
+    // -------
     let app = Router::new()
         .nest("/api/v1", routes::api().layer(cors))
         .nest("/", routes::web())
@@ -49,6 +51,7 @@ pub async fn start_server() -> Result<()> {
         .layer(Extension(SharedState::new(State::init(&settings))));
 
     // Start server
+    // ------------
     let addr = format!("{}:{}", settings.server_url, settings.server_port);
     info!("Starting server on {}", &addr);
     Ok(axum::Server::bind(&addr.parse()?)
