@@ -32,6 +32,9 @@ pub enum AppError {
     #[display(fmt = "{}", message)]
     NotFound { message: String },
 
+    #[display(fmt = "Request Timeout")]
+    Timeout,
+
     #[display(fmt = "Unauthorized")]
     Unauthorized,
 }
@@ -43,6 +46,7 @@ impl AppError {
             Self::BadRequest { message: m } => m.to_owned(),
             Self::InternalError { message: m } => m.to_owned(),
             Self::Unauthorized => "Unauthorized".to_owned(),
+            Self::Timeout => "Request Timeout".to_owned(),
         }
     }
 }
@@ -56,6 +60,7 @@ impl IntoResponse for AppError {
             AppError::NotFound { .. } => StatusCode::NOT_FOUND,
             AppError::Unauthorized { .. } => StatusCode::UNAUTHORIZED,
             AppError::BadRequest { .. } => StatusCode::BAD_REQUEST,
+            AppError::Timeout { .. } => StatusCode::REQUEST_TIMEOUT,
         };
 
         let body = Json(json!(AppErrorMessage {

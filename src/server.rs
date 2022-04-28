@@ -1,10 +1,12 @@
+use std::time::Duration;
+
 use crate::{
     config::Config,
-    database,
+    database, handlers,
     layers::{self, MakeRequestUuid, SharedState, State},
     logger, routes,
 };
-use axum::{Extension, Router};
+use axum::{error_handling::HandleErrorLayer, Extension, Router};
 use color_eyre::Result;
 use tokio::signal;
 use tower::ServiceBuilder;
@@ -38,8 +40,10 @@ pub async fn start_server() -> Result<()> {
     // ------
     let logger_layer = ServiceBuilder::new()
         .set_x_request_id(MakeRequestUuid)
-        //.timeout(Duration::from_secs(10)) // Does not work
         .layer(crate::layers::logger::LoggerLayer)
+        .layer(HandleErrorLayer::new(handlers::timeout_error))
+        // .rate_limit(30, Duration::from_secs(60))
+        .timeout(Duration::from_secs(settings.request_timeout))
         .propagate_x_request_id()
         .into_inner();
 
