@@ -14,6 +14,8 @@ use tower::ServiceBuilder;
 use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer, ServiceBuilderExt};
 use tracing::Span;
 
+// TODO: Timeout: https://docs.rs/axum/latest/axum/error_handling/index.html#applying-fallible-middleware
+
 /// Starts API server
 pub async fn start_server() -> Result<()> {
     // Install Color Eyre
