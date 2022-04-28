@@ -36,9 +36,9 @@ pub async fn start_server() -> Result<()> {
     // ----
     let cors = layers::cors();
 
-    // Logger
+    // Layers
     // ------
-    let logger_layer = ServiceBuilder::new()
+    let layers = ServiceBuilder::new()
         .set_x_request_id(MakeRequestUuid)
         .layer(crate::layers::logger::LoggerLayer)
         .layer(HandleErrorLayer::new(handlers::timeout_error))
@@ -53,7 +53,7 @@ pub async fn start_server() -> Result<()> {
         .nest("/api/v1", routes::api().layer(cors))
         .nest("/", routes::web())
         .layer(Extension(pool))
-        .layer(logger_layer)
+        .layer(layers)
         .layer(Extension(SharedState::new(State::init(&settings))));
 
     // Start server
