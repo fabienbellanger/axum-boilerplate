@@ -1,18 +1,14 @@
 use crate::{
     config::Config,
     database,
-    layers::{self, header_value_to_str, MakeRequestUuid, SharedState, State},
+    layers::{self, MakeRequestUuid, SharedState, State},
     logger, routes,
 };
-use axum::{
-    http::{Request, Response},
-    Extension, Router,
-};
+use axum::{Extension, Router};
 use color_eyre::Result;
-use std::time::Duration;
+use tokio::signal;
 use tower::ServiceBuilder;
-use tower_http::{classify::ServerErrorsFailureClass, trace::TraceLayer, ServiceBuilderExt};
-use tracing::Span;
+use tower_http::ServiceBuilderExt;
 
 // TODO: Timeout: https://docs.rs/axum/latest/axum/error_handling/index.html#applying-fallible-middleware
 
@@ -42,35 +38,13 @@ pub async fn start_server() -> Result<()> {
     // ------
     let logger_layer = ServiceBuilder::new()
         .set_x_request_id(MakeRequestUuid)
-        .layer(
-            TraceLayer::new_for_http()
-                .on_request(|request: &Request<_>, _span: &Span| {
-                    info!(
-                        r#"[REQ] [{}] {} | {} | {} | {}"#,
-                        header_value_to_str(request.headers().get("x-request-id")),
-                        request.method(),
-                        header_value_to_str(request.headers().get("host")),
-                        request.uri(),
-                        header_value_to_str(request.headers().get("user-agent"))
-                    );
-                })
-                .on_response(|response: &Response<_>, latency: Duration, _span: &Span| {
-                    info!(
-                        "[RES] [{}] {} | {:?} | {:?}",
-                        header_value_to_str(response.headers().get("x-request-id")),
-                        response.status().as_u16(),
-                        response.version(),
-                        latency,
-                    );
-                })
-                .on_failure(|error: ServerErrorsFailureClass, _latency: Duration, _span: &Span| {
-                    error!("[FAILURE] {:?}", error);
-                }),
-        )
+        //.timeout(Duration::from_secs(10)) // Does not work
+        .layer(crate::layers::logger::LoggerLayer)
         .propagate_x_request_id()
         .into_inner();
 
-    // Build our application with a single route
+    // Routing
+    // -------
     let app = Router::new()
         .nest("/api/v1", routes::api().layer(cors))
         .nest("/", routes::web())
@@ -79,9 +53,35 @@ pub async fn start_server() -> Result<()> {
         .layer(Extension(SharedState::new(State::init(&settings))));
 
     // Start server
+    // ------------
     let addr = format!("{}:{}", settings.server_url, settings.server_port);
     info!("Starting server on {}", &addr);
     Ok(axum::Server::bind(&addr.parse()?)
         .serve(app.into_make_service())
+        .with_graceful_shutdown(shutdown_signal())
         .await?)
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
+
+    info!("signal received, starting graceful shutdown");
 }

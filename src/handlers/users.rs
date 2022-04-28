@@ -15,17 +15,17 @@ use axum::http::StatusCode;
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use futures::TryStreamExt;
 use sqlx::{MySql, Pool};
-use tracing::instrument;
 use uuid::Uuid;
 
 // Route: POST /api/v1/login
-#[instrument(name = "Login", skip(pool, state))]
+#[instrument(name = "Login", skip(pool, state), level = "warn")]
 pub async fn login(
     Json(payload): Json<Login>,
     Extension(pool): Extension<Pool<MySql>>,
     Extension(state): Extension<SharedState>,
     ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<Json<LoginResponse>> {
+    warn!("LOGIN handler");
     validate_request(&payload)?;
 
     // Search user in database and return `LoginResponse`
@@ -74,7 +74,7 @@ pub async fn login(
 }
 
 // Route: POST /api/v1/users
-#[instrument(name = "User creation", skip(pool))]
+#[instrument(skip(pool))]
 pub async fn create(
     Json(payload): Json<UserCreation>,
     Extension(pool): Extension<Pool<MySql>>,
@@ -88,7 +88,7 @@ pub async fn create(
 }
 
 // Route: GET /api/v1/users
-#[instrument(name = "Users list", skip(pool))]
+#[instrument(skip(pool))]
 pub async fn get_all(Extension(pool): Extension<Pool<MySql>>) -> AppResult<Json<Vec<User>>> {
     let mut stream = UserRepository::get_all(&pool);
     let mut users: Vec<User> = Vec::new();
@@ -100,7 +100,7 @@ pub async fn get_all(Extension(pool): Extension<Pool<MySql>>) -> AppResult<Json<
 }
 
 // Route: GET "/v1/users/:id"
-#[instrument(name = "User information", skip(pool))]
+#[instrument(skip(pool))]
 pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> AppResult<Json<User>> {
     let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
     match user {
@@ -112,7 +112,7 @@ pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MyS
 }
 
 // Route: DELETE "/v1/users/:id"
-#[instrument(name = "User deletion", skip(pool))]
+#[instrument(skip(pool))]
 pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> AppResult<StatusCode> {
     let result = UserRepository::delete(&pool, id.to_string()).await?;
     match result {
@@ -124,7 +124,7 @@ pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>
 }
 
 // Route: PUT "/v1/users/:id"
-#[instrument(name = "User update", skip(pool))]
+#[instrument(skip(pool))]
 pub async fn update(
     Path(id): Path<Uuid>,
     Json(payload): Json<UserCreation>,
