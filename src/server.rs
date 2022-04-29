@@ -53,7 +53,6 @@ pub async fn start_server() -> Result<()> {
         .nest("/", routes::web())
         .layer(Extension(pool))
         .layer(layers)
-        .layer(rate_limiter_layer)
         .layer(Extension(SharedState::new(State::init(&settings))));
 
     // Start server
