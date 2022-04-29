@@ -42,7 +42,6 @@ pub async fn start_server() -> Result<()> {
         .set_x_request_id(MakeRequestUuid)
         .layer(crate::layers::logger::LoggerLayer)
         .layer(HandleErrorLayer::new(handlers::timeout_error))
-        // .rate_limit(30, Duration::from_secs(60))
         .timeout(Duration::from_secs(settings.request_timeout))
         .propagate_x_request_id()
         .into_inner();
@@ -54,6 +53,7 @@ pub async fn start_server() -> Result<()> {
         .nest("/", routes::web())
         .layer(Extension(pool))
         .layer(layers)
+        .layer(rate_limiter_layer)
         .layer(Extension(SharedState::new(State::init(&settings))));
 
     // Start server
