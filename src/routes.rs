@@ -4,14 +4,14 @@ use crate::handlers;
 use crate::layers;
 use axum::routing::{delete, get, post, put};
 use axum::Router;
-use std::time::Duration;
-use tokio::time::sleep;
 
 /// Return web routes list
 pub fn web() -> Router {
     Router::new()
-        .route("/health-check", get(|| async { "OK" }))
-        .route("/timeout", get(|| async { sleep(Duration::from_secs(30)).await }))
+        .route("/health-check", get(handlers::web::health_check))
+        .route("/timeout", get(handlers::web::timeout))
+        .route("/spawn", get(handlers::web::spawn))
+        .route("/stream", get(handlers::web::stream))
 }
 
 /// Return API routes list

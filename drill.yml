@@ -8,6 +8,10 @@ plan:
     request:
       url: /health-check
 
+  - name: Spawn
+    request:
+      url: /spawn
+
   - name: Login
     request:
       url: /api/v1/login

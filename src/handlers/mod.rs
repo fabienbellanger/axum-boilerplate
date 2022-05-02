@@ -1,6 +1,7 @@
 //! Handlers module
 
 pub mod users;
+pub mod web;
 
 use crate::errors::AppError;
 use axum::BoxError;
