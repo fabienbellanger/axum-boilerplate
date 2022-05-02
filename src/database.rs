@@ -7,7 +7,6 @@ use sqlx::{MySql, Pool};
 use std::time::Duration;
 
 /// Initialize database connection pool for MySQL
-/// TODO: Use customer error CliError
 pub async fn init(settings: &Config) -> CliResult<Pool<MySql>> {
     let url = &settings.database_url;
     let max_connections = settings.database_max_connections;

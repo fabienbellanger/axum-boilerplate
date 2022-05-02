@@ -12,8 +12,6 @@ use tokio::signal;
 use tower::ServiceBuilder;
 use tower_http::ServiceBuilderExt;
 
-// TODO: Timeout: https://docs.rs/axum/latest/axum/error_handling/index.html#applying-fallible-middleware
-
 /// Starts API server
 pub async fn start_server() -> Result<()> {
     // Install Color Eyre
@@ -26,7 +24,7 @@ pub async fn start_server() -> Result<()> {
 
     // Tracing
     // -------
-    logger::init(&settings.environment, &settings.logs_path, &settings.logs_file);
+    logger::init(&settings.environment, &settings.logs_path, &settings.logs_file)?;
 
     // Database
     // --------

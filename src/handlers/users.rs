@@ -4,7 +4,7 @@ use crate::models::auth::Jwt;
 use crate::models::user::{Login, User, UserCreation};
 use crate::repositories::user::UserRepository;
 use crate::utils::extractors::ExtractRequestId;
-use crate::utils::validation::validate_request;
+use crate::utils::validation::validate_request_data;
 use crate::{
     errors::{AppError, AppResult},
     layers::SharedState,
@@ -26,7 +26,7 @@ pub async fn login(
     ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<Json<LoginResponse>> {
     warn!("LOGIN handler");
-    validate_request(&payload)?;
+    validate_request_data(&payload)?;
 
     // Search user in database and return `LoginResponse`
     let user = UserRepository::login(&pool, payload).await?;
@@ -79,7 +79,7 @@ pub async fn create(
     Json(payload): Json<UserCreation>,
     Extension(pool): Extension<Pool<MySql>>,
 ) -> AppResult<Json<User>> {
-    validate_request(&payload)?;
+    validate_request_data(&payload)?;
 
     let mut user = User::new(payload);
     UserRepository::create(&pool, &mut user).await?;

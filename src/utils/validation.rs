@@ -5,8 +5,7 @@ use serde_json::json;
 use validator::Validate;
 
 /// Validate the HTTP request parameters
-// TODO: Try this: https://github.com/tokio-rs/axum/blob/main/examples/validator/src/main.rs
-pub fn validate_request<T: Validate>(data: &T) -> AppResult<()> {
+pub fn validate_request_data<T: Validate>(data: &T) -> AppResult<()> {
     match data.validate() {
         Ok(_) => Ok(()),
         Err(errors) => Err(AppError::BadRequest {

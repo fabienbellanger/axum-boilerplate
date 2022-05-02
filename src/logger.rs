@@ -1,5 +1,6 @@
 //! Logger module for customize `Tracing` logs
 
+use crate::errors::{CliError, CliResult};
 use tracing_subscriber::{fmt::format::JsonFields, prelude::*, EnvFilter, Registry};
 
 // Examples:
@@ -9,8 +10,7 @@ use tracing_subscriber::{fmt::format::JsonFields, prelude::*, EnvFilter, Registr
 /// Register a subscriber as global default to process span data.
 ///
 /// It should only be called once!
-// TODO: Return Result
-pub fn init(environment: &str, path: &str, filename: &str) {
+pub fn init(environment: &str, path: &str, filename: &str) -> CliResult<()> {
     let (is_production, default_level) = match environment {
         "production" => (true, "error"),
         _ => (false, "info"),
@@ -35,7 +35,7 @@ pub fn init(environment: &str, path: &str, filename: &str) {
 
         let subscriber = Registry::default().with(filter).with(layer);
 
-        tracing::subscriber::set_global_default(subscriber).expect("unable to set global development subscriber");
+        tracing::subscriber::set_global_default(subscriber).map_err(|err| CliError::ConfigError(err.to_string()))?;
     } else {
         let layer = tracing_subscriber::fmt::layer()
             .with_ansi(true)
@@ -44,6 +44,8 @@ pub fn init(environment: &str, path: &str, filename: &str) {
 
         let subscriber = Registry::default().with(filter).with(layer);
 
-        tracing::subscriber::set_global_default(subscriber).expect("unable to set global development subscriber");
+        tracing::subscriber::set_global_default(subscriber).map_err(|err| CliError::ConfigError(err.to_string()))?;
     }
+
+    Ok(())
 }
