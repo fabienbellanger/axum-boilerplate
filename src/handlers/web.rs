@@ -13,13 +13,16 @@ pub async fn timeout() {
     sleep(Duration::from_secs(30)).await;
 }
 
+/// Simulate a long process
+async fn long_process() {
+    sleep(Duration::from_secs(2)).await;
+    info!("long process end");
+}
+
 // Route: GET "/spawn"
 pub async fn spawn() {
     info!("Spawn start");
-    tokio::spawn(async move {
-        sleep(Duration::from_secs(2)).await;
-        info!("Spawn end");
-    });
+    tokio::spawn(long_process());
     info!("Spawn return");
 }
 
