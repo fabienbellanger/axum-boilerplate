@@ -11,6 +11,7 @@ pub fn web() -> Router {
         .route("/health-check", get(handlers::web::health_check))
         .route("/timeout", get(handlers::web::timeout))
         .route("/spawn", get(handlers::web::spawn))
+        .route("/big-json", get(handlers::web::big_json))
         .route("/stream", get(handlers::web::stream))
 }
 
