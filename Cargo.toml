@@ -41,6 +41,10 @@ thiserror = "1.0"
 # sqlx
 sqlx = {version = "0.5", features = ["runtime-tokio-native-tls", "chrono", "mysql", "macros", "bigdecimal", "migrate", "offline"]}
 
+# Redis
+r2d2 = "0.8"
+redis = {version = "0.21", features = ["r2d2"]}
+
 async-stream = "0.3"
 bytes = "1.0"
 chrono = {version = "0.4", features = ["serde"]}

@@ -1,13 +1,12 @@
-use std::time::Duration;
-
 use crate::{
     config::Config,
-    database, handlers,
+    databases, handlers,
     layers::{self, MakeRequestUuid, SharedState, State},
     logger, routes,
 };
 use axum::{error_handling::HandleErrorLayer, Extension, Router};
 use color_eyre::Result;
+use std::time::Duration;
 use tokio::signal;
 use tower::ServiceBuilder;
 use tower_http::ServiceBuilderExt;
@@ -28,7 +27,11 @@ pub async fn start_server() -> Result<()> {
 
     // Database
     // --------
-    let pool = database::init(&settings).await?;
+    let pool = databases::init(&settings).await?;
+
+    // Redis
+    // -----
+    let redis_pool = databases::init_redis(&settings).await?;
 
     // CORS
     // ----
@@ -50,6 +53,7 @@ pub async fn start_server() -> Result<()> {
         .nest("/api/v1", routes::api().layer(cors))
         .nest("/", routes::web())
         .layer(Extension(pool))
+        .layer(Extension(redis_pool))
         .layer(layers)
         .layer(Extension(SharedState::new(State::init(&settings))));
 

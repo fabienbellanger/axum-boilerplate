@@ -1,6 +1,6 @@
 pub mod cli;
 pub mod config;
-pub mod database;
+pub mod databases;
 pub mod errors;
 pub mod handlers;
 pub mod layers;

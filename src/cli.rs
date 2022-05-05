@@ -1,7 +1,7 @@
 //! CLI module
 
 use crate::config::Config;
-use crate::database;
+use crate::databases;
 use crate::errors::{CliError, CliResult};
 use crate::models::user::{User, UserCreation};
 use crate::repositories::user::UserRepository;
@@ -99,7 +99,7 @@ async fn register(lastname: &str, firstname: &str, username: &str, password: &st
 
     // MySQL pool creation
     // -------------------
-    let pool = database::init(&config).await?;
+    let pool = databases::init(&config).await?;
 
     let lastname = lastname.trim();
     let firstname = firstname.trim();
