@@ -4,18 +4,33 @@ use axum::{
     body::StreamBody,
     http::header::CONTENT_TYPE,
     response::{AppendHeaders, IntoResponse},
-    Json,
+    Extension, Json,
 };
 use bytes::{Bytes, BytesMut};
+use r2d2::Pool;
+use redis::Client;
+use redis::Commands;
 use serde::Serialize;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::errors::AppError;
+use crate::errors::{AppError, AppResult};
 
 // Route: GET "/health-check"
 pub async fn health_check<'a>() -> &'a str {
     "OK"
+}
+
+// Route: GET "/test-redis"
+#[instrument(skip(pool))]
+pub async fn test_redis(Extension(pool): Extension<Pool<Client>>) -> AppResult<()> {
+    let mut conn = pool.get()?;
+
+    conn.set("key", "value")?;
+    let val: String = conn.get("key")?;
+    info!("{}", val);
+
+    Ok(())
 }
 
 // Route: GET "/timeout"

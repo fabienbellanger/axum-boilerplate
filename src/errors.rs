@@ -84,6 +84,30 @@ impl From<sqlx::Error> for AppError {
     }
 }
 
+// Redis errors
+// ------------
+impl From<redis::RedisError> for AppError {
+    fn from(error: redis::RedisError) -> Self {
+        error!("Redis database error: {:?}", error);
+
+        Self::InternalError {
+            message: "Redis Database Error".to_owned(),
+        }
+    }
+}
+
+// r2d2 errors
+// -----------
+impl From<r2d2::Error> for AppError {
+    fn from(error: r2d2::Error) -> Self {
+        error!("Redis r2d2 pool error: {:?}", error);
+
+        Self::InternalError {
+            message: "Redis Database Error".to_owned(),
+        }
+    }
+}
+
 /// Custom Result typefor `CliError`
 pub type CliResult<T> = EyreResult<T, CliError>;
 

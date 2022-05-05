@@ -29,12 +29,13 @@ pub async fn init(settings: &Config) -> CliResult<Pool<MySql>> {
     Ok(pool)
 }
 
-/// Initalialize Redis pool
+/// Initialize database connection pool for Redis
 pub async fn init_redis(settings: &Config) -> CliResult<r2d2::Pool<redis::Client>> {
     let url = &settings.redis_url;
-
     let client = redis::Client::open(url.clone()).map_err(|err| CliError::DatabaseError(err.to_string()))?;
-    let pool: r2d2::Pool<redis::Client> = r2d2::Pool::builder().build(client).unwrap();
 
-    Ok(pool)
+    Ok(r2d2::Pool::builder()
+        .connection_timeout(Duration::from_secs(settings.redis_connection_timeout))
+        .build(client)
+        .map_err(|err| CliError::DatabaseError(err.to_string()))?)
 }

@@ -13,6 +13,7 @@ pub fn web() -> Router {
         .route("/spawn", get(handlers::web::spawn))
         .route("/big-json", get(handlers::web::big_json))
         .route("/stream", get(handlers::web::stream))
+        .route("/test-redis", get(handlers::web::test_redis))
 }
 
 /// Return API routes list
