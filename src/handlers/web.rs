@@ -35,7 +35,7 @@ pub async fn test_redis(Extension(pool): Extension<Pool<Client>>) -> AppResult<(
 
 // Route: GET "/timeout"
 pub async fn timeout() {
-    sleep(Duration::from_secs(30)).await;
+    sleep(Duration::from_secs(20)).await;
 }
 
 /// Simulate a long process
