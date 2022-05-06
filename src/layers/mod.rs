@@ -19,8 +19,11 @@ pub struct MakeRequestUuid;
 
 impl MakeRequestId for MakeRequestUuid {
     fn make_request_id<B>(&mut self, _request: &Request<B>) -> Option<RequestId> {
-        let request_id = Uuid::new_v4().to_string().parse().unwrap();
-        Some(RequestId::new(request_id))
+        let id = Uuid::new_v4().to_string().parse();
+        match id {
+            Ok(id) => Some(RequestId::new(id)),
+            _ => None,
+        }
     }
 }
 

@@ -42,10 +42,13 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let state = request.extensions().get::<layers::SharedState>().unwrap(); // TODO: Remove unwrap()
-        let state = state.clone();
-        let is_authorized =
-            auth::Claims::extract_from_request(request.headers(), state.jwt_secret_key.clone()).is_some();
+        let is_authorized = match request.extensions().get::<layers::SharedState>() {
+            Some(state) => {
+                let state = state.clone();
+                auth::Claims::extract_from_request(request.headers(), state.jwt_secret_key.clone()).is_some()
+            }
+            _ => false,
+        };
 
         let future = self.inner.call(request);
         Box::pin(async move {
