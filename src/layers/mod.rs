@@ -4,7 +4,7 @@ pub mod jwt;
 pub mod logger;
 
 use crate::config::Config;
-use axum::http::{HeaderValue, Method, Request};
+use axum::http::{HeaderValue, Method, Request, Response};
 use std::str::from_utf8;
 use std::sync::Arc;
 use tower_http::cors::{Any, CorsLayer};
@@ -72,4 +72,29 @@ pub fn header_value_to_str(value: Option<&HeaderValue>) -> &str {
         Some(value) => from_utf8(value.as_bytes()).unwrap_or(""),
         None => "",
     }
+}
+
+// TODO
+pub fn layer_response<T>(_response: &mut Response<T>) {
+    /*
+        let (mut parts, _body) = response.into_parts();
+
+        // Status code
+        parts.status = StatusCode::UNAUTHORIZED;
+
+        // Content Type
+        parts.headers.insert(
+            axum::http::header::CONTENT_TYPE,
+            HeaderValue::from_static("application/json"),
+        );
+
+        // Body
+        let msg = serde_json::json!(AppErrorMessage {
+            code: StatusCode::UNAUTHORIZED.as_u16(),
+            message: String::from("Unauthorized"),
+        });
+        let msg = Bytes::from(msg.to_string());
+
+        Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
+    */
 }
