@@ -6,7 +6,7 @@ use crate::{
 };
 use axum::{error_handling::HandleErrorLayer, Extension, Router};
 use color_eyre::Result;
-use std::{net::SocketAddr, time::Duration};
+use std::time::Duration;
 use tokio::signal;
 use tower::ServiceBuilder;
 use tower_http::ServiceBuilderExt;
@@ -62,7 +62,7 @@ pub async fn start_server() -> Result<()> {
     let addr = format!("{}:{}", settings.server_url, settings.server_port);
     info!("Starting server on {}", &addr);
     Ok(axum::Server::bind(&addr.parse()?)
-        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
+        .serve(app.into_make_service())
         .with_graceful_shutdown(shutdown_signal())
         .await?)
 }
