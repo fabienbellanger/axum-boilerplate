@@ -4,7 +4,7 @@ description = "Axum boilerplate"
 edition = "2021"
 name = "axum_boilerplate"
 readme = "README.md"
-repository = "https://github.com/fabienbellanger/axium-boilerplate"
+repository = "https://github.com/fabienbellanger/axum-boilerplate"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
