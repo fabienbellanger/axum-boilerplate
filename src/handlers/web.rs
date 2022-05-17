@@ -1,5 +1,6 @@
 //! Web handlers
 
+use crate::errors::{AppError, AppResult};
 use axum::{
     body::StreamBody,
     http::header::CONTENT_TYPE,
@@ -13,8 +14,6 @@ use redis::Commands;
 use serde::Serialize;
 use std::time::Duration;
 use tokio::time::sleep;
-
-use crate::errors::{AppError, AppResult};
 
 // Route: GET "/health-check"
 pub async fn health_check<'a>() -> &'a str {
