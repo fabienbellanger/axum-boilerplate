@@ -18,7 +18,7 @@ use tokio::time::sleep;
 
 // Route: GET "/health-check"
 pub async fn health_check<'a>(ConnectInfo(addr): ConnectInfo<SocketAddr>) -> &'a str {
-    info!("Address: {}", addr);
+    info!("Address: {}", addr.ip());
 
     "OK"
 }

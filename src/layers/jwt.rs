@@ -9,6 +9,8 @@ use axum::{
 };
 use bytes::Bytes;
 use futures::future::BoxFuture;
+use r2d2::Pool;
+use redis::Client;
 use std::{
     net::SocketAddr,
     task::{Context, Poll},
@@ -46,10 +48,15 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        // TODO: Only for test
+        // --------> TODO: Only for test
+        // Client Remote IP address
         let remote_address = request.extensions().get::<ConnectInfo<SocketAddr>>().unwrap();
         let remote_address = remote_address.0.ip().to_string();
         info!("Client address: {:?}", remote_address);
+
+        // Redis connection
+        let _pool = request.extensions().get::<Pool<Client>>().unwrap();
+        // <--------
 
         let is_authorized = match request.extensions().get::<layers::SharedState>() {
             Some(state) => {
