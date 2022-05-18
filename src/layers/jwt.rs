@@ -3,12 +3,16 @@
 use crate::{errors::AppErrorMessage, layers, models::auth};
 use axum::{
     body::{Body, Full},
+    extract::ConnectInfo,
     http::{HeaderValue, Request, StatusCode},
     response::Response,
 };
 use bytes::Bytes;
 use futures::future::BoxFuture;
-use std::task::{Context, Poll};
+use std::{
+    net::SocketAddr,
+    task::{Context, Poll},
+};
 use tower::{Layer, Service};
 
 pub struct JwtLayer;
@@ -42,6 +46,11 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
+        // TODO: Only for test
+        let remote_address = request.extensions().get::<ConnectInfo<SocketAddr>>().unwrap();
+        let remote_address = remote_address.0.ip().to_string();
+        info!("Client address: {:?}", remote_address);
+
         let is_authorized = match request.extensions().get::<layers::SharedState>() {
             Some(state) => {
                 let state = state.clone();
