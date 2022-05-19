@@ -2,6 +2,7 @@
 
 pub mod jwt;
 pub mod logger;
+pub mod rate_limiter;
 
 use crate::config::Config;
 use axum::http::{HeaderValue, Method, Request};

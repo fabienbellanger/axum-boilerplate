@@ -41,7 +41,7 @@ pub async fn start_server() -> Result<()> {
     // ------
     let layers = ServiceBuilder::new()
         .set_x_request_id(MakeRequestUuid)
-        .layer(crate::layers::logger::LoggerLayer)
+        .layer(layers::logger::LoggerLayer)
         .layer(HandleErrorLayer::new(handlers::timeout_error))
         .timeout(Duration::from_secs(settings.request_timeout))
         .propagate_x_request_id()
@@ -54,6 +54,7 @@ pub async fn start_server() -> Result<()> {
         .nest("/", routes::web())
         .layer(Extension(pool))
         .layer(Extension(redis_pool))
+        .layer(layers::rate_limiter::RateLimiterLayer)
         .layer(layers)
         .layer(Extension(SharedState::new(State::init(&settings))));
 
