@@ -52,9 +52,9 @@ pub async fn start_server() -> Result<()> {
     let app = Router::new()
         .nest("/api/v1", routes::api().layer(cors))
         .nest("/", routes::web())
+        .layer(layers::rate_limiter::RateLimiterLayer)
         .layer(Extension(pool))
         .layer(Extension(redis_pool))
-        .layer(layers::rate_limiter::RateLimiterLayer)
         .layer(layers)
         .layer(Extension(SharedState::new(State::init(&settings))));
 
