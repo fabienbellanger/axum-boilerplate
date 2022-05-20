@@ -52,10 +52,10 @@ pub async fn start_server() -> Result<()> {
     let app = Router::new()
         .nest("/api/v1", routes::api().layer(cors))
         .nest("/", routes::web())
-        .layer(layers::rate_limiter::RateLimiterLayer {
-            pool: &redis_pool,
-            jwt_secret: settings.jwt_secret_key.clone(),
-        })
+        .layer(layers::rate_limiter::RateLimiterLayer::new(
+            &redis_pool,
+            settings.jwt_secret_key.clone(),
+        ))
         .layer(Extension(pool))
         .layer(Extension(redis_pool))
         .layer(layers)

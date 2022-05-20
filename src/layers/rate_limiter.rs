@@ -15,6 +15,12 @@ pub struct RateLimiterLayer<'a> {
     pub jwt_secret: String,
 }
 
+impl<'a> RateLimiterLayer<'a> {
+    pub fn new<'b>(pool: &'a Pool<Client>, jwt_secret: String) -> Self {
+        Self { pool, jwt_secret }
+    }
+}
+
 impl<'a, S> Layer<S> for RateLimiterLayer<'a> {
     type Service = RateLimiterMiddleware<S>;
 
