@@ -10,25 +10,33 @@ use std::{
 };
 use tower::{Layer, Service};
 
-pub struct RateLimiterLayer;
+pub struct RateLimiterLayer<'a> {
+    pub pool: &'a Pool<Client>,
+    pub jwt_secret: String,
+}
 
-impl<S> Layer<S> for RateLimiterLayer {
+impl<'a, S> Layer<S> for RateLimiterLayer<'a> {
     type Service = RateLimiterMiddleware<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        RateLimiterMiddleware { inner }
+        RateLimiterMiddleware {
+            inner,
+            pool: self.pool.clone(),
+            jwt_secret: self.jwt_secret.clone(),
+        }
     }
 }
 
 #[derive(Clone)]
 pub struct RateLimiterMiddleware<S> {
     inner: S,
+    pool: Pool<Client>,
+    jwt_secret: String,
 }
 
 impl<S> Service<Request<Body>> for RateLimiterMiddleware<S>
 where
     S: Service<Request<Body>, Response = Response> + Send + 'static,
-
     S::Future: Send + 'static,
 {
     type Response = S::Response;
@@ -48,7 +56,12 @@ where
         info!("Client address: {:?}", remote_address);
 
         // Redis connection
-        let _pool = request.extensions().get::<Pool<Client>>().unwrap();
+        let pool = self.pool.clone();
+        info!("Redis pool: {:?}", pool);
+
+        // JWT
+        let _jwt_secret = self.jwt_secret.clone();
+        info!("JWT secret: {}", _jwt_secret);
         // <--------
 
         let future = self.inner.call(request);

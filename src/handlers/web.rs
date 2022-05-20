@@ -3,7 +3,6 @@
 use crate::errors::{AppError, AppResult};
 use axum::{
     body::StreamBody,
-    extract::ConnectInfo,
     http::header::CONTENT_TYPE,
     response::{AppendHeaders, IntoResponse},
     Extension, Json,
@@ -13,13 +12,11 @@ use r2d2::Pool;
 use redis::Client;
 use redis::Commands;
 use serde::Serialize;
-use std::{net::SocketAddr, time::Duration};
+use std::time::Duration;
 use tokio::time::sleep;
 
 // Route: GET "/health-check"
-pub async fn health_check<'a>(ConnectInfo(addr): ConnectInfo<SocketAddr>) -> &'a str {
-    info!("Address: {}", addr.ip());
-
+pub async fn health_check<'a>() -> &'a str {
     "OK"
 }
 

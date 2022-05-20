@@ -29,7 +29,6 @@ pub struct JwtMiddleware<S> {
 impl<S> Service<Request<Body>> for JwtMiddleware<S>
 where
     S: Service<Request<Body>, Response = Response> + Send + 'static,
-
     S::Future: Send + 'static,
 {
     type Response = S::Response;
@@ -78,6 +77,7 @@ where
                     Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
                 }
             };
+
             Ok(response)
         })
     }
