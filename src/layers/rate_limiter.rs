@@ -159,7 +159,7 @@ impl RateLimiterCheck {
     /// Checks limit and update Redis
     fn check_and_update(&self, pool: &Pool<Client>, expire_in_seconds: i32) -> AppResult<(i32, i32)> {
         if self.has_error {
-            Err(AppError::TooManyRequests)
+            Err(AppError::TooManyRequests) // TODO: Good error?
         } else {
             if self.limit == -1 {
                 Ok((0, 0))
@@ -169,7 +169,7 @@ impl RateLimiterCheck {
 
                 // Find if key exists
                 let result: HashMap<String, String> = conn.hgetall(&self.key)?;
-                dbg!(&result);
+
                 if result.is_empty() {
                     // Not exists
                     conn.hset(&self.key, "remaining", self.limit)?;
@@ -181,15 +181,20 @@ impl RateLimiterCheck {
                     let expired_at = DateTime::parse_from_rfc3339(expired_at).unwrap();
 
                     if now >= expired_at {
+                        // Expired cache
                         warn!("CACHE EXPIRED: {} / {}", expired_at, now);
-                        // Expired
+
+                        conn.del(&self.key)?; // TODO: Necesary?
+
                         let expire_at = now + Duration::seconds(expire_in_seconds as i64);
 
                         conn.hset(&self.key, "remaining", 50)?;
                         conn.hset(&self.key, "expiredAt", expire_at.to_rfc3339())?;
                     } else {
+                        // Valid cache
                         warn!("CACHE VALID: {} / {}", expired_at, now);
-                        // Valid
+
+                        // Check remaining requests
                     }
                 }
 
