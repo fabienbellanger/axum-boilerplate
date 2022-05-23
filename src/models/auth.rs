@@ -19,6 +19,9 @@ pub struct Claims {
     pub user_firstname: String,
     pub user_email: String,
     pub user_roles: String,
+
+    /// Max number of request by second (-1: unlimited)
+    pub user_limit: i32,
 }
 
 impl Claims {
@@ -73,6 +76,7 @@ impl Jwt {
             user_firstname,
             user_email,
             user_roles: roles,
+            user_limit: 10, // TODO: From DB
         };
 
         let token = encode(&header, &payload, &EncodingKey::from_secret(secret_key.as_bytes()))?;

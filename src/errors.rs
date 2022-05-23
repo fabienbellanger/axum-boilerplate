@@ -37,6 +37,9 @@ pub enum AppError {
 
     #[display(fmt = "Unauthorized")]
     Unauthorized,
+
+    #[display(fmt = "Too Many Requests")]
+    TooManyRequests,
 }
 
 impl AppError {
@@ -47,6 +50,7 @@ impl AppError {
             Self::InternalError { message: m } => m.to_owned(),
             Self::Unauthorized => "Unauthorized".to_owned(),
             Self::Timeout => "Request Timeout".to_owned(),
+            Self::TooManyRequests => "Too Many Requests".to_owned(),
         }
     }
 }
@@ -61,6 +65,7 @@ impl IntoResponse for AppError {
             AppError::Unauthorized { .. } => StatusCode::UNAUTHORIZED,
             AppError::BadRequest { .. } => StatusCode::BAD_REQUEST,
             AppError::Timeout { .. } => StatusCode::REQUEST_TIMEOUT,
+            AppError::TooManyRequests { .. } => StatusCode::TOO_MANY_REQUESTS,
         };
 
         let body = Json(json!(AppErrorMessage {

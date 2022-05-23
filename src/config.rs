@@ -31,6 +31,10 @@ pub struct Config {
     pub redis_url: String,
     pub redis_prefix: String,
     pub redis_connection_timeout: u64,
+
+    pub limiter_enabled: bool,
+    pub limiter_requests_by_second: i32,
+    pub limiter_expire_in_seconds: i32,
 }
 
 impl Config {

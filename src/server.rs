@@ -55,6 +55,9 @@ pub async fn start_server() -> Result<()> {
         .layer(layers::rate_limiter::RateLimiterLayer::new(
             &redis_pool,
             settings.jwt_secret_key.clone(),
+            settings.limiter_enabled,
+            settings.limiter_requests_by_second,
+            settings.limiter_expire_in_seconds,
         ))
         .layer(Extension(pool))
         .layer(Extension(redis_pool))
