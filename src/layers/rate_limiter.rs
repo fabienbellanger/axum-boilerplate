@@ -25,7 +25,7 @@ pub struct RateLimiterLayer<'a> {
 }
 
 impl<'a> RateLimiterLayer<'a> {
-    pub fn new<'b>(
+    pub fn new(
         pool: &'a Pool<Client>,
         jwt_secret: String,
         enabled: bool,
@@ -95,7 +95,8 @@ where
         let result = RateLimiterCheck::init(claims, self.requests_by_second, addr);
         info!("Result={:?}", result);
 
-        result.check_and_update(&pool, self.expire_in_seconds).unwrap(); // TODO: Remove unwrap
+        let t = result.check_and_update(&pool, self.expire_in_seconds); // TODO: Remove unwrap
+        warn!("t={:?}", t);
 
         // Headers
         // -------
@@ -114,7 +115,7 @@ where
 
 #[derive(Debug)]
 struct RateLimiterCheck {
-    has_error: bool,
+    has_error: bool, // TODO: Replace by Option<RateLimiterError> where RateLimiterError is an enum
     key: Option<String>,
     limit: i32,
 }
@@ -160,54 +161,50 @@ impl RateLimiterCheck {
     fn check_and_update(&self, pool: &Pool<Client>, expire_in_seconds: i32) -> AppResult<(i32, i64)> {
         if self.has_error {
             Err(AppError::TooManyRequests) // TODO: Good error?
+        } else if self.limit == -1 {
+            Ok((0, 0))
         } else {
-            if self.limit == -1 {
-                Ok((0, 0))
-            } else {
-                let mut conn = pool.get()?;
-                let now: DateTime<Utc> = Utc::now();
+            let mut conn = pool.get()?;
 
-                // Find if key exists
-                let result: HashMap<String, String> = conn.hgetall(&self.key)?;
+            let now: DateTime<Utc> = Utc::now();
+            let mut remaining = self.limit - 1;
+            let mut reset = expire_in_seconds as i64;
+            let mut expired_at = now + Duration::seconds(expire_in_seconds as i64);
 
-                if result.is_empty() {
-                    // Not exists
-                    conn.hset(&self.key, "remaining", self.limit)?;
-                    conn.hset(&self.key, "expiredAt", now.to_rfc3339())?;
+            // Find if key exists
+            let result: HashMap<String, String> = conn.hgetall(&self.key)?;
+
+            if !result.is_empty() {
+                let expired_at_str = result.get("expiredAt").unwrap(); // TODO: Delete unwrap
+                expired_at = DateTime::parse_from_rfc3339(expired_at_str)
+                    .unwrap()
+                    .with_timezone(&Utc);
+
+                reset = (expired_at - now).num_seconds();
+
+                if reset <= 0 {
+                    // Expired cache
+                    // -------------
+                    conn.del(&self.key)?; // TODO: Necesary?
+
+                    expired_at = now + Duration::seconds(expire_in_seconds as i64);
+                    reset = expire_in_seconds as i64;
                 } else {
-                    // Exists
-                    let _remaining = result.get("remaining").unwrap(); // TODO: Delete unwrap
-                    let expired_at = result.get("expiredAt").unwrap(); // TODO: Delete unwrap
-                    let expired_at = DateTime::parse_from_rfc3339(expired_at).unwrap().with_timezone(&Utc);
+                    // Valid cache
+                    // -----------
+                    let remaining_str = result.get("remaining").unwrap(); // TODO: Delete unwrap
+                    remaining = remaining_str.parse::<i32>().unwrap();
 
-                    let reset = (expired_at - now).num_seconds();
-                    info!("Reset: {}", reset);
-
-                    if reset <= 0 {
-                        // Expired cache
-                        info!("===> CACHE EXPIRED");
-
-                        conn.del(&self.key)?; // TODO: Necesary?
-
-                        let expire_at = now + Duration::seconds(expire_in_seconds as i64);
-
-                        conn.hset(&self.key, "remaining", self.limit)?;
-                        conn.hset(&self.key, "expiredAt", expire_at.to_rfc3339())?;
-                    } else {
-                        // Valid cache
-                        info!("CACHE VALID");
-
-                        // Check remaining requests
+                    if remaining > 0 {
+                        remaining -= 1;
                     }
                 }
-
-                let mut current_limit: i32 = 0;
-                if current_limit < self.limit {
-                    current_limit += 1;
-                }
-
-                Ok((current_limit, 0)) // TODO: Remove!
             }
+
+            conn.hset(&self.key, "remaining", remaining)?;
+            conn.hset(&self.key, "expiredAt", expired_at.to_rfc3339())?;
+
+            Ok((remaining, reset))
         }
     }
 }
