@@ -157,7 +157,7 @@ impl RateLimiterCheck {
     }
 
     /// Checks limit and update Redis
-    fn check_and_update(&self, pool: &Pool<Client>, expire_in_seconds: i32) -> AppResult<(i32, i32)> {
+    fn check_and_update(&self, pool: &Pool<Client>, expire_in_seconds: i32) -> AppResult<(i32, i64)> {
         if self.has_error {
             Err(AppError::TooManyRequests) // TODO: Good error?
         } else {
@@ -178,21 +178,24 @@ impl RateLimiterCheck {
                     // Exists
                     let _remaining = result.get("remaining").unwrap(); // TODO: Delete unwrap
                     let expired_at = result.get("expiredAt").unwrap(); // TODO: Delete unwrap
-                    let expired_at = DateTime::parse_from_rfc3339(expired_at).unwrap();
+                    let expired_at = DateTime::parse_from_rfc3339(expired_at).unwrap().with_timezone(&Utc);
 
-                    if now >= expired_at {
+                    let reset = (expired_at - now).num_seconds();
+                    info!("Reset: {}", reset);
+
+                    if reset <= 0 {
                         // Expired cache
-                        warn!("CACHE EXPIRED: {} / {}", expired_at, now);
+                        info!("===> CACHE EXPIRED");
 
                         conn.del(&self.key)?; // TODO: Necesary?
 
                         let expire_at = now + Duration::seconds(expire_in_seconds as i64);
 
-                        conn.hset(&self.key, "remaining", 50)?;
+                        conn.hset(&self.key, "remaining", self.limit)?;
                         conn.hset(&self.key, "expiredAt", expire_at.to_rfc3339())?;
                     } else {
                         // Valid cache
-                        warn!("CACHE VALID: {} / {}", expired_at, now);
+                        info!("CACHE VALID");
 
                         // Check remaining requests
                     }
@@ -203,7 +206,7 @@ impl RateLimiterCheck {
                     current_limit += 1;
                 }
 
-                Ok((current_limit, self.limit))
+                Ok((current_limit, 0)) // TODO: Remove!
             }
         }
     }
