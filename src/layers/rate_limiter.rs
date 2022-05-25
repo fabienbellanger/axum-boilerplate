@@ -1,7 +1,16 @@
 //! Rate limiter module
 
-use crate::models::auth::{self, Claims};
-use axum::{body::Body, extract::ConnectInfo, http::Request, response::Response};
+use crate::{
+    errors::AppErrorMessage,
+    models::auth::{self, Claims},
+};
+use axum::{
+    body::{Body, Full},
+    extract::ConnectInfo,
+    http::{HeaderValue, Request, StatusCode},
+    response::Response,
+};
+use bytes::Bytes;
 use chrono::{DateTime, Duration, Utc};
 use derive_more::{Display, Error};
 use futures::future::BoxFuture;
@@ -80,38 +89,77 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        info!("Rate limiter enabled: {}", self.enabled); // TODO: Use it!
+        let check_result = if self.enabled {
+            // Redis connection
+            let pool = self.pool.clone();
 
-        // Redis connection
-        let pool = self.pool.clone();
-        info!("Redis pool: {:?}", pool);
+            // Check JWT claims
+            let claims = auth::Claims::extract_from_request(request.headers(), self.jwt_secret.clone());
 
-        // Check JWT claims
-        let claims = auth::Claims::extract_from_request(request.headers(), self.jwt_secret.clone());
-        let addr = request.extensions().get::<ConnectInfo<SocketAddr>>();
+            // Get socket address
+            let addr = request.extensions().get::<ConnectInfo<SocketAddr>>();
 
-        let result = RateLimiterCheck::init(claims, self.requests_by_second, addr);
-        info!("Result={:?}", result);
+            // Initialize RateLimiterCheck
+            let check = RateLimiterCheck::init(claims, self.requests_by_second, addr);
 
-        let t = result.check_and_update(&pool, self.expire_in_seconds);
-        warn!("t={:?}", t);
+            check.check_and_update(&pool, self.expire_in_seconds)
+        } else {
+            // Disabled ie. no limit
+            Ok((0, 0))
+        };
 
         // Headers
         // -------
-        // X-Ratelimit-Limit: 50       => limit
-        // X-Ratelimit-Remaining: 48   => remaining limit
-        // X-Ratelimit-Reset: 17       => remaining seconds
+        // x-ratelimit-limit: 50       => limit
+        // x-ratelimit-remaining: 48   => remaining limit
+        // x-ratelimit-reset: 17       => remaining seconds
 
         let future = self.inner.call(request);
         Box::pin(async move {
-            let response: Response = future.await?;
+            let mut response = Response::default();
+
+            warn!("check_result={:?}", check_result);
+
+            response = match check_result {
+                Ok((_remaining, _reset)) => {
+                    let (mut parts, body) = future.await?.into_parts();
+
+                    // Headers
+                    parts
+                        .headers
+                        .insert("x-ratelimiter-reset", HeaderValue::from_static("10"));
+
+                    Response::from_parts(parts, body)
+                }
+                Err(_err) => {
+                    let (mut parts, _body) = response.into_parts();
+
+                    // Status code
+                    parts.status = StatusCode::INTERNAL_SERVER_ERROR;
+
+                    // Content Type
+                    parts.headers.insert(
+                        axum::http::header::CONTENT_TYPE,
+                        HeaderValue::from_static("application/json"),
+                    );
+
+                    // Body
+                    let msg = serde_json::json!(AppErrorMessage {
+                        code: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
+                        message: String::from("Internal Server Error"), // TODO: Message from RateLimiterError by implementing Display trait
+                    });
+                    let msg = Bytes::from(msg.to_string());
+
+                    Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
+                }
+            };
 
             Ok(response)
         })
     }
 }
 
-#[derive(Display, Debug, Error, Copy, Clone)]
+#[derive(Display, Debug, Error, Copy, Clone, PartialEq)]
 enum RateLimiterError {
     Ip,
     Redis,
@@ -131,7 +179,7 @@ impl From<r2d2::Error> for RateLimiterError {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct RateLimiterCheck {
     error: Option<RateLimiterError>,
     key: Option<String>,
@@ -153,7 +201,7 @@ impl RateLimiterCheck {
         Self { error, key, limit }
     }
 
-    // TODO: Add test
+    // Initialize `RateLimiterCheck`
     fn init(claims: Option<Claims>, requests_by_second: i32, addr: Option<&ConnectInfo<SocketAddr>>) -> Self {
         match claims {
             None => {
@@ -199,7 +247,7 @@ impl RateLimiterCheck {
                 if reset <= 0 {
                     // Expired cache
                     // -------------
-                    conn.del(&self.key)?; // TODO: Necesary?
+                    conn.del(&self.key)?; // Necesary?
 
                     expired_at = now + Duration::seconds(expire_in_seconds as i64);
                     reset = expire_in_seconds as i64;
@@ -220,5 +268,72 @@ impl RateLimiterCheck {
 
             Ok((remaining, reset))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::net::{IpAddr, Ipv4Addr};
+
+    #[test]
+    fn test_rate_limiter_check_init() {
+        let mut requests_by_second = 30;
+        let claims = None;
+        let addr = None;
+
+        assert_eq!(
+            RateLimiterCheck::init(claims, requests_by_second, addr),
+            RateLimiterCheck {
+                error: Some(RateLimiterError::Ip),
+                key: None,
+                limit: 0
+            }
+        );
+
+        requests_by_second = -1;
+        let claims = None;
+        let addr = None;
+        assert_eq!(
+            RateLimiterCheck::init(claims, requests_by_second, addr),
+            RateLimiterCheck {
+                error: None,
+                key: None,
+                limit: -1
+            }
+        );
+
+        requests_by_second = 30;
+        let user_id = uuid::Uuid::new_v4().to_string();
+        let claims = Some(Claims {
+            sub: String::from("Subject"),
+            exp: 123456789,
+            iat: 123456789,
+            nbf: 123456789,
+            user_id: user_id.clone(),
+            user_roles: String::from("ADMIN"),
+            user_limit: 25,
+        });
+        let addr = None;
+        assert_eq!(
+            RateLimiterCheck::init(claims, requests_by_second, addr),
+            RateLimiterCheck {
+                error: None,
+                key: Some(user_id),
+                limit: 25
+            }
+        );
+
+        let claims = None;
+        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8000);
+        let addr = Some(ConnectInfo(socket));
+        assert_eq!(
+            RateLimiterCheck::init(claims, requests_by_second, addr.as_ref()),
+            RateLimiterCheck {
+                error: None,
+                key: Some("127.0.0.1".to_owned()),
+                limit: 30
+            }
+        );
     }
 }
