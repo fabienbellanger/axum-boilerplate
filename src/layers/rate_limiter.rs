@@ -1,11 +1,9 @@
 //! Rate limiter module
 
-use crate::{
-    errors::{AppError, AppResult},
-    models::auth::{self, Claims},
-};
+use crate::models::auth::{self, Claims};
 use axum::{body::Body, extract::ConnectInfo, http::Request, response::Response};
 use chrono::{DateTime, Duration, Utc};
+use derive_more::{Display, Error};
 use futures::future::BoxFuture;
 use r2d2::Pool;
 use redis::{Client, Commands};
@@ -95,7 +93,7 @@ where
         let result = RateLimiterCheck::init(claims, self.requests_by_second, addr);
         info!("Result={:?}", result);
 
-        let t = result.check_and_update(&pool, self.expire_in_seconds); // TODO: Remove unwrap
+        let t = result.check_and_update(&pool, self.expire_in_seconds);
         warn!("t={:?}", t);
 
         // Headers
@@ -113,9 +111,29 @@ where
     }
 }
 
+#[derive(Display, Debug, Error, Copy, Clone)]
+enum RateLimiterError {
+    Ip,
+    Redis,
+    DateTime,
+    Parse,
+}
+
+impl From<redis::RedisError> for RateLimiterError {
+    fn from(_error: redis::RedisError) -> Self {
+        Self::Redis {}
+    }
+}
+
+impl From<r2d2::Error> for RateLimiterError {
+    fn from(_error: r2d2::Error) -> Self {
+        Self::Redis {}
+    }
+}
+
 #[derive(Debug)]
 struct RateLimiterCheck {
-    has_error: bool, // TODO: Replace by Option<RateLimiterError> where RateLimiterError is an enum
+    error: Option<RateLimiterError>,
     key: Option<String>,
     limit: i32,
 }
@@ -123,7 +141,7 @@ struct RateLimiterCheck {
 impl Default for RateLimiterCheck {
     fn default() -> Self {
         Self {
-            has_error: false,
+            error: None,
             key: None,
             limit: -1,
         }
@@ -131,8 +149,8 @@ impl Default for RateLimiterCheck {
 }
 
 impl RateLimiterCheck {
-    fn new(has_error: bool, key: Option<String>, limit: i32) -> Self {
-        Self { has_error, key, limit }
+    fn new(error: Option<RateLimiterError>, key: Option<String>, limit: i32) -> Self {
+        Self { error, key, limit }
     }
 
     // TODO: Add test
@@ -146,38 +164,34 @@ impl RateLimiterCheck {
                 } else {
                     // Client Remote IP address
                     match addr {
-                        None => Self::new(true, None, 0),
-                        Some(remote_address) => {
-                            Self::new(false, Some(remote_address.0.ip().to_string()), default_limit)
-                        }
+                        None => Self::new(Some(RateLimiterError::Ip), None, 0),
+                        Some(remote_address) => Self::new(None, Some(remote_address.0.ip().to_string()), default_limit),
                     }
                 }
             }
-            Some(claims) => Self::new(false, Some(claims.user_id), claims.user_limit),
+            Some(claims) => Self::new(None, Some(claims.user_id), claims.user_limit),
         }
     }
 
-    /// Checks limit and update Redis
-    fn check_and_update(&self, pool: &Pool<Client>, expire_in_seconds: i32) -> AppResult<(i32, i64)> {
-        if self.has_error {
-            Err(AppError::TooManyRequests) // TODO: Good error?
+    /// Checks limit, update Redis and reurns information for headers
+    fn check_and_update(&self, pool: &Pool<Client>, expire_in_seconds: i32) -> Result<(i32, i64), RateLimiterError> {
+        if let Some(err) = self.error {
+            return Err(err);
         } else if self.limit == -1 {
             Ok((0, 0))
         } else {
             let mut conn = pool.get()?;
-
             let now: DateTime<Utc> = Utc::now();
             let mut remaining = self.limit - 1;
             let mut reset = expire_in_seconds as i64;
             let mut expired_at = now + Duration::seconds(expire_in_seconds as i64);
 
-            // Find if key exists
             let result: HashMap<String, String> = conn.hgetall(&self.key)?;
 
             if !result.is_empty() {
-                let expired_at_str = result.get("expiredAt").unwrap(); // TODO: Delete unwrap
+                let expired_at_str = result.get("expiredAt").ok_or(RateLimiterError::Redis)?;
                 expired_at = DateTime::parse_from_rfc3339(expired_at_str)
-                    .unwrap()
+                    .map_err(|_err| RateLimiterError::DateTime)?
                     .with_timezone(&Utc);
 
                 reset = (expired_at - now).num_seconds();
@@ -192,8 +206,8 @@ impl RateLimiterCheck {
                 } else {
                     // Valid cache
                     // -----------
-                    let remaining_str = result.get("remaining").unwrap(); // TODO: Delete unwrap
-                    remaining = remaining_str.parse::<i32>().unwrap();
+                    let remaining_str = result.get("remaining").ok_or(RateLimiterError::Redis)?;
+                    remaining = remaining_str.parse::<i32>().map_err(|_err| RateLimiterError::Parse)?;
 
                     if remaining > 0 {
                         remaining -= 1;
