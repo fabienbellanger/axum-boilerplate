@@ -40,15 +40,7 @@ pub async fn login(
                 Some(roles) => roles,
                 None => String::new(),
             };
-            let token = Jwt::generate(
-                user.id.to_owned(),
-                user.lastname.to_owned(),
-                user.firstname.to_owned(),
-                user.username.to_owned(),
-                roles.clone(),
-                secret,
-                jwt_lifetime,
-            );
+            let token = Jwt::generate(user.id.to_owned(), roles.clone(), secret, jwt_lifetime);
 
             match token {
                 Ok(token) => {

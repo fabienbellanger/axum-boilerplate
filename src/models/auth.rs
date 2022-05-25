@@ -15,9 +15,6 @@ pub struct Claims {
     pub iat: i64,
     pub nbf: i64,
     pub user_id: String,
-    pub user_lastname: String,
-    pub user_firstname: String,
-    pub user_email: String,
     pub user_roles: String,
 
     /// Max number of request by second (-1: unlimited)
@@ -55,9 +52,6 @@ impl Jwt {
     /// TODO: Use custom error instead of Box<dyn std::error::Error>
     pub fn generate(
         user_id: String,
-        user_lastname: String,
-        user_firstname: String,
-        user_email: String,
         roles: String,
         secret_key: String,
         jwt_lifetime: i64,
@@ -72,9 +66,6 @@ impl Jwt {
             iat: now,
             nbf: now,
             user_id,
-            user_lastname,
-            user_firstname,
-            user_email,
             user_roles: roles,
             user_limit: 10, // TODO: From DB
         };
