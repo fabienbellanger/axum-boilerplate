@@ -58,7 +58,7 @@ where
                 false => {
                     let (mut parts, _body) = response.into_parts();
 
-                    // Status code
+                    // Status
                     parts.status = StatusCode::UNAUTHORIZED;
 
                     // Content Type

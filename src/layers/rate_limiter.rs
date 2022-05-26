@@ -7,7 +7,7 @@ use crate::{
 use axum::{
     body::{Body, Full},
     extract::ConnectInfo,
-    http::{HeaderValue, Request, StatusCode},
+    http::{response::Parts, HeaderValue, Request, StatusCode},
     response::Response,
 };
 use bytes::Bytes;
@@ -105,36 +105,51 @@ where
             check.check_and_update(&pool, self.expire_in_seconds)
         } else {
             // Disabled ie. no limit
-            Ok((0, 0))
+            Ok((-1, 0, 0))
         };
-
-        // Headers
-        // -------
-        // x-ratelimit-limit: 50       => limit
-        // x-ratelimit-remaining: 48   => remaining limit
-        // x-ratelimit-reset: 17       => remaining seconds
 
         let future = self.inner.call(request);
         Box::pin(async move {
             let mut response = Response::default();
 
-            warn!("check_result={:?}", check_result);
-
             response = match check_result {
-                Ok((_remaining, _reset)) => {
-                    let (mut parts, body) = future.await?.into_parts();
+                Ok((limit, remaining, reset)) => {
+                    if limit <= -1 {
+                        future.await?
+                    } else if remaining <= 0 {
+                        let (mut parts, _body) = response.into_parts();
 
-                    // Headers
-                    parts
-                        .headers
-                        .insert("x-ratelimiter-reset", HeaderValue::from_static("10"));
+                        // Status
+                        parts.status = StatusCode::TOO_MANY_REQUESTS;
 
-                    Response::from_parts(parts, body)
+                        // Headers
+                        set_headers(&mut parts, limit, remaining, reset);
+                        parts.headers.insert(
+                            axum::http::header::CONTENT_TYPE,
+                            HeaderValue::from_static("application/json"),
+                        );
+
+                        // Body
+                        let msg = serde_json::json!(AppErrorMessage {
+                            code: StatusCode::TOO_MANY_REQUESTS.as_u16(),
+                            message: String::from("Too Many Requests"),
+                        });
+                        let msg = Bytes::from(msg.to_string());
+
+                        Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
+                    } else {
+                        let (mut parts, body) = future.await?.into_parts();
+
+                        // Headers
+                        set_headers(&mut parts, limit, remaining, reset);
+
+                        Response::from_parts(parts, body)
+                    }
                 }
-                Err(_err) => {
+                Err(err) => {
                     let (mut parts, _body) = response.into_parts();
 
-                    // Status code
+                    // Status
                     parts.status = StatusCode::INTERNAL_SERVER_ERROR;
 
                     // Content Type
@@ -146,7 +161,7 @@ where
                     // Body
                     let msg = serde_json::json!(AppErrorMessage {
                         code: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
-                        message: String::from("Internal Server Error"), // TODO: Message from RateLimiterError by implementing Display trait
+                        message: String::from(err.to_string()),
                     });
                     let msg = Bytes::from(msg.to_string());
 
@@ -156,6 +171,21 @@ where
 
             Ok(response)
         })
+    }
+}
+
+/// Set middleware specific headers
+fn set_headers(parts: &mut Parts, limit: i32, remaining: i32, reset: i64) {
+    if let Ok(limit) = HeaderValue::from_str(limit.to_string().as_str()) {
+        parts.headers.insert("x-ratelimit-limit", limit);
+    }
+
+    if let Ok(remaining) = HeaderValue::from_str(remaining.to_string().as_str()) {
+        parts.headers.insert("x-ratelimit-remaining", remaining);
+    }
+
+    if let Ok(reset) = HeaderValue::from_str(reset.to_string().as_str()) {
+        parts.headers.insert("x-ratelimit-reset", reset);
     }
 }
 
@@ -222,11 +252,15 @@ impl RateLimiterCheck {
     }
 
     /// Checks limit, update Redis and reurns information for headers
-    fn check_and_update(&self, pool: &Pool<Client>, expire_in_seconds: i32) -> Result<(i32, i64), RateLimiterError> {
+    fn check_and_update(
+        &self,
+        pool: &Pool<Client>,
+        expire_in_seconds: i32,
+    ) -> Result<(i32, i32, i64), RateLimiterError> {
         if let Some(err) = self.error {
             return Err(err);
         } else if self.limit == -1 {
-            Ok((0, 0))
+            Ok((self.limit, 0, 0))
         } else {
             let mut conn = pool.get()?;
             let now: DateTime<Utc> = Utc::now();
@@ -266,7 +300,7 @@ impl RateLimiterCheck {
             conn.hset(&self.key, "remaining", remaining)?;
             conn.hset(&self.key, "expiredAt", expired_at.to_rfc3339())?;
 
-            Ok((remaining, reset))
+            Ok((self.limit, remaining, reset))
         }
     }
 }
