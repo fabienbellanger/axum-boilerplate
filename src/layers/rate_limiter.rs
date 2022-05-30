@@ -348,9 +348,10 @@ mod tests {
         let mut requests_by_second = 30;
         let claims = None;
         let addr = None;
+        let redis_prefix = "axum_";
 
         assert_eq!(
-            RateLimiterCheck::init(claims, "axum_", requests_by_second, addr),
+            RateLimiterCheck::init(claims, redis_prefix, requests_by_second, addr),
             RateLimiterCheck {
                 error: Some(RateLimiterError::Ip),
                 key: None,
@@ -362,7 +363,7 @@ mod tests {
         let claims = None;
         let addr = None;
         assert_eq!(
-            RateLimiterCheck::init(claims, "axum_", requests_by_second, addr),
+            RateLimiterCheck::init(claims, redis_prefix, requests_by_second, addr),
             RateLimiterCheck {
                 error: None,
                 key: None,
@@ -382,11 +383,13 @@ mod tests {
             user_limit: 25,
         });
         let addr = None;
+        let mut key = user_id.clone();
+        key.insert_str(0, redis_prefix);
         assert_eq!(
-            RateLimiterCheck::init(claims, "axum_", requests_by_second, addr),
+            RateLimiterCheck::init(claims, redis_prefix, requests_by_second, addr),
             RateLimiterCheck {
                 error: None,
-                key: Some(user_id),
+                key: Some(key),
                 limit: 25
             }
         );
@@ -394,11 +397,13 @@ mod tests {
         let claims = None;
         let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8000);
         let addr = Some(ConnectInfo(socket));
+        let mut key = "127.0.0.1".to_owned();
+        key.insert_str(0, redis_prefix);
         assert_eq!(
-            RateLimiterCheck::init(claims, "axum_", requests_by_second, addr.as_ref()),
+            RateLimiterCheck::init(claims, redis_prefix, requests_by_second, addr.as_ref()),
             RateLimiterCheck {
                 error: None,
-                key: Some("127.0.0.1".to_owned()),
+                key: Some(key),
                 limit: 30
             }
         );
