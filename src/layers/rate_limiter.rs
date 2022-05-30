@@ -284,7 +284,7 @@ impl RateLimiterCheck {
     }
 
     /// Checks limit, update Redis and reurns information for headers
-    // TODO: Improve by using timestamp instead of DateTime (use std::time)
+    // TODO: Improve by using timestamp instead of DateTime (use https://doc.rust-lang.org/std/time/struct.SystemTime.html#method.elapsed)
     fn check_and_update(
         &self,
         pool: &Pool<Client>,
