@@ -1,4 +1,8 @@
 //! Rate limiter module
+//
+// TODO:
+// - Add list of excluded keys (listed in .env)
+//
 
 use crate::{
     errors::AppErrorMessage,
@@ -26,6 +30,7 @@ use tower::{Layer, Service};
 pub struct RateLimiterLayer<'a> {
     pub pool: &'a Pool<Client>,
     pub jwt_secret: String,
+    pub redis_prefix: String,
     pub enabled: bool,
     pub requests_by_second: i32,
     pub expire_in_seconds: i32,
@@ -35,6 +40,7 @@ impl<'a> RateLimiterLayer<'a> {
     pub fn new(
         pool: &'a Pool<Client>,
         jwt_secret: String,
+        redis_prefix: String,
         enabled: bool,
         requests_by_second: i32,
         expire_in_seconds: i32,
@@ -42,6 +48,7 @@ impl<'a> RateLimiterLayer<'a> {
         Self {
             pool,
             jwt_secret,
+            redis_prefix,
             enabled,
             requests_by_second,
             expire_in_seconds,
@@ -57,6 +64,7 @@ impl<'a, S> Layer<S> for RateLimiterLayer<'a> {
             inner,
             pool: self.pool.clone(),
             jwt_secret: self.jwt_secret.clone(),
+            redis_prefix: self.redis_prefix.clone(),
             enabled: self.enabled,
             requests_by_second: self.requests_by_second,
             expire_in_seconds: self.expire_in_seconds,
@@ -69,6 +77,7 @@ pub struct RateLimiterMiddleware<S> {
     inner: S,
     pool: Pool<Client>,
     jwt_secret: String,
+    redis_prefix: String,
     enabled: bool,
     requests_by_second: i32,
     expire_in_seconds: i32,
@@ -89,23 +98,23 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let check_result = if self.enabled {
-            // Redis connection
-            let pool = self.pool.clone();
+        let check_result = match self.enabled {
+            true => {
+                // Redis connection
+                let pool = self.pool.clone();
 
-            // Check JWT claims
-            let claims = auth::Claims::extract_from_request(request.headers(), self.jwt_secret.clone());
+                // Check JWT claims
+                let claims = auth::Claims::extract_from_request(request.headers(), self.jwt_secret.clone());
 
-            // Get socket address
-            let addr = request.extensions().get::<ConnectInfo<SocketAddr>>();
+                // Get socket address
+                let addr = request.extensions().get::<ConnectInfo<SocketAddr>>();
 
-            // Initialize RateLimiterCheck
-            let check = RateLimiterCheck::init(claims, self.requests_by_second, addr);
+                // Initialize RateLimiterCheck
+                let check = RateLimiterCheck::init(claims, &self.redis_prefix, self.requests_by_second, addr);
 
-            check.check_and_update(&pool, self.expire_in_seconds)
-        } else {
-            // Disabled ie. no limit
-            Ok((-1, 0, 0))
+                check.check_and_update(&pool, self.expire_in_seconds)
+            }
+            false => Ok((-1, 0, 0)), // Disabled ie. no limit
         };
 
         let future = self.inner.call(request);
@@ -113,38 +122,40 @@ where
             let mut response = Response::default();
 
             response = match check_result {
+                Ok((limit, _remaining, _reset)) if limit <= -1 => future.await?,
+                Ok((limit, remaining, reset)) if remaining >= 0 => {
+                    // Limit OK
+                    // --------
+                    let (mut parts, body) = future.await?.into_parts();
+
+                    // Headers
+                    set_headers(&mut parts, limit, remaining, reset);
+
+                    Response::from_parts(parts, body)
+                }
                 Ok((limit, remaining, reset)) => {
-                    if limit <= -1 {
-                        future.await?
-                    } else if remaining < 0 {
-                        let (mut parts, _body) = response.into_parts();
+                    // Limit KO
+                    // --------
+                    let (mut parts, _body) = response.into_parts();
 
-                        // Status
-                        parts.status = StatusCode::TOO_MANY_REQUESTS;
+                    // Status
+                    parts.status = StatusCode::TOO_MANY_REQUESTS;
 
-                        // Headers
-                        set_headers(&mut parts, limit, 0, reset);
-                        parts.headers.insert(
-                            axum::http::header::CONTENT_TYPE,
-                            HeaderValue::from_static("application/json"),
-                        );
+                    // Headers
+                    set_headers(&mut parts, limit, remaining, reset);
+                    parts.headers.insert(
+                        axum::http::header::CONTENT_TYPE,
+                        HeaderValue::from_static("application/json"),
+                    );
 
-                        // Body
-                        let msg = serde_json::json!(AppErrorMessage {
-                            code: StatusCode::TOO_MANY_REQUESTS.as_u16(),
-                            message: String::from("Too Many Requests"),
-                        });
-                        let msg = Bytes::from(msg.to_string());
+                    // Body
+                    let msg = serde_json::json!(AppErrorMessage {
+                        code: StatusCode::TOO_MANY_REQUESTS.as_u16(),
+                        message: String::from("Too Many Requests"),
+                    });
+                    let msg = Bytes::from(msg.to_string());
 
-                        Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
-                    } else {
-                        let (mut parts, body) = future.await?.into_parts();
-
-                        // Headers
-                        set_headers(&mut parts, limit, remaining, reset);
-
-                        Response::from_parts(parts, body)
-                    }
+                    Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
                 }
                 Err(err) => {
                     let (mut parts, _body) = response.into_parts();
@@ -176,16 +187,24 @@ where
 
 /// Set middleware specific headers
 fn set_headers(parts: &mut Parts, limit: i32, remaining: i32, reset: i64) {
-    if let Ok(limit) = HeaderValue::from_str(limit.to_string().as_str()) {
-        parts.headers.insert("x-ratelimit-limit", limit);
-    }
+    if remaining >= 0 {
+        // Limit OK
+        if let Ok(limit) = HeaderValue::from_str(limit.to_string().as_str()) {
+            parts.headers.insert("x-ratelimit-limit", limit);
+        }
 
-    if let Ok(remaining) = HeaderValue::from_str(remaining.to_string().as_str()) {
-        parts.headers.insert("x-ratelimit-remaining", remaining);
-    }
+        if let Ok(remaining) = HeaderValue::from_str(remaining.to_string().as_str()) {
+            parts.headers.insert("x-ratelimit-remaining", remaining);
+        }
 
-    if let Ok(reset) = HeaderValue::from_str(reset.to_string().as_str()) {
-        parts.headers.insert("x-ratelimit-reset", reset);
+        if let Ok(reset) = HeaderValue::from_str(reset.to_string().as_str()) {
+            parts.headers.insert("x-ratelimit-reset", reset);
+        }
+    } else {
+        // Limit reached
+        if let Ok(reset) = HeaderValue::from_str(reset.to_string().as_str()) {
+            parts.headers.insert("retry-after", reset);
+        }
     }
 }
 
@@ -232,7 +251,12 @@ impl RateLimiterCheck {
     }
 
     // Initialize `RateLimiterCheck`
-    fn init(claims: Option<Claims>, requests_by_second: i32, addr: Option<&ConnectInfo<SocketAddr>>) -> Self {
+    fn init(
+        claims: Option<Claims>,
+        redis_prefix: &str,
+        requests_by_second: i32,
+        addr: Option<&ConnectInfo<SocketAddr>>,
+    ) -> Self {
         match claims {
             None => {
                 let default_limit = requests_by_second;
@@ -243,15 +267,24 @@ impl RateLimiterCheck {
                     // Client Remote IP address
                     match addr {
                         None => Self::new(Some(RateLimiterError::Ip), None, 0),
-                        Some(remote_address) => Self::new(None, Some(remote_address.0.ip().to_string()), default_limit),
+                        Some(remote_address) => {
+                            let mut key = remote_address.0.ip().to_string();
+                            key.insert_str(0, redis_prefix);
+                            Self::new(None, Some(key), default_limit)
+                        }
                     }
                 }
             }
-            Some(claims) => Self::new(None, Some(claims.user_id), claims.user_limit),
+            Some(claims) => {
+                let mut key = claims.user_id;
+                key.insert_str(0, redis_prefix);
+                Self::new(None, Some(key), claims.user_limit)
+            }
         }
     }
 
     /// Checks limit, update Redis and reurns information for headers
+    // TODO: Improve by using timestamp instead of DateTime (use std::time)
     fn check_and_update(
         &self,
         pool: &Pool<Client>,
@@ -317,7 +350,7 @@ mod tests {
         let addr = None;
 
         assert_eq!(
-            RateLimiterCheck::init(claims, requests_by_second, addr),
+            RateLimiterCheck::init(claims, "axum_", requests_by_second, addr),
             RateLimiterCheck {
                 error: Some(RateLimiterError::Ip),
                 key: None,
@@ -329,7 +362,7 @@ mod tests {
         let claims = None;
         let addr = None;
         assert_eq!(
-            RateLimiterCheck::init(claims, requests_by_second, addr),
+            RateLimiterCheck::init(claims, "axum_", requests_by_second, addr),
             RateLimiterCheck {
                 error: None,
                 key: None,
@@ -350,7 +383,7 @@ mod tests {
         });
         let addr = None;
         assert_eq!(
-            RateLimiterCheck::init(claims, requests_by_second, addr),
+            RateLimiterCheck::init(claims, "axum_", requests_by_second, addr),
             RateLimiterCheck {
                 error: None,
                 key: Some(user_id),
@@ -362,7 +395,7 @@ mod tests {
         let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8000);
         let addr = Some(ConnectInfo(socket));
         assert_eq!(
-            RateLimiterCheck::init(claims, requests_by_second, addr.as_ref()),
+            RateLimiterCheck::init(claims, "axum_", requests_by_second, addr.as_ref()),
             RateLimiterCheck {
                 error: None,
                 key: Some("127.0.0.1".to_owned()),
