@@ -116,14 +116,14 @@ where
                 Ok((limit, remaining, reset)) => {
                     if limit <= -1 {
                         future.await?
-                    } else if remaining <= 0 {
+                    } else if remaining < 0 {
                         let (mut parts, _body) = response.into_parts();
 
                         // Status
                         parts.status = StatusCode::TOO_MANY_REQUESTS;
 
                         // Headers
-                        set_headers(&mut parts, limit, remaining, reset);
+                        set_headers(&mut parts, limit, 0, reset);
                         parts.headers.insert(
                             axum::http::header::CONTENT_TYPE,
                             HeaderValue::from_static("application/json"),
@@ -161,7 +161,7 @@ where
                     // Body
                     let msg = serde_json::json!(AppErrorMessage {
                         code: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
-                        message: String::from(err.to_string()),
+                        message: err.to_string(),
                     });
                     let msg = Bytes::from(msg.to_string());
 
@@ -258,7 +258,7 @@ impl RateLimiterCheck {
         expire_in_seconds: i32,
     ) -> Result<(i32, i32, i64), RateLimiterError> {
         if let Some(err) = self.error {
-            return Err(err);
+            Err(err)
         } else if self.limit == -1 {
             Ok((self.limit, 0, 0))
         } else {
@@ -291,7 +291,7 @@ impl RateLimiterCheck {
                     let remaining_str = result.get("remaining").ok_or(RateLimiterError::Redis)?;
                     remaining = remaining_str.parse::<i32>().map_err(|_err| RateLimiterError::Parse)?;
 
-                    if remaining > 0 {
+                    if remaining >= 0 {
                         remaining -= 1;
                     }
                 }
