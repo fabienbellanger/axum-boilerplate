@@ -1,6 +1,6 @@
-concurrency: 512
+concurrency: 256
 base: "http://localhost:8087"
-iterations: 10000
+iterations: 100000
 rampup: 0
 
 plan:
@@ -8,9 +8,9 @@ plan:
     request:
       url: /health-check
 
-  # - name: Spawn
-  #   request:
-  #     url: /spawn
+  - name: Spawn
+    request:
+      url: /spawn
 
   # - name: Login
   #   request:

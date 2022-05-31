@@ -2,6 +2,7 @@
 //
 // TODO:
 // - Add list of excluded keys (listed in .env)
+// - Add doc
 
 use crate::{
     errors::AppErrorMessage,
@@ -215,21 +216,33 @@ fn set_headers(parts: &mut Parts, limit: i64, remaining: i64, reset: i64) {
     }
 }
 
-#[derive(Display, Debug, Error, Copy, Clone, PartialEq)]
+#[derive(Display, Debug, Error, Clone, PartialEq)]
 enum RateLimiterError {
     Ip,
-    Redis,
+
+    #[display(fmt = "{}", message)]
+    Redis {
+        message: String,
+    },
 }
 
 impl From<redis::RedisError> for RateLimiterError {
-    fn from(_error: redis::RedisError) -> Self {
-        Self::Redis {}
+    fn from(error: redis::RedisError) -> Self {
+        error!("Redis database error from Rate Limiter middleware: {:?}", error);
+
+        Self::Redis {
+            message: error.to_string(),
+        }
     }
 }
 
 impl From<r2d2::Error> for RateLimiterError {
-    fn from(_error: r2d2::Error) -> Self {
-        Self::Redis {}
+    fn from(error: r2d2::Error) -> Self {
+        error!("Redis r2d2 pool error from Rate Limiter middleware: {:?}", error);
+
+        Self::Redis {
+            message: error.to_string(),
+        }
     }
 }
 
@@ -275,6 +288,7 @@ impl RateLimiterCheck {
                         Some(remote_address) => {
                             let mut key = remote_address.0.ip().to_string();
                             key.insert_str(0, redis_prefix);
+
                             Self::new(None, Some(key), default_limit)
                         }
                     }
@@ -283,6 +297,7 @@ impl RateLimiterCheck {
             Some(claims) => {
                 let mut key = claims.user_id;
                 key.insert_str(0, redis_prefix);
+
                 Self::new(None, Some(key), claims.user_limit)
             }
         }
@@ -294,8 +309,8 @@ impl RateLimiterCheck {
         pool: &Pool<Client>,
         expire_in_seconds: i64,
     ) -> Result<(i64, i64, i64), RateLimiterError> {
-        if let Some(err) = self.error {
-            Err(err)
+        if let Some(err) = &self.error {
+            Err(err.clone())
         } else if self.limit == -1 {
             Ok((self.limit, 0, 0))
         } else {
@@ -308,7 +323,9 @@ impl RateLimiterCheck {
             let result: HashMap<String, i64> = conn.hgetall(&self.key)?;
 
             if !result.is_empty() {
-                expired_at = *result.get("expiredAt").ok_or(RateLimiterError::Redis)?;
+                expired_at = *result.get("expiredAt").ok_or(RateLimiterError::Redis {
+                    message: "Redis key not found in Rate Limiter middleware".to_owned(),
+                })?;
                 reset = expired_at - now;
 
                 if reset <= 0 {
@@ -319,7 +336,9 @@ impl RateLimiterCheck {
                 } else {
                     // Valid cache
                     // -----------
-                    remaining = *result.get("remaining").ok_or(RateLimiterError::Redis)?;
+                    remaining = *result.get("remaining").ok_or(RateLimiterError::Redis {
+                        message: "Redis key not found in Rate Limiter middleware".to_owned(),
+                    })?;
 
                     if remaining >= 0 {
                         remaining -= 1;
@@ -327,7 +346,6 @@ impl RateLimiterCheck {
                 }
             }
 
-            conn.del(&self.key)?; // Necesary?
             conn.hset(&self.key, "remaining", remaining)?;
             conn.hset(&self.key, "expiredAt", expired_at)?;
 
