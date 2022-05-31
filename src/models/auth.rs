@@ -18,7 +18,7 @@ pub struct Claims {
     pub user_roles: String,
 
     /// Max number of request by second (-1: unlimited)
-    pub user_limit: i32,
+    pub user_limit: i64,
 }
 
 impl Claims {

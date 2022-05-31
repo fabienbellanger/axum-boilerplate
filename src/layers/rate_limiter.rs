@@ -2,7 +2,6 @@
 //
 // TODO:
 // - Add list of excluded keys (listed in .env)
-//
 
 use crate::{
     errors::AppErrorMessage,
@@ -15,7 +14,7 @@ use axum::{
     response::Response,
 };
 use bytes::Bytes;
-use chrono::{DateTime, Duration, Utc};
+use chrono::Utc;
 use derive_more::{Display, Error};
 use futures::future::BoxFuture;
 use r2d2::Pool;
@@ -27,13 +26,19 @@ use std::{
 };
 use tower::{Layer, Service};
 
+const RATE_LIMITER_PREFIX: &str = "rl_";
+const LIMIT_HEADER: &str = "x-ratelimit-limit";
+const REMAINING_HEADER: &str = "x-ratelimit-remaining";
+const RESET_HEADER: &str = "x-ratelimit-reset";
+const RETRY_AFTER_HEADER: &str = "retry-after";
+
 pub struct RateLimiterLayer<'a> {
     pub pool: &'a Pool<Client>,
     pub jwt_secret: String,
     pub redis_prefix: String,
     pub enabled: bool,
-    pub requests_by_second: i32,
-    pub expire_in_seconds: i32,
+    pub requests_by_second: i64,
+    pub expire_in_seconds: i64,
 }
 
 impl<'a> RateLimiterLayer<'a> {
@@ -42,9 +47,12 @@ impl<'a> RateLimiterLayer<'a> {
         jwt_secret: String,
         redis_prefix: String,
         enabled: bool,
-        requests_by_second: i32,
-        expire_in_seconds: i32,
+        requests_by_second: i64,
+        expire_in_seconds: i64,
     ) -> Self {
+        let mut redis_prefix = redis_prefix;
+        redis_prefix.push_str(RATE_LIMITER_PREFIX);
+
         Self {
             pool,
             jwt_secret,
@@ -79,8 +87,8 @@ pub struct RateLimiterMiddleware<S> {
     jwt_secret: String,
     redis_prefix: String,
     enabled: bool,
-    requests_by_second: i32,
-    expire_in_seconds: i32,
+    requests_by_second: i64,
+    expire_in_seconds: i64,
 }
 
 impl<S> Service<Request<Body>> for RateLimiterMiddleware<S>
@@ -128,7 +136,6 @@ where
                     // --------
                     let (mut parts, body) = future.await?.into_parts();
 
-                    // Headers
                     set_headers(&mut parts, limit, remaining, reset);
 
                     Response::from_parts(parts, body)
@@ -186,24 +193,24 @@ where
 }
 
 /// Set middleware specific headers
-fn set_headers(parts: &mut Parts, limit: i32, remaining: i32, reset: i64) {
+fn set_headers(parts: &mut Parts, limit: i64, remaining: i64, reset: i64) {
     if remaining >= 0 {
         // Limit OK
         if let Ok(limit) = HeaderValue::from_str(limit.to_string().as_str()) {
-            parts.headers.insert("x-ratelimit-limit", limit);
+            parts.headers.insert(LIMIT_HEADER, limit);
         }
 
         if let Ok(remaining) = HeaderValue::from_str(remaining.to_string().as_str()) {
-            parts.headers.insert("x-ratelimit-remaining", remaining);
+            parts.headers.insert(REMAINING_HEADER, remaining);
         }
 
         if let Ok(reset) = HeaderValue::from_str(reset.to_string().as_str()) {
-            parts.headers.insert("x-ratelimit-reset", reset);
+            parts.headers.insert(RESET_HEADER, reset);
         }
     } else {
         // Limit reached
         if let Ok(reset) = HeaderValue::from_str(reset.to_string().as_str()) {
-            parts.headers.insert("retry-after", reset);
+            parts.headers.insert(RETRY_AFTER_HEADER, reset);
         }
     }
 }
@@ -212,8 +219,6 @@ fn set_headers(parts: &mut Parts, limit: i32, remaining: i32, reset: i64) {
 enum RateLimiterError {
     Ip,
     Redis,
-    DateTime,
-    Parse,
 }
 
 impl From<redis::RedisError> for RateLimiterError {
@@ -232,7 +237,7 @@ impl From<r2d2::Error> for RateLimiterError {
 struct RateLimiterCheck {
     error: Option<RateLimiterError>,
     key: Option<String>,
-    limit: i32,
+    limit: i64,
 }
 
 impl Default for RateLimiterCheck {
@@ -246,7 +251,7 @@ impl Default for RateLimiterCheck {
 }
 
 impl RateLimiterCheck {
-    fn new(error: Option<RateLimiterError>, key: Option<String>, limit: i32) -> Self {
+    fn new(error: Option<RateLimiterError>, key: Option<String>, limit: i64) -> Self {
         Self { error, key, limit }
     }
 
@@ -254,7 +259,7 @@ impl RateLimiterCheck {
     fn init(
         claims: Option<Claims>,
         redis_prefix: &str,
-        requests_by_second: i32,
+        requests_by_second: i64,
         addr: Option<&ConnectInfo<SocketAddr>>,
     ) -> Self {
         match claims {
@@ -284,45 +289,37 @@ impl RateLimiterCheck {
     }
 
     /// Checks limit, update Redis and reurns information for headers
-    // TODO: Improve by using timestamp instead of DateTime (use https://doc.rust-lang.org/std/time/struct.SystemTime.html#method.elapsed)
     fn check_and_update(
         &self,
         pool: &Pool<Client>,
-        expire_in_seconds: i32,
-    ) -> Result<(i32, i32, i64), RateLimiterError> {
+        expire_in_seconds: i64,
+    ) -> Result<(i64, i64, i64), RateLimiterError> {
         if let Some(err) = self.error {
             Err(err)
         } else if self.limit == -1 {
             Ok((self.limit, 0, 0))
         } else {
             let mut conn = pool.get()?;
-            let now: DateTime<Utc> = Utc::now();
+            let now = Utc::now().timestamp();
             let mut remaining = self.limit - 1;
-            let mut reset = expire_in_seconds as i64;
-            let mut expired_at = now + Duration::seconds(expire_in_seconds as i64);
+            let mut reset = expire_in_seconds;
+            let mut expired_at = now + expire_in_seconds;
 
-            let result: HashMap<String, String> = conn.hgetall(&self.key)?;
+            let result: HashMap<String, i64> = conn.hgetall(&self.key)?;
 
             if !result.is_empty() {
-                let expired_at_str = result.get("expiredAt").ok_or(RateLimiterError::Redis)?;
-                expired_at = DateTime::parse_from_rfc3339(expired_at_str)
-                    .map_err(|_err| RateLimiterError::DateTime)?
-                    .with_timezone(&Utc);
-
-                reset = (expired_at - now).num_seconds();
+                expired_at = *result.get("expiredAt").ok_or(RateLimiterError::Redis)?;
+                reset = expired_at - now;
 
                 if reset <= 0 {
                     // Expired cache
                     // -------------
-                    conn.del(&self.key)?; // Necesary?
-
-                    expired_at = now + Duration::seconds(expire_in_seconds as i64);
-                    reset = expire_in_seconds as i64;
+                    expired_at = now + expire_in_seconds;
+                    reset = expire_in_seconds;
                 } else {
                     // Valid cache
                     // -----------
-                    let remaining_str = result.get("remaining").ok_or(RateLimiterError::Redis)?;
-                    remaining = remaining_str.parse::<i32>().map_err(|_err| RateLimiterError::Parse)?;
+                    remaining = *result.get("remaining").ok_or(RateLimiterError::Redis)?;
 
                     if remaining >= 0 {
                         remaining -= 1;
@@ -330,8 +327,9 @@ impl RateLimiterCheck {
                 }
             }
 
+            conn.del(&self.key)?; // Necesary?
             conn.hset(&self.key, "remaining", remaining)?;
-            conn.hset(&self.key, "expiredAt", expired_at.to_rfc3339())?;
+            conn.hset(&self.key, "expiredAt", expired_at)?;
 
             Ok((self.limit, remaining, reset))
         }
@@ -348,7 +346,7 @@ mod tests {
         let mut requests_by_second = 30;
         let claims = None;
         let addr = None;
-        let redis_prefix = "axum_";
+        let redis_prefix = "axum_rl_";
 
         assert_eq!(
             RateLimiterCheck::init(claims, redis_prefix, requests_by_second, addr),
