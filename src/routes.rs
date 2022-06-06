@@ -9,6 +9,7 @@ use axum::Router;
 pub fn web() -> Router {
     Router::new()
         .route("/health-check", get(handlers::web::health_check))
+        //.route("/hello/:name", get(handlers::web::hello))
         .route("/timeout", get(handlers::web::timeout))
         .route("/spawn", get(handlers::web::spawn))
         .route("/big-json", get(handlers::web::big_json))

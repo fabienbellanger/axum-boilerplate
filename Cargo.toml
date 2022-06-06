@@ -45,6 +45,10 @@ sqlx = {version = "0.5", features = ["runtime-tokio-native-tls", "chrono", "mysq
 r2d2 = "0.8"
 redis = {version = "0.21", features = ["r2d2"]}
 
+# Askama
+askama = {version = "0.11", features = ["with-axum", "serde-json"]}
+askama_axum = "0.1"
+
 async-stream = "0.3"
 bytes = "1.1"
 chrono = {version = "0.4", features = ["serde"]}

@@ -1,8 +1,10 @@
 //! Web handlers
 
 use crate::errors::{AppError, AppResult};
+use askama::Template;
 use axum::{
     body::StreamBody,
+    extract::Path,
     http::header::CONTENT_TYPE,
     response::{AppendHeaders, IntoResponse},
     Extension, Json,
@@ -18,6 +20,18 @@ use tokio::time::sleep;
 // Route: GET "/health-check"
 pub async fn health_check<'a>() -> &'a str {
     "OK"
+}
+
+#[derive(Template)]
+#[template(path = "hello.html")]
+pub struct HelloTemplate<'a> {
+    name: &'a str,
+}
+
+// Route: GET "/hello/:name"
+// TODO: Waiting for askama 0.11.2 to fix bug
+pub async fn hello(Path(name): Path<&'static str>) -> HelloTemplate<'static> {
+    HelloTemplate { name }
 }
 
 // Route: GET "/test-redis"
