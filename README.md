@@ -75,6 +75,7 @@ SQLX_OFFLINE=true cargo build
 - [x] Add JWT ([Example](https://github.com/tokio-rs/axum/blob/main/examples/jwt/src/main.rs))
 - [x] Add Sqlx / MySQL ([Example](https://github.com/tokio-rs/axum/blob/main/examples/sqlx-postgres/src/main.rs))
 - [x] Add multiple writers to logger
+- [x] Add WebSocket example
+- [ ] Add Askama (WIP)
 - [ ] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs))
 - [ ] Add Basic Auth
-- [ ] Add Askama

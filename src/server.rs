@@ -4,12 +4,12 @@ use crate::{
     layers::{self, MakeRequestUuid, SharedState, State},
     logger, routes,
 };
-use axum::{error_handling::HandleErrorLayer, Extension, Router};
+use axum::{error_handling::HandleErrorLayer, routing::get_service, Extension, Router};
 use color_eyre::Result;
 use std::{net::SocketAddr, time::Duration};
 use tokio::signal;
 use tower::ServiceBuilder;
-use tower_http::ServiceBuilderExt;
+use tower_http::{services::ServeDir, ServiceBuilderExt};
 
 /// Starts API server
 pub async fn start_server() -> Result<()> {
@@ -50,6 +50,10 @@ pub async fn start_server() -> Result<()> {
     // Routing
     // -------
     let app = Router::new()
+        .fallback(
+            get_service(ServeDir::new("assets").append_index_html_on_directories(true))
+                .handle_error(handlers::static_file_error),
+        )
         .nest("/api/v1", routes::api().layer(cors))
         .nest("/", routes::web())
         .layer(layers::rate_limiter::RateLimiterLayer::new(

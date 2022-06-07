@@ -12,9 +12,11 @@ pub fn web() -> Router {
         //.route("/hello/:name", get(handlers::web::hello))
         .route("/timeout", get(handlers::web::timeout))
         .route("/spawn", get(handlers::web::spawn))
+        // Test of streams and large data
         .route("/big-json", get(handlers::web::big_json))
         .route("/stream", get(handlers::web::stream))
-        .route("/test-redis", get(handlers::web::test_redis))
+        // WebSocket
+        .route("/ws", get(handlers::ws::ws_handler))
 }
 
 /// Return API routes list

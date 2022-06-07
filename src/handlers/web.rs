@@ -1,18 +1,15 @@
 //! Web handlers
 
-use crate::errors::{AppError, AppResult};
+use crate::errors::AppError;
 use askama::Template;
 use axum::{
     body::StreamBody,
     extract::Path,
     http::header::CONTENT_TYPE,
     response::{AppendHeaders, IntoResponse},
-    Extension, Json,
+    Json,
 };
 use bytes::{Bytes, BytesMut};
-use r2d2::Pool;
-use redis::Client;
-use redis::Commands;
 use serde::Serialize;
 use std::time::Duration;
 use tokio::time::sleep;
@@ -32,18 +29,6 @@ pub struct HelloTemplate<'a> {
 // TODO: Waiting for askama 0.11.2 to fix bug
 pub async fn hello(Path(name): Path<&'static str>) -> HelloTemplate<'static> {
     HelloTemplate { name }
-}
-
-// Route: GET "/test-redis"
-#[instrument(skip(pool))]
-pub async fn test_redis(Extension(pool): Extension<Pool<Client>>) -> AppResult<()> {
-    let mut conn = pool.get()?;
-
-    conn.set("key", "value")?;
-    let val: String = conn.get("key")?;
-    info!("{}", val);
-
-    Ok(())
 }
 
 // Route: GET "/timeout"
