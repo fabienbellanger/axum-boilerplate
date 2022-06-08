@@ -6,10 +6,20 @@ use crate::{
 };
 use axum::{error_handling::HandleErrorLayer, routing::get_service, Extension, Router};
 use color_eyre::Result;
-use std::{net::SocketAddr, time::Duration};
-use tokio::signal;
+use std::{
+    collections::HashSet,
+    net::SocketAddr,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+use tokio::{signal, sync::broadcast};
 use tower::ServiceBuilder;
 use tower_http::{services::ServeDir, ServiceBuilderExt};
+
+pub struct ChatAppState {
+    pub user_set: Mutex<HashSet<String>>,
+    pub tx: broadcast::Sender<String>,
+}
 
 /// Starts API server
 pub async fn start_server() -> Result<()> {
@@ -47,6 +57,12 @@ pub async fn start_server() -> Result<()> {
         .propagate_x_request_id()
         .into_inner();
 
+    // Chat app state
+    // --------------
+    let user_set = Mutex::new(HashSet::new());
+    let (tx, _rx) = broadcast::channel(100);
+    let chat_app_state = Arc::new(ChatAppState { user_set, tx });
+
     // Routing
     // -------
     let app = Router::new()
@@ -64,6 +80,7 @@ pub async fn start_server() -> Result<()> {
             settings.limiter_requests_by_second,
             settings.limiter_expire_in_seconds,
         ))
+        .layer(Extension(chat_app_state))
         .layer(Extension(pool))
         .layer(Extension(redis_pool))
         .layer(layers)

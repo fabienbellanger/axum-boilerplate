@@ -16,7 +16,8 @@ pub fn web() -> Router {
         .route("/big-json", get(handlers::web::big_json))
         .route("/stream", get(handlers::web::stream))
         // WebSocket
-        .route("/ws", get(handlers::ws::ws_handler))
+        .route("/ws", get(handlers::ws::simple_ws_handler))
+        .route("/chat-ws", get(handlers::ws::chat_ws_handler))
 }
 
 /// Return API routes list
