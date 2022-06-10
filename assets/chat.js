@@ -6,7 +6,7 @@ const input = document.querySelector("#input");
 join_btn.addEventListener("click", function(e) {
     this.disabled = true;
 
-    const websocket = new WebSocket("ws://localhost:8087/chat-ws");
+    const websocket = new WebSocket("ws://localhost:8087/ws/chat");
 
     websocket.onopen = function() {
         console.log("connection opened");

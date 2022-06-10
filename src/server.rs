@@ -6,16 +6,19 @@ use crate::{
 };
 use axum::{error_handling::HandleErrorLayer, routing::get_service, Extension, Router};
 use color_eyre::Result;
-use std::{
-    collections::HashSet,
-    net::SocketAddr,
-    sync::{Arc, Mutex},
-    time::Duration,
-};
-use tokio::{signal, sync::broadcast};
+#[cfg(feature = "ws")]
+use std::collections::HashSet;
+#[cfg(feature = "ws")]
+use std::sync::{Arc, Mutex};
+use std::{net::SocketAddr, time::Duration};
+use tokio::signal;
+#[cfg(feature = "ws")]
+use tokio::sync::broadcast;
 use tower::ServiceBuilder;
 use tower_http::{services::ServeDir, ServiceBuilderExt};
 
+/// State for WebSocket chat example
+#[cfg(feature = "ws")]
 pub struct ChatAppState {
     pub user_set: Mutex<HashSet<String>>,
     pub tx: broadcast::Sender<String>,
@@ -59,8 +62,11 @@ pub async fn start_server() -> Result<()> {
 
     // Chat app state
     // --------------
+    #[cfg(feature = "ws")]
     let user_set = Mutex::new(HashSet::new());
+    #[cfg(feature = "ws")]
     let (tx, _rx) = broadcast::channel(100);
+    #[cfg(feature = "ws")]
     let chat_app_state = Arc::new(ChatAppState { user_set, tx });
 
     // Routing
@@ -71,6 +77,7 @@ pub async fn start_server() -> Result<()> {
                 .handle_error(handlers::static_file_error),
         )
         .nest("/api/v1", routes::api().layer(cors))
+        .nest("/ws", routes::ws())
         .nest("/", routes::web())
         .layer(layers::rate_limiter::RateLimiterLayer::new(
             &redis_pool,
@@ -79,8 +86,12 @@ pub async fn start_server() -> Result<()> {
             settings.limiter_enabled,
             settings.limiter_requests_by_second,
             settings.limiter_expire_in_seconds,
-        ))
-        .layer(Extension(chat_app_state))
+        ));
+
+    #[cfg(feature = "ws")]
+    let app = app.layer(Extension(chat_app_state));
+
+    let app = app
         .layer(Extension(pool))
         .layer(Extension(redis_pool))
         .layer(layers)

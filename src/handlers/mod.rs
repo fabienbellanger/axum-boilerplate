@@ -2,6 +2,7 @@
 
 pub mod users;
 pub mod web;
+#[cfg(feature = "ws")]
 pub mod ws;
 
 use crate::errors::AppError;

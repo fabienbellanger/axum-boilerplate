@@ -6,6 +6,10 @@
 
 [Axum Doc](https://docs.rs/axum/latest/axum)
 
+## Features
+
+- `ws`: Enable WebSocket support
+
 ## Cargo watch
 
 cargo-watch repository: [Github](https://github.com/passcod/cargo-watch)
@@ -13,6 +17,12 @@ Usage:
 
 ```bash
 cargo watch -x 'run --bin api'
+```
+
+With all features:
+
+```bash
+cargo watch -x 'run --all-features --bin api'
 ```
 
 ## Benchmark

@@ -18,8 +18,8 @@ jobs:
     - name: Fmt
       run: cargo fmt
     - name: Clippy
-      run: cargo clippy
+      run: cargo clippy --all-features
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test --all-features --verbose
     - name: Build
-      run: cargo build --verbose
+      run: cargo build --all-features --verbose

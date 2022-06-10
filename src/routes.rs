@@ -15,9 +15,18 @@ pub fn web() -> Router {
         // Test of streams and large data
         .route("/big-json", get(handlers::web::big_json))
         .route("/stream", get(handlers::web::stream))
-        // WebSocket
-        .route("/ws", get(handlers::ws::simple_ws_handler))
-        .route("/chat-ws", get(handlers::ws::chat_ws_handler))
+}
+
+/// Return WebSocket routes list
+pub fn ws() -> Router {
+    let router = Router::new();
+
+    #[cfg(feature = "ws")]
+    let router = router
+        .route("/", get(handlers::ws::simple_ws_handler))
+        .route("/chat", get(handlers::ws::chat_ws_handler));
+
+    router
 }
 
 /// Return API routes list
