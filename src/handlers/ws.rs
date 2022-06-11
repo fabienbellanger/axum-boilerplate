@@ -56,7 +56,7 @@ async fn handle_simple_socket(mut socket: WebSocket) {
             return;
         }
 
-        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
 }
 
