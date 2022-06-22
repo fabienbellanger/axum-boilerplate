@@ -303,7 +303,7 @@ impl RateLimiterCheck {
         }
     }
 
-    /// Checks limit, update Redis and reurns information for headers
+    /// Checks limit, update Redis and returns information for headers
     fn check_and_update(
         &self,
         pool: &Pool<Client>,

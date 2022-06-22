@@ -91,3 +91,6 @@ SQLX_OFFLINE=true cargo build
 - [ ] Add Askama (WIP)
 - [ ] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs))
 - [ ] Add Basic Auth
+- [ ] Rate limiter middleware
+  - [ ] Add documentation
+  - [ ] Add excluded list from `.env`
