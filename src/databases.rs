@@ -19,7 +19,7 @@ pub async fn init(settings: &Config) -> CliResult<Pool<MySql>> {
         .max_connections(max_connections)
         .min_connections(min_connections)
         .max_lifetime(Some(Duration::from_secs(max_lifetime)))
-        .connect_timeout(Duration::from_secs(connect_timeout))
+        .acquire_timeout(Duration::from_secs(connect_timeout))
         .idle_timeout(Duration::from_secs(idle_timeout))
         .test_before_acquire(true)
         .connect(url)

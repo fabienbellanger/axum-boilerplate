@@ -22,10 +22,10 @@ ws = []
 [dependencies]
 
 # Axum
-axum = { version = "0.5.7", features = ["headers", "ws"] }
+axum = { version = "0.5.9", features = ["headers", "ws"] }
 
 # Tower
-tower = { version = "0.4.12", features = ["timeout"] }
+tower = { version = "0.4.13", features = ["timeout"] }
 tower-http = { version = "0.3.4", features = ["cors", "fs", "request-id"] }
 
 # Log
@@ -36,16 +36,16 @@ tracing-appender = "0.2.2"
 tracing-subscriber = { version = "0.3.11", features = ["registry", "env-filter", "fmt", "json"] }
 
 # Error
-anyhow = "1.0.57"
+anyhow = "1.0.58"
 color-eyre = "0.6.1"
 eyre = "0.6.8"
 thiserror = "1.0.31"
 
 # sqlx
-sqlx = { version = "0.5.13", features = ["runtime-tokio-native-tls", "chrono", "mysql", "macros", "bigdecimal", "migrate", "offline"] }
+sqlx = { version = "0.6.0", features = ["runtime-tokio-native-tls", "chrono", "mysql", "macros", "bigdecimal", "migrate", "offline"] }
 
 # Redis
-r2d2 = "0.8.9"
+r2d2 = "0.8.10"
 redis = { version = "0.21.5", features = ["r2d2"] }
 
 # Askama
@@ -55,12 +55,12 @@ askama_axum = "0.1.0"
 async-stream = "0.3.3"
 bytes = "1.1.0"
 chrono = { version = "0.4.19", features = ["serde"] }
-clap = { version = "3.1.18", features = ["derive"] }
+clap = { version = "3.2.6", features = ["derive"] }
 config = "0.13.1"
 derive_more = "0.99.17"
 dotenv = "0.15.0"
 futures = "0.3.21"
-jsonwebtoken = "8.1.0"
+jsonwebtoken = "8.1.1"
 mailchecker = "4.1.17"
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
