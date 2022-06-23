@@ -93,4 +93,4 @@ SQLX_OFFLINE=true cargo build
 - [ ] Add Basic Auth
 - [ ] Rate limiter middleware
   - [ ] Add documentation
-  - [ ] Add excluded list from `.env`
+  - [x] Add white list from `.env`

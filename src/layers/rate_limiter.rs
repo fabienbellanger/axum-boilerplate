@@ -1,8 +1,4 @@
 //! Rate limiter module
-//
-// TODO:
-// - Add list of excluded keys (listed in .env)
-// - Add doc
 
 use crate::{
     errors::AppErrorMessage,
@@ -40,6 +36,7 @@ pub struct RateLimiterLayer<'a> {
     pub enabled: bool,
     pub requests_by_second: i64,
     pub expire_in_seconds: i64,
+    pub white_list: String,
 }
 
 impl<'a> RateLimiterLayer<'a> {
@@ -50,6 +47,7 @@ impl<'a> RateLimiterLayer<'a> {
         enabled: bool,
         requests_by_second: i64,
         expire_in_seconds: i64,
+        white_list: String,
     ) -> Self {
         let mut redis_prefix = redis_prefix;
         redis_prefix.push_str(RATE_LIMITER_PREFIX);
@@ -61,6 +59,7 @@ impl<'a> RateLimiterLayer<'a> {
             enabled,
             requests_by_second,
             expire_in_seconds,
+            white_list,
         }
     }
 }
@@ -69,6 +68,7 @@ impl<'a, S> Layer<S> for RateLimiterLayer<'a> {
     type Service = RateLimiterMiddleware<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
+        let white_list = self.white_list.split(',').map(|s| s.to_string()).collect();
         RateLimiterMiddleware {
             inner,
             pool: self.pool.clone(),
@@ -77,6 +77,7 @@ impl<'a, S> Layer<S> for RateLimiterLayer<'a> {
             enabled: self.enabled,
             requests_by_second: self.requests_by_second,
             expire_in_seconds: self.expire_in_seconds,
+            white_list,
         }
     }
 }
@@ -90,6 +91,7 @@ pub struct RateLimiterMiddleware<S> {
     enabled: bool,
     requests_by_second: i64,
     expire_in_seconds: i64,
+    white_list: Vec<String>,
 }
 
 impl<S> Service<Request<Body>> for RateLimiterMiddleware<S>
@@ -119,7 +121,13 @@ where
                 let addr = request.extensions().get::<ConnectInfo<SocketAddr>>();
 
                 // Initialize RateLimiterCheck
-                let check = RateLimiterCheck::init(claims, &self.redis_prefix, self.requests_by_second, addr);
+                let check = RateLimiterCheck::init(
+                    claims,
+                    addr,
+                    &self.white_list,
+                    &self.redis_prefix,
+                    self.requests_by_second,
+                );
 
                 check.check_and_update(&pool, self.expire_in_seconds)
             }
@@ -271,9 +279,10 @@ impl RateLimiterCheck {
     // Initialize `RateLimiterCheck`
     fn init(
         claims: Option<Claims>,
+        addr: Option<&ConnectInfo<SocketAddr>>,
+        white_list: &[String],
         redis_prefix: &str,
         requests_by_second: i64,
-        addr: Option<&ConnectInfo<SocketAddr>>,
     ) -> Self {
         match claims {
             None => {
@@ -287,9 +296,15 @@ impl RateLimiterCheck {
                         None => Self::new(Some(RateLimiterError::Ip), None, 0),
                         Some(remote_address) => {
                             let mut key = remote_address.0.ip().to_string();
-                            key.insert_str(0, redis_prefix);
 
-                            Self::new(None, Some(key), default_limit)
+                            // Check if IP address is in white list
+                            if white_list.contains(&key) {
+                                Self::default()
+                            } else {
+                                key.insert_str(0, redis_prefix);
+
+                                Self::new(None, Some(key), default_limit)
+                            }
                         }
                     }
                 }
@@ -367,7 +382,7 @@ mod tests {
         let redis_prefix = "axum_rl_";
 
         assert_eq!(
-            RateLimiterCheck::init(claims, redis_prefix, requests_by_second, addr),
+            RateLimiterCheck::init(claims, addr, &vec![], redis_prefix, requests_by_second),
             RateLimiterCheck {
                 error: Some(RateLimiterError::Ip),
                 key: None,
@@ -379,7 +394,7 @@ mod tests {
         let claims = None;
         let addr = None;
         assert_eq!(
-            RateLimiterCheck::init(claims, redis_prefix, requests_by_second, addr),
+            RateLimiterCheck::init(claims, addr, &vec![], redis_prefix, requests_by_second),
             RateLimiterCheck {
                 error: None,
                 key: None,
@@ -402,7 +417,7 @@ mod tests {
         let mut key = user_id.clone();
         key.insert_str(0, redis_prefix);
         assert_eq!(
-            RateLimiterCheck::init(claims, redis_prefix, requests_by_second, addr),
+            RateLimiterCheck::init(claims, addr, &vec![], redis_prefix, requests_by_second),
             RateLimiterCheck {
                 error: None,
                 key: Some(key),
@@ -416,11 +431,37 @@ mod tests {
         let mut key = "127.0.0.1".to_owned();
         key.insert_str(0, redis_prefix);
         assert_eq!(
-            RateLimiterCheck::init(claims, redis_prefix, requests_by_second, addr.as_ref()),
+            RateLimiterCheck::init(claims, addr.as_ref(), &vec![], redis_prefix, requests_by_second),
             RateLimiterCheck {
                 error: None,
                 key: Some(key),
                 limit: 30
+            }
+        );
+    }
+
+    #[test]
+    fn test_rate_limiter_check_init_with_white_list() {
+        let requests_by_second = 30;
+        let redis_prefix = "axum_rl_";
+        let claims = None;
+        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8000);
+        let addr = Some(ConnectInfo(socket));
+        let mut key = "127.0.0.1".to_owned();
+        key.insert_str(0, redis_prefix);
+
+        assert_eq!(
+            RateLimiterCheck::init(
+                claims,
+                addr.as_ref(),
+                &vec!["127.0.0.1".to_owned()],
+                redis_prefix,
+                requests_by_second
+            ),
+            RateLimiterCheck {
+                error: None,
+                key: None,
+                limit: -1
             }
         );
     }

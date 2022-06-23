@@ -6,18 +6,27 @@ use serde::Deserialize;
 /// Represents configuration structure
 #[derive(Deserialize, Clone, Debug)]
 pub struct Config {
+    /// Environment: `developement` or `production`
     pub environment: String,
 
+    /// Logs used by Axum, sqlx, etc.
     pub rust_log: String,
 
+    /// Path of log files
     pub logs_path: String,
+    /// Log file name
     pub logs_file: String,
 
+    /// Server URL
     pub server_url: String,
+    /// Server port
     pub server_port: String,
+    /// Server requests timeout
     pub request_timeout: u64,
 
+    /// JWT secret key
     pub jwt_secret_key: String,
+    /// JWT lifetime
     pub jwt_lifetime: i64,
 
     pub database_url: String,
@@ -35,6 +44,7 @@ pub struct Config {
     pub limiter_enabled: bool,
     pub limiter_requests_by_second: i64,
     pub limiter_expire_in_seconds: i64,
+    pub limiter_white_list: String,
 }
 
 impl Config {

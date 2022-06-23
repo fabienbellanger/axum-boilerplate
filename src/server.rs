@@ -86,6 +86,7 @@ pub async fn start_server() -> Result<()> {
             settings.limiter_enabled,
             settings.limiter_requests_by_second,
             settings.limiter_expire_in_seconds,
+            settings.limiter_white_list.clone(),
         ));
 
     #[cfg(feature = "ws")]
