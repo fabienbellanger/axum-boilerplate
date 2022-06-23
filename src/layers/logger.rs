@@ -1,4 +1,4 @@
-//! JWT layer
+//! Logger layer
 
 use crate::layers::header_value_to_str;
 use axum::{body::Body, http::Request, response::Response};
