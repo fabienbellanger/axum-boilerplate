@@ -78,6 +78,20 @@ For example:
 SQLX_OFFLINE=true cargo build
 ```
 
+## Documentation
+
+Run:
+
+```bash
+cargo doc --open --no-deps
+```
+
+Run with private items:
+
+```bash
+cargo doc --open --no-deps --document-private-items
+```
+
 ## TODO:
 
 - [x] Custom errors

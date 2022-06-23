@@ -13,7 +13,7 @@ version = "0.1.0"
 path = "src/lib.rs"
 
 [[bin]]
-name = "axum-boilerplate"
+name = "axum-boilerplate-bin"
 path = "src/bin/main.rs"
 
 [features]
