@@ -22,7 +22,7 @@ ws = []
 [dependencies]
 
 # Axum
-axum = { version = "0.5.9", features = ["headers", "ws"] }
+axum = { version = "0.5.10", features = ["headers", "ws"] }
 
 # Tower
 tower = { version = "0.4.13", features = ["timeout"] }
@@ -55,7 +55,7 @@ askama_axum = "0.1.0"
 async-stream = "0.3.3"
 bytes = "1.1.0"
 chrono = { version = "0.4.19", features = ["serde"] }
-clap = { version = "3.2.6", features = ["derive"] }
+clap = { version = "3.2.7", features = ["derive"] }
 config = "0.13.1"
 derive_more = "0.99.17"
 dotenv = "0.15.0"
