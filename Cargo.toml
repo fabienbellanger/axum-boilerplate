@@ -22,7 +22,7 @@ ws = []
 [dependencies]
 
 # Axum
-axum = { version = "0.5.11", features = ["headers", "ws"] }
+axum = { version = "0.5.12", features = ["headers", "ws"] }
 
 # Tower
 tower = { version = "0.4.13", features = ["timeout"] }
@@ -62,7 +62,7 @@ dotenv = "0.15.0"
 futures = "0.3.21"
 jsonwebtoken = "8.1.1"
 mailchecker = "4.1.17"
-serde = { version = "1.0.138", features = ["derive"] }
+serde = { version = "1.0.139", features = ["derive"] }
 serde_json = "1.0.82"
 sha2 = "0.10.2"
 tokio = { version = "1.19.2", features = ["full"] }
