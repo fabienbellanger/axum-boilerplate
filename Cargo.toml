@@ -37,7 +37,7 @@ tracing-subscriber = { version = "0.3.14", features = ["registry", "env-filter",
 
 # Error
 anyhow = "1.0.58"
-color-eyre = "0.6.1"
+color-eyre = "0.6.2"
 eyre = "0.6.8"
 thiserror = "1.0.31"
 
@@ -55,7 +55,7 @@ askama_axum = "0.1.0"
 async-stream = "0.3.3"
 bytes = "1.1.0"
 chrono = { version = "0.4.19", features = ["serde"] }
-clap = { version = "3.2.8", features = ["derive"] }
+clap = { version = "3.2.10", features = ["derive"] }
 config = "0.13.1"
 derive_more = "0.99.17"
 dotenv = "0.15.0"
