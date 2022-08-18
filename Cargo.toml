@@ -53,12 +53,12 @@ askama_axum = "0.1.0"
 
 async-stream = "0.3.3"
 bytes = "1.2.1"
-chrono = { version = "0.4.21", features = ["serde"] }
-clap = { version = "3.2.16", features = ["derive"] }
+chrono = { version = "0.4.22", features = ["serde"] }
+clap = { version = "3.2.17", features = ["derive"] }
 config = "0.13.2"
 derive_more = "0.99.17"
 dotenv = "0.15.0"
-futures = "0.3.21"
+futures = "0.3.23"
 jsonwebtoken = "8.1.1"
 mailchecker = "5.0.0"
 serde = { version = "1.0.143", features = ["derive"] }
