@@ -16,13 +16,13 @@ cargo-watch repository: [Github](https://github.com/passcod/cargo-watch)
 Usage:
 
 ```bash
-cargo watch -x 'run --bin api'
+cargo watch -x 'run --bin axum-boilerplate-bin'
 ```
 
 With all features:
 
 ```bash
-cargo watch -x 'run --all-features --bin api'
+cargo watch -x 'run --all-features --bin axum-boilerplate-bin'
 ```
 
 ## Benchmark
