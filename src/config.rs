@@ -29,6 +29,9 @@ pub struct Config {
     /// JWT lifetime
     pub jwt_lifetime: i64,
 
+    /// CORS Allow Origin Headers
+    pub cors_allow_origin: String,
+
     pub database_url: String,
     pub database_auto_migration: bool,
     pub database_max_connections: u32,

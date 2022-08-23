@@ -48,7 +48,7 @@ pub async fn start_server() -> Result<()> {
 
     // CORS
     // ----
-    let cors = layers::cors();
+    let cors = layers::cors(&settings);
 
     // Layers
     // ------

@@ -5,10 +5,11 @@ pub mod logger;
 pub mod rate_limiter;
 
 use crate::config::Config;
+use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN};
 use axum::http::{HeaderValue, Method, Request};
 use std::str::from_utf8;
 use std::sync::Arc;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::{AllowOrigin, Any, CorsLayer};
 use tower_http::request_id::{MakeRequestId, RequestId};
 use uuid::Uuid;
 
@@ -52,25 +53,41 @@ impl State {
 // ================ CORS ================
 
 /// CORS layer
-pub fn cors() -> CorsLayer {
-    CorsLayer::new()
-        .allow_methods(vec![
-            Method::GET,
-            Method::POST,
-            Method::PUT,
-            Method::PATCH,
-            Method::DELETE,
-        ])
-        .allow_origin(Any)
+pub fn cors(config: &Config) -> CorsLayer {
+    let allow_origin = config.cors_allow_origin.clone();
+
+    let layer = CorsLayer::new()
+        .allow_methods([Method::GET, Method::POST, Method::PUT, Method::PATCH, Method::DELETE])
+        .allow_headers([AUTHORIZATION, ACCEPT, ORIGIN, CONTENT_TYPE]);
+
+    if allow_origin == "*" {
+        layer.allow_origin(Any)
+    } else {
+        let origins = allow_origin
+            .split(',')
+            .into_iter()
+            .filter(|url| *url != "*" && !url.is_empty())
+            .filter_map(|url| url.parse().ok())
+            .collect::<Vec<HeaderValue>>();
+
+        if origins.is_empty() {
+            layer.allow_origin(Any)
+        } else {
+            layer
+                .allow_origin(AllowOrigin::predicate(move |origin: &HeaderValue, _| {
+                    origins.contains(origin)
+                }))
+                .allow_credentials(true)
+        }
+    }
 }
 
 // =============== Utils ================
 
 /// Convert `HeaderValue` to `&str`
-// TODO: Create a module utils
 pub fn header_value_to_str(value: Option<&HeaderValue>) -> &str {
     match value {
-        Some(value) => from_utf8(value.as_bytes()).unwrap_or(""),
+        Some(value) => from_utf8(value.as_bytes()).unwrap_or_default(),
         None => "",
     }
 }

@@ -61,8 +61,8 @@ dotenv = "0.15.0"
 futures = "0.3.23"
 jsonwebtoken = "8.1.1"
 mailchecker = "5.0.0"
-serde = { version = "1.0.143", features = ["derive"] }
-serde_json = "1.0.83"
+serde = { version = "1.0.144", features = ["derive"] }
+serde_json = "1.0.85"
 sha2 = "0.10.2"
 tokio = { version = "1.20.1", features = ["full"] }
 uuid = { version = "1.1.2", features = ["serde", "v4"] }
