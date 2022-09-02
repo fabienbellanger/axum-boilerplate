@@ -12,6 +12,9 @@ pub mod server;
 pub mod utils;
 
 #[macro_use]
+extern crate lazy_static;
+
+#[macro_use]
 extern crate tracing;
 
 extern crate chrono;

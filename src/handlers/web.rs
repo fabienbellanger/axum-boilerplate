@@ -1,18 +1,33 @@
 //! Web handlers
 
-use crate::errors::AppError;
+use crate::errors::{AppError, AppResult};
 use askama::Template;
 use axum::{
     body::StreamBody,
     extract::Path,
     http::header::CONTENT_TYPE,
-    response::{AppendHeaders, IntoResponse},
+    response::{AppendHeaders, Html, IntoResponse},
     Json,
 };
 use bytes::{Bytes, BytesMut};
 use serde::Serialize;
 use std::time::Duration;
+use tera::{Context, Tera};
 use tokio::time::sleep;
+
+lazy_static! {
+    pub static ref TEMPLATES: Tera = {
+        let mut tera = match Tera::new("templates/tera/**/*") {
+            Ok(t) => t,
+            Err(e) => {
+                println!("Parsing error(s): {}", e);
+                ::std::process::exit(1);
+            }
+        };
+        tera.autoescape_on(vec![".html"]);
+        tera
+    };
+}
 
 // Route: GET "/health-check"
 pub async fn health_check<'a>() -> &'a str {
@@ -23,6 +38,15 @@ pub async fn health_check<'a>() -> &'a str {
 #[template(path = "hello.html")]
 pub struct HelloTemplate<'a> {
     name: &'a str,
+}
+
+// Route: GET "hello-tera"
+pub async fn hello_tera() -> AppResult<Html<String>> {
+    Ok(Html(
+        TEMPLATES
+            .render("hello.html", &Context::new())
+            .map_err(|_err| AppError::Timeout)?,
+    ))
 }
 
 // Route: GET "/hello/:name"

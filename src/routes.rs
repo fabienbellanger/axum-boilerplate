@@ -10,6 +10,7 @@ pub fn web() -> Router {
     Router::new()
         .route("/health-check", get(handlers::web::health_check))
         //.route("/hello/:name", get(handlers::web::hello))
+        .route("/hello-tera", get(handlers::web::hello_tera))
         .route("/timeout", get(handlers::web::timeout))
         .route("/spawn", get(handlers::web::spawn))
         // Test of streams and large data
