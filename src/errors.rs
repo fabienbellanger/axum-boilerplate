@@ -117,7 +117,7 @@ impl From<r2d2::Error> for AppError {
 pub type CliResult<T> = EyreResult<T, CliError>;
 
 /// Custom CLI Error
-#[derive(Debug, Clone, PartialEq, thiserror::Error)]
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum CliError {
     #[error("Panic: {0}")]
     Panic(String),
