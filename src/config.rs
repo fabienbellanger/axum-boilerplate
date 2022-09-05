@@ -48,6 +48,9 @@ pub struct Config {
     pub limiter_requests_by_second: i64,
     pub limiter_expire_in_seconds: i64,
     pub limiter_white_list: String,
+
+    pub forgotten_password_expiration_duration: i64,
+    pub forgotten_password_base_url: String,
 }
 
 impl Config {

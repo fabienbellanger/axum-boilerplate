@@ -1,4 +1,4 @@
-use crate::models::user::{Login, User, UserCreation};
+use crate::models::user::{Login, PasswordReset, User, UserCreation};
 use chrono::{TimeZone, Utc};
 use futures::stream::BoxStream;
 use sha2::{Digest, Sha512};
@@ -125,6 +125,37 @@ impl UserRepository {
         }
     }
 
+    /// Returns a user by its email
+    #[instrument(skip(pool))]
+    pub async fn get_by_email(pool: &MySqlPool, email: String) -> Result<Option<User>, sqlx::Error> {
+        let result = sqlx::query!(
+            r#"
+                SELECT * 
+                FROM users 
+                WHERE username = ?
+                    AND deleted_at IS NULL
+            "#,
+            email
+        )
+        .fetch_optional(pool)
+        .await?;
+
+        match result {
+            Some(result) => Ok(Some(User {
+                id: result.id,
+                lastname: result.lastname,
+                firstname: result.firstname,
+                username: result.username,
+                password: result.password,
+                roles: result.roles,
+                created_at: Utc.from_utc_datetime(&result.created_at),
+                updated_at: Utc.from_utc_datetime(&result.updated_at),
+                deleted_at: result.deleted_at.map(|d| Utc.from_utc_datetime(&d)),
+            })),
+            None => Ok(None),
+        }
+    }
+
     /// Delete a user
     #[instrument(skip(pool))]
     pub async fn delete(pool: &MySqlPool, id: String) -> Result<u64, sqlx::Error> {
@@ -159,6 +190,31 @@ impl UserRepository {
             hashed_password,
             Some(Utc::now()),
             id
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
+}
+
+pub struct PasswordResetRepository;
+
+impl PasswordResetRepository {
+    /// Add a new password reset
+    #[tracing::instrument(skip(pool))]
+    pub async fn create_or_update(pool: &MySqlPool, password_reset: &mut PasswordReset) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            r#"
+                INSERT INTO password_resets (user_id, token, expired_at)
+                VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE token = ?, expired_at = ?
+            "#,
+            password_reset.user_id,
+            password_reset.token,
+            password_reset.expired_at,
+            password_reset.token,
+            password_reset.expired_at,
         )
         .execute(pool)
         .await?;

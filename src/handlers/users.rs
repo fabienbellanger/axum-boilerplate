@@ -1,8 +1,8 @@
 //! API users handlers
 
 use crate::models::auth::Jwt;
-use crate::models::user::{Login, User, UserCreation};
-use crate::repositories::user::UserRepository;
+use crate::models::user::{Login, PasswordReset, User, UserCreation};
+use crate::repositories::user::{PasswordResetRepository, UserRepository};
 use crate::utils::extractors::ExtractRequestId;
 use crate::utils::validation::validate_request_data;
 use crate::{
@@ -91,7 +91,7 @@ pub async fn get_all(Extension(pool): Extension<Pool<MySql>>) -> AppResult<Json<
     Ok(Json(users))
 }
 
-// Route: GET "/v1/users/:id"
+// Route: GET "/api/v1/users/:id"
 #[instrument(skip(pool))]
 pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> AppResult<Json<User>> {
     let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
@@ -103,7 +103,7 @@ pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MyS
     }
 }
 
-// Route: DELETE "/v1/users/:id"
+// Route: DELETE "/api/v1/users/:id"
 #[instrument(skip(pool))]
 pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> AppResult<StatusCode> {
     let result = UserRepository::delete(&pool, id.to_string()).await?;
@@ -115,7 +115,7 @@ pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>
     }
 }
 
-// Route: PUT "/v1/users/:id"
+// Route: PUT "/api/v1/users/:id"
 #[instrument(skip(pool))]
 pub async fn update(
     Path(id): Path<Uuid>,
@@ -130,5 +130,29 @@ pub async fn update(
         _ => Err(AppError::NotFound {
             message: String::from("No user found"),
         }),
+    }
+}
+
+// Route: GET "/api/v1/forgotten-password/:email"
+#[instrument(skip(pool, state))]
+pub async fn forgotten_password(
+    Path(email): Path<String>,
+    Extension(state): Extension<SharedState>,
+    Extension(pool): Extension<Pool<MySql>>,
+) -> AppResult<StatusCode> {
+    match UserRepository::get_by_email(&pool, email).await? {
+        None => Err(AppError::NotFound {
+            message: String::from("no user found"),
+        }),
+        Some(user) => {
+            let mut password_reset = PasswordReset::new(user.id, state.forgotten_password_expiration_duration);
+
+            // Save in database
+            PasswordResetRepository::create_or_update(&pool, &mut password_reset).await?;
+
+            // Send email
+
+            Ok(StatusCode::NO_CONTENT)
+        }
     }
 }

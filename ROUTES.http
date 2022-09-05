@@ -19,6 +19,11 @@ Content-Type: application/json
 }
 ###
 
+# Forgotten password
+GET {{baseUrl}}/forgotten-password/toto@apitic.com
+Content-Type: application/json
+###
+
 # Register
 POST {{baseUrl}}/users
 Content-Type: application/json

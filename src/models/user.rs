@@ -1,10 +1,12 @@
 //! User model module
 
+use chrono::Duration;
 use serde::{Deserialize, Serialize};
 use sqlx::types::chrono::{DateTime, Utc};
 use std::{
     collections::{HashMap, HashSet},
     fmt::Display,
+    ops::Add,
 };
 use uuid::Uuid;
 use validator::Validate;
@@ -114,6 +116,26 @@ impl Role {
             .iter()
             .filter_map(|r| Self::try_from_str(*r))
             .collect()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct PasswordReset {
+    pub user_id: String,
+    pub token: String,
+    pub expired_at: DateTime<Utc>,
+}
+
+impl PasswordReset {
+    /// Create a new password recovery
+    pub fn new(user_id: String, expiration_duration: i64) -> Self {
+        let now = Utc::now();
+
+        Self {
+            user_id,
+            token: Uuid::new_v4().to_string(),
+            expired_at: now.add(Duration::hours(expiration_duration)),
+        }
     }
 }
 
