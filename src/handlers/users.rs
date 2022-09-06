@@ -1,5 +1,7 @@
 //! API users handlers
 
+use crate::emails::forgotten_password::ForgottenPasswordEmail;
+use crate::emails::SmtpConfig;
 use crate::models::auth::Jwt;
 use crate::models::user::{Login, PasswordReset, User, UserCreation};
 use crate::repositories::user::{PasswordResetRepository, UserRepository};
@@ -133,14 +135,14 @@ pub async fn update(
     }
 }
 
-// Route: GET "/api/v1/forgotten-password/:email"
+// Route: POST "/api/v1/forgotten-password/:email"
 #[instrument(skip(pool, state))]
 pub async fn forgotten_password(
     Path(email): Path<String>,
     Extension(state): Extension<SharedState>,
     Extension(pool): Extension<Pool<MySql>>,
 ) -> AppResult<StatusCode> {
-    match UserRepository::get_by_email(&pool, email).await? {
+    match UserRepository::get_by_email(&pool, email.clone()).await? {
         None => Err(AppError::NotFound {
             message: String::from("no user found"),
         }),
@@ -151,6 +153,17 @@ pub async fn forgotten_password(
             PasswordResetRepository::create_or_update(&pool, &mut password_reset).await?;
 
             // Send email
+            ForgottenPasswordEmail::send(
+                &SmtpConfig {
+                    host: state.smtp_host.clone(),
+                    port: state.smtp_port,
+                    timeout: state.smtp_timeout,
+                },
+                state.forgotten_password_base_url.clone(),
+                state.forgotten_password_email_from.clone(),
+                email,
+                password_reset.token,
+            )?;
 
             Ok(StatusCode::NO_CONTENT)
         }

@@ -38,8 +38,12 @@ pub type SharedState = Arc<State>;
 pub struct State {
     pub jwt_secret_key: String,
     pub jwt_lifetime: i64,
+    pub smtp_host: String,
+    pub smtp_port: u16,
+    pub smtp_timeout: u64,
     pub forgotten_password_expiration_duration: i64,
     pub forgotten_password_base_url: String,
+    pub forgotten_password_email_from: String,
 }
 
 impl State {
@@ -48,8 +52,12 @@ impl State {
         Self {
             jwt_secret_key: config.jwt_secret_key.clone(),
             jwt_lifetime: config.jwt_lifetime,
+            smtp_host: config.smtp_host.clone(),
+            smtp_port: config.smtp_port,
+            smtp_timeout: config.smtp_timeout,
             forgotten_password_expiration_duration: config.forgotten_password_expiration_duration,
             forgotten_password_base_url: config.forgotten_password_base_url.clone(),
+            forgotten_password_email_from: config.forgotten_password_email_from.clone(),
         }
     }
 }

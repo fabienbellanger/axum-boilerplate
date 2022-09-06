@@ -35,7 +35,7 @@ pub fn api() -> Router {
     Router::new()
         // Public routes
         .route("/login", post(handlers::users::login))
-        .route("/forgotten-password/:email", get(handlers::users::forgotten_password))
+        .route("/forgotten-password/:email", post(handlers::users::forgotten_password))
         // Protected routes
         .nest("/", api_protected().layer(layers::jwt::JwtLayer))
 }

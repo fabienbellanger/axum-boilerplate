@@ -44,6 +44,12 @@ pub struct Config {
     pub redis_prefix: String,
     pub redis_connection_timeout: u64,
 
+    pub smtp_host: String,
+    pub smtp_port: u16,
+    pub smtp_timeout: u64,
+    pub smtp_username: String,
+    pub smtp_password: String,
+
     pub limiter_enabled: bool,
     pub limiter_requests_by_second: i64,
     pub limiter_expire_in_seconds: i64,
@@ -51,6 +57,7 @@ pub struct Config {
 
     pub forgotten_password_expiration_duration: i64,
     pub forgotten_password_base_url: String,
+    pub forgotten_password_email_from: String,
 }
 
 impl Config {

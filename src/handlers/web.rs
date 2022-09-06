@@ -1,6 +1,7 @@
 //! Web handlers
 
 use crate::errors::{AppError, AppResult};
+use crate::TEMPLATES;
 use askama::Template;
 use axum::{
     body::StreamBody,
@@ -12,22 +13,8 @@ use axum::{
 use bytes::{Bytes, BytesMut};
 use serde::Serialize;
 use std::time::Duration;
-use tera::{Context, Tera};
+use tera::Context;
 use tokio::time::sleep;
-
-lazy_static! {
-    pub static ref TEMPLATES: Tera = {
-        let mut tera = match Tera::new("templates/tera/**/*") {
-            Ok(t) => t,
-            Err(e) => {
-                println!("Parsing error(s): {}", e);
-                ::std::process::exit(1);
-            }
-        };
-        tera.autoescape_on(vec![".html"]);
-        tera
-    };
-}
 
 // Route: GET "/health-check"
 pub async fn health_check<'a>() -> &'a str {
@@ -44,7 +31,7 @@ pub struct HelloTemplate<'a> {
 pub async fn hello_tera() -> AppResult<Html<String>> {
     Ok(Html(
         TEMPLATES
-            .render("hello.html", &Context::new())
+            .render("tera/hello.html", &Context::new())
             .map_err(|_err| AppError::Timeout)?,
     ))
 }
