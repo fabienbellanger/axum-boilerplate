@@ -196,6 +196,25 @@ impl UserRepository {
 
         Ok(())
     }
+
+    #[instrument(skip(pool))]
+    pub async fn update_password(pool: &MySqlPool, id: String, password: String) -> Result<(), sqlx::Error> {
+        let hashed_password = format!("{:x}", Sha512::digest(password.as_bytes()));
+        sqlx::query!(
+            r#"
+                UPDATE users
+                SET password = ?, updated_at = ?
+                WHERE id = ?
+            "#,
+            hashed_password,
+            Some(Utc::now()),
+            id
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
 }
 
 pub struct PasswordResetRepository;
@@ -220,5 +239,44 @@ impl PasswordResetRepository {
         .await?;
 
         Ok(())
+    }
+
+    /// Get user ID from token
+    #[tracing::instrument(skip(pool))]
+    pub async fn get_user_id_from_token(pool: &MySqlPool, token: String) -> Result<Option<String>, sqlx::Error> {
+        let result = sqlx::query!(
+            r#"
+                SELECT u.id AS user_id
+                FROM password_resets pr
+                    INNER JOIN users u ON u.id = pr.user_id AND u.deleted_at IS NULL
+                WHERE pr.token = ?
+                    AND pr.expired_at >= ?
+            "#,
+            token,
+            Utc::now(),
+        )
+        .fetch_optional(pool)
+        .await?;
+
+        match result {
+            Some(result) => Ok(Some(result.user_id)),
+            None => Ok(None),
+        }
+    }
+
+    /// Delete password reset after successfull update
+    #[tracing::instrument(skip(pool))]
+    pub async fn delete(pool: &MySqlPool, user_id: String) -> Result<u64, sqlx::Error> {
+        let result = sqlx::query!(
+            r#"
+                DELETE FROM password_resets
+                WHERE user_id = ?
+            "#,
+            user_id
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(result.rows_affected())
     }
 }

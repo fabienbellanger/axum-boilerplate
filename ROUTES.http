@@ -8,6 +8,8 @@
 # -----
 @userId = 4323a1b1-206b-42c7-a7e5-bcb45f7f6335
 @userIdToDelete = f6a6ed37-d0fc-4e45-b97d-3bbc6924562e
+@userEmail = test@gmail.com
+@passwordResetToken = 5a6df5bf-0dab-468e-b3e5-217c78f19dce
 
 # Login
 POST {{baseUrl}}/login
@@ -20,8 +22,17 @@ Content-Type: application/json
 ###
 
 # Forgotten password
-GET {{baseUrl}}/forgotten-password/toto@apitic.com
+POST {{baseUrl}}/forgotten-password/{{userEmail}}
 Content-Type: application/json
+###
+
+# Update user password
+PATCH {{baseUrl}}/update-password/{{passwordResetToken}}
+Content-Type: application/json
+
+{
+    "password": "12345678"
+}
 ###
 
 # Register

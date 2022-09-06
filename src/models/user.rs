@@ -74,6 +74,12 @@ pub struct UserCreation {
     pub roles: Option<String>,
 }
 
+#[derive(Deserialize, Debug, Validate)]
+pub struct UserUpdatePassword {
+    #[validate(length(min = 8))]
+    pub password: String,
+}
+
 /// Defines user roles. Be carefull, roles are case sensitive (uppercase)
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Role {
@@ -121,6 +127,7 @@ impl Role {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PasswordReset {
+    #[serde(skip_serializing)]
     pub user_id: String,
     pub token: String,
     pub expired_at: DateTime<Utc>,

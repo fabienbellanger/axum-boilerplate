@@ -3,7 +3,7 @@
 use crate::emails::forgotten_password::ForgottenPasswordEmail;
 use crate::emails::SmtpConfig;
 use crate::models::auth::Jwt;
-use crate::models::user::{Login, PasswordReset, User, UserCreation};
+use crate::models::user::{Login, PasswordReset, User, UserCreation, UserUpdatePassword};
 use crate::repositories::user::{PasswordResetRepository, UserRepository};
 use crate::utils::extractors::ExtractRequestId;
 use crate::utils::validation::validate_request_data;
@@ -100,7 +100,7 @@ pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MyS
     match user {
         Some(user) => Ok(Json(user)),
         _ => Err(AppError::NotFound {
-            message: String::from("No user found"),
+            message: String::from("no user found"),
         }),
     }
 }
@@ -112,7 +112,7 @@ pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>
     match result {
         1 => Ok(StatusCode::NO_CONTENT),
         _ => Err(AppError::InternalError {
-            message: String::from("No user or user already deleted"),
+            message: String::from("no user or user already deleted"),
         }),
     }
 }
@@ -124,13 +124,15 @@ pub async fn update(
     Json(payload): Json<UserCreation>,
     Extension(pool): Extension<Pool<MySql>>,
 ) -> AppResult<Json<User>> {
+    validate_request_data(&payload)?;
+
     UserRepository::update(&pool, id.to_string(), &payload).await?;
 
     let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
     match user {
         Some(user) => Ok(Json(user)),
         _ => Err(AppError::NotFound {
-            message: String::from("No user found"),
+            message: String::from("no user found"),
         }),
     }
 }
@@ -141,7 +143,7 @@ pub async fn forgotten_password(
     Path(email): Path<String>,
     Extension(state): Extension<SharedState>,
     Extension(pool): Extension<Pool<MySql>>,
-) -> AppResult<StatusCode> {
+) -> AppResult<Json<PasswordReset>> {
     match UserRepository::get_by_email(&pool, email.clone()).await? {
         None => Err(AppError::NotFound {
             message: String::from("no user found"),
@@ -162,10 +164,37 @@ pub async fn forgotten_password(
                 state.forgotten_password_base_url.clone(),
                 state.forgotten_password_email_from.clone(),
                 email,
-                password_reset.token,
+                password_reset.token.clone(),
             )?;
 
-            Ok(StatusCode::NO_CONTENT)
+            Ok(Json(password_reset))
         }
+    }
+}
+
+// Route: PATCH "/api/v1/update-password/:token"
+#[instrument(skip(pool))]
+pub async fn update_password(
+    Path(token): Path<Uuid>,
+    Json(payload): Json<UserUpdatePassword>,
+    Extension(pool): Extension<Pool<MySql>>,
+) -> AppResult<StatusCode> {
+    validate_request_data(&payload)?;
+
+    let user_id = PasswordResetRepository::get_user_id_from_token(&pool, token.to_string()).await?;
+    match user_id {
+        Some(user_id) => {
+            // Update user password
+            let password = payload.password;
+            UserRepository::update_password(&pool, user_id.clone(), password).await?;
+
+            // Delete password reset entry
+            PasswordResetRepository::delete(&pool, user_id).await?;
+
+            Ok(StatusCode::OK)
+        }
+        _ => Err(AppError::NotFound {
+            message: String::from("no user found"),
+        }),
     }
 }

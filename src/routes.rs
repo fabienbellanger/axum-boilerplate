@@ -2,7 +2,7 @@
 
 use crate::handlers;
 use crate::layers;
-use axum::routing::{delete, get, post, put};
+use axum::routing::{delete, get, patch, post, put};
 use axum::Router;
 
 /// Return web routes list
@@ -36,6 +36,7 @@ pub fn api() -> Router {
         // Public routes
         .route("/login", post(handlers::users::login))
         .route("/forgotten-password/:email", post(handlers::users::forgotten_password))
+        .route("/update-password/:token", patch(handlers::users::update_password))
         // Protected routes
         .nest("/", api_protected().layer(layers::jwt::JwtLayer))
 }
