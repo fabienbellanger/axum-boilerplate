@@ -129,12 +129,151 @@
       ]
     }
   },
+  "76fe534e5e6b4905ab8cd9a8f9c4335dd970d311f08122400cc0c51235032a6e": {
+    "query": "\n                SELECT * \n                FROM users \n                WHERE username = ?\n                    AND deleted_at IS NULL\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "id",
+          "type_info": {
+            "type": "VarString",
+            "flags": {
+              "bits": 4099
+            },
+            "char_set": 224,
+            "max_size": 144
+          }
+        },
+        {
+          "ordinal": 1,
+          "name": "username",
+          "type_info": {
+            "type": "VarString",
+            "flags": {
+              "bits": 4101
+            },
+            "char_set": 224,
+            "max_size": 508
+          }
+        },
+        {
+          "ordinal": 2,
+          "name": "password",
+          "type_info": {
+            "type": "VarString",
+            "flags": {
+              "bits": 4105
+            },
+            "char_set": 224,
+            "max_size": 764
+          }
+        },
+        {
+          "ordinal": 3,
+          "name": "lastname",
+          "type_info": {
+            "type": "VarString",
+            "flags": {
+              "bits": 4097
+            },
+            "char_set": 224,
+            "max_size": 252
+          }
+        },
+        {
+          "ordinal": 4,
+          "name": "firstname",
+          "type_info": {
+            "type": "VarString",
+            "flags": {
+              "bits": 4097
+            },
+            "char_set": 224,
+            "max_size": 252
+          }
+        },
+        {
+          "ordinal": 5,
+          "name": "roles",
+          "type_info": {
+            "type": "VarString",
+            "flags": {
+              "bits": 8
+            },
+            "char_set": 224,
+            "max_size": 252
+          }
+        },
+        {
+          "ordinal": 6,
+          "name": "created_at",
+          "type_info": {
+            "type": "Datetime",
+            "flags": {
+              "bits": 4225
+            },
+            "char_set": 63,
+            "max_size": 23
+          }
+        },
+        {
+          "ordinal": 7,
+          "name": "updated_at",
+          "type_info": {
+            "type": "Datetime",
+            "flags": {
+              "bits": 4225
+            },
+            "char_set": 63,
+            "max_size": 23
+          }
+        },
+        {
+          "ordinal": 8,
+          "name": "deleted_at",
+          "type_info": {
+            "type": "Datetime",
+            "flags": {
+              "bits": 136
+            },
+            "char_set": 63,
+            "max_size": 23
+          }
+        }
+      ],
+      "parameters": {
+        "Right": 1
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true
+      ]
+    }
+  },
   "9c9e5c6cf8ab27b95e67309b39c0ea6907264435ee3a8a3196f683ad41dfbb3d": {
     "query": "\n                UPDATE users\n                SET deleted_at = ?\n                WHERE id = ? AND deleted_at IS NULL\n            ",
     "describe": {
       "columns": [],
       "parameters": {
         "Right": 2
+      },
+      "nullable": []
+    }
+  },
+  "b8f74399794cd3329eee0f99300d09b26778e42131d8fd256c4ff820e77d49a4": {
+    "query": "\n                INSERT INTO password_resets (user_id, token, expired_at)\n                VALUES (?, ?, ?)\n                ON DUPLICATE KEY UPDATE token = ?, expired_at = ?\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Right": 5
       },
       "nullable": []
     }

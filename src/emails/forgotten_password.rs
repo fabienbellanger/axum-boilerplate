@@ -15,6 +15,7 @@ pub struct EmailContext {
 impl EmailContext {
     /// New `EmailContext`
     pub fn new(base_url: String, token: String) -> Self {
+        // TODO: Check if link is a valid URL
         let link = format!("{}/{token}", base_url);
 
         Self {
@@ -27,8 +28,8 @@ impl EmailContext {
 pub struct ForgottenPasswordEmail;
 
 impl ForgottenPasswordEmail {
-    /// Construct forgotten password email
-    fn construct(base_url: String, token: String) -> AppResult<(String, String)> {
+    /// Construct forgotten password email body
+    fn construct_body(base_url: String, token: String) -> AppResult<(String, String)> {
         let context = EmailContext::new(base_url, token);
 
         let html = TEMPLATES
@@ -65,7 +66,7 @@ impl ForgottenPasswordEmail {
         token: String,
     ) -> AppResult<()> {
         let subject = format!("[{APP_NAME}] Forgotten password");
-        let (html, text) = Self::construct(base_url, token)?;
+        let (html, text) = Self::construct_body(base_url, token)?;
 
         send(
             smtp_config,
