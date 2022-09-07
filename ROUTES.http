@@ -9,7 +9,7 @@
 @userId = 4323a1b1-206b-42c7-a7e5-bcb45f7f6335
 @userIdToDelete = f6a6ed37-d0fc-4e45-b97d-3bbc6924562e
 @userEmail = test@gmail.com
-@passwordResetToken = 5a6df5bf-0dab-468e-b3e5-217c78f19dce
+@passwordResetToken = d3f68c49-defd-4e68-b787-c7c2d22cb8ae
 
 # Login
 POST {{baseUrl}}/login

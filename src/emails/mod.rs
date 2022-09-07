@@ -43,7 +43,7 @@ pub fn send(config: &SmtpConfig, message: Message) -> AppResult<()> {
     let mut email_builder = lettre::Message::builder()
         .subject(message.subject)
         .from(message.from.parse().map_err(|_| AppError::InternalError {
-            message: "cannot send password reset email because: invalid: from email".to_string(),
+            message: "cannot send password reset email because: invalid from email".to_string(),
         })?);
 
     // Add destination emails

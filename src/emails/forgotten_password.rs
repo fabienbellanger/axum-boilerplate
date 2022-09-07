@@ -14,13 +14,17 @@ pub struct EmailContext {
 
 impl EmailContext {
     /// New `EmailContext`
-    pub fn new(base_url: String, token: String) -> Self {
-        // TODO: Check if link is a valid URL
+    pub fn new(base_url: String, token: String) -> AppResult<Self> {
         let link = format!("{}/{token}", base_url);
 
-        Self {
-            title: APP_NAME.to_owned(),
-            link,
+        match validator::validate_url(&link) {
+            true => Ok(Self {
+                title: format!("{} - Forgotten password", APP_NAME.to_owned()),
+                link,
+            }),
+            false => Err(AppError::InternalError {
+                message: "cannot send password reset email because: invalid link".to_string(),
+            }),
         }
     }
 }
@@ -30,7 +34,7 @@ pub struct ForgottenPasswordEmail;
 impl ForgottenPasswordEmail {
     /// Construct forgotten password email body
     fn construct_body(base_url: String, token: String) -> AppResult<(String, String)> {
-        let context = EmailContext::new(base_url, token);
+        let context = EmailContext::new(base_url, token)?;
 
         let html = TEMPLATES
             .render(
@@ -45,7 +49,7 @@ impl ForgottenPasswordEmail {
 
         let text = TEMPLATES
             .render(
-                "email/forgotten_password.html",
+                "email/forgotten_password.txt",
                 &Context::from_serialize(&context).map_err(|err| AppError::InternalError {
                     message: err.to_string(),
                 })?,
