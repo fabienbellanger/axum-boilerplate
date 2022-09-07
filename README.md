@@ -56,7 +56,7 @@ Run migrations:
 sqlx migrate run
 ```
 
-Revet migrations:
+Revert migrations:
 
 ```bash
 sqlx migrate revert
@@ -102,7 +102,7 @@ cargo doc --open --no-deps --document-private-items
 - [x] Add WebSocket examples
   - [x] Simple WebSocket example
   - [x] Chat WebSocket example
-- [ ] Add Askama (WIP)
+- [x] Add Tera
 - [ ] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs))
 - [ ] Add Basic Auth
 - [ ] Rate limiter middleware

@@ -2,10 +2,8 @@
 
 use crate::errors::{AppError, AppResult};
 use crate::TEMPLATES;
-use askama::Template;
 use axum::{
     body::StreamBody,
-    extract::Path,
     http::header::CONTENT_TYPE,
     response::{AppendHeaders, Html, IntoResponse},
     Json,
@@ -21,25 +19,13 @@ pub async fn health_check<'a>() -> &'a str {
     "OK"
 }
 
-#[derive(Template)]
-#[template(path = "hello.html")]
-pub struct HelloTemplate<'a> {
-    name: &'a str,
-}
-
-// Route: GET "hello-tera"
-pub async fn hello_tera() -> AppResult<Html<String>> {
+// Route: GET "hello"
+pub async fn hello() -> AppResult<Html<String>> {
     Ok(Html(
         TEMPLATES
-            .render("tera/hello.html", &Context::new())
+            .render("hello.html", &Context::new())
             .map_err(|_err| AppError::Timeout)?,
     ))
-}
-
-// Route: GET "/hello/:name"
-// TODO: Waiting for askama 0.11.2 to fix bug
-pub async fn hello(Path(name): Path<&'static str>) -> HelloTemplate<'static> {
-    HelloTemplate { name }
 }
 
 // Route: GET "/timeout"
