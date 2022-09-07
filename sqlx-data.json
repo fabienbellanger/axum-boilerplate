@@ -1,5 +1,30 @@
 {
   "db": "MySQL",
+  "2d4f4e67f1b7ee745d61d7c3e61362a15c574c31cc2a3bc24737b0b64858196a": {
+    "query": "\n                SELECT u.id AS user_id\n                FROM password_resets pr\n                    INNER JOIN users u ON u.id = pr.user_id AND u.deleted_at IS NULL\n                WHERE pr.token = ?\n                    AND pr.expired_at >= ?\n            ",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": {
+            "type": "VarString",
+            "flags": {
+              "bits": 4099
+            },
+            "char_set": 224,
+            "max_size": 144
+          }
+        }
+      ],
+      "parameters": {
+        "Right": 2
+      },
+      "nullable": [
+        false
+      ]
+    }
+  },
   "33d05bf9983fe254078ecd0d4492dc02eb3c3340de5caf0b474d611495979f48": {
     "query": "\n                SELECT * \n                FROM users \n                WHERE id = ?\n                    AND deleted_at IS NULL\n            ",
     "describe": {
@@ -127,6 +152,16 @@
         false,
         true
       ]
+    }
+  },
+  "3e9ba2028d53254bba86e80aa37bedb8367e65f7162c0c0fe5cf1fa06d89c8c6": {
+    "query": "\n                DELETE FROM password_resets\n                WHERE user_id = ?\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Right": 1
+      },
+      "nullable": []
     }
   },
   "76fe534e5e6b4905ab8cd9a8f9c4335dd970d311f08122400cc0c51235032a6e": {
@@ -274,6 +309,16 @@
       "columns": [],
       "parameters": {
         "Right": 5
+      },
+      "nullable": []
+    }
+  },
+  "cacace735965c8f3ccec05fe24591b80f6b0502fea80fec90362d7993f939bc5": {
+    "query": "\n                UPDATE users\n                SET password = ?, updated_at = ?\n                WHERE id = ?\n            ",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Right": 3
       },
       "nullable": []
     }
