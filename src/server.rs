@@ -34,21 +34,36 @@ pub async fn start_server() -> Result<()> {
     // ------------------
     let settings = Config::from_env()?;
 
+    let app = get_app(&settings).await?;
+
+    // Start server
+    // ------------
+    let addr = format!("{}:{}", settings.server_url, settings.server_port);
+    info!("Starting server on {}", &addr);
+    Ok(axum::Server::bind(&addr.parse()?)
+        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
+        .with_graceful_shutdown(shutdown_signal())
+        .await?)
+}
+
+pub async fn get_app(settings: &Config) -> Result<Router> {
+    // https://github.com/wolf4ood/realworld-axum/blob/main/src/web/src/app.rs
+
     // Tracing
     // -------
     logger::init(&settings.environment, &settings.logs_path, &settings.logs_file)?;
 
     // Database
     // --------
-    let pool = databases::init(&settings).await?;
+    let pool = databases::init(settings).await?;
 
     // Redis
     // -----
-    let redis_pool = databases::init_redis(&settings).await?;
+    let redis_pool = databases::init_redis(settings).await?;
 
     // CORS
     // ----
-    let cors = layers::cors(&settings);
+    let cors = layers::cors(settings);
 
     // Layers
     // ------
@@ -100,16 +115,9 @@ pub async fn start_server() -> Result<()> {
         .layer(Extension(pool))
         .layer(Extension(redis_pool))
         .layer(layers)
-        .layer(Extension(SharedState::new(State::init(&settings))));
+        .layer(Extension(SharedState::new(State::init(settings))));
 
-    // Start server
-    // ------------
-    let addr = format!("{}:{}", settings.server_url, settings.server_port);
-    info!("Starting server on {}", &addr);
-    Ok(axum::Server::bind(&addr.parse()?)
-        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
-        .with_graceful_shutdown(shutdown_signal())
-        .await?)
+    Ok(app)
 }
 
 async fn shutdown_signal() {
