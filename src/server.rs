@@ -76,8 +76,12 @@ pub async fn start_server() -> Result<()> {
             get_service(ServeDir::new("assets").append_index_html_on_directories(true))
                 .handle_error(handlers::static_file_error),
         )
-        .nest("/api/v1", routes::api().layer(cors))
-        .nest("/ws", routes::ws())
+        .nest("/api/v1", routes::api().layer(cors));
+
+    #[cfg(feature = "ws")]
+    let app = app.nest("/ws", routes::ws());
+
+    let app = app
         .nest("/", routes::web())
         .layer(layers::rate_limiter::RateLimiterLayer::new(
             &redis_pool,

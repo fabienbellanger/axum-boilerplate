@@ -18,15 +18,11 @@ pub fn web() -> Router {
 }
 
 /// Return WebSocket routes list
+#[cfg(feature = "ws")]
 pub fn ws() -> Router {
-    let router = Router::new();
-
-    #[cfg(feature = "ws")]
-    let router = router
+    Router::new()
         .route("/", get(handlers::ws::simple_ws_handler))
-        .route("/chat", get(handlers::ws::chat_ws_handler));
-
-    router
+        .route("/chat", get(handlers::ws::chat_ws_handler))
 }
 
 /// Return API routes list
