@@ -68,6 +68,7 @@ Used for Github Actions or Docker
 
 ```bash
 cargo sqlx prepare -- --bin <app name in Cargo.toml>
+cargo sqlx prepare -- --lib
 ```
 
 Then set env variable `SQLX_OFFLINE` to `true`.
