@@ -9,7 +9,7 @@
 @userId = 4323a1b1-206b-42c7-a7e5-bcb45f7f6335
 @userIdToDelete = f6a6ed37-d0fc-4e45-b97d-3bbc6924562e
 @userEmail = test@gmail.com
-@passwordResetToken = d3f68c49-defd-4e68-b787-c7c2d22cb8ae
+@passwordResetToken = 9f58f9c2-7983-4027-890e-bb9b8a267587
 
 # Login
 POST {{baseUrl}}/login
@@ -31,7 +31,7 @@ PATCH {{baseUrl}}/update-password/{{passwordResetToken}}
 Content-Type: application/json
 
 {
-    "password": "12345678"
+    "password": "00000000"
 }
 ###
 

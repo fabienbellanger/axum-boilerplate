@@ -173,6 +173,7 @@ pub async fn forgotten_password(
 }
 
 // Route: PATCH "/api/v1/update-password/:token"
+// TODO: New password and current password must be different!
 #[instrument(skip(pool))]
 pub async fn update_password(
     Path(token): Path<Uuid>,
@@ -181,12 +182,12 @@ pub async fn update_password(
 ) -> AppResult<StatusCode> {
     validate_request_data(&payload)?;
 
-    let user_id = PasswordResetRepository::get_user_id_from_token(&pool, token.to_string()).await?;
-    match user_id {
-        Some(user_id) => {
+    let result = PasswordResetRepository::get_user_id_from_token(&pool, token.to_string()).await?;
+    match result {
+        Some((user_id, current_password)) => {
             // Update user password
             let password = payload.password;
-            UserRepository::update_password(&pool, user_id.clone(), password).await?;
+            UserRepository::update_password(&pool, user_id.clone(), current_password, password).await?;
 
             // Delete password reset entry
             PasswordResetRepository::delete(&pool, user_id).await?;
