@@ -148,7 +148,6 @@ mod tests {
             .await
             .unwrap();
 
-        //   assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.status(), StatusCode::ACCEPTED);
+        assert_eq!(response.status(), StatusCode::OK);
     }
 }
