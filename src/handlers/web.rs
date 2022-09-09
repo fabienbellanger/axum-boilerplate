@@ -133,20 +133,15 @@ pub async fn stream() -> impl IntoResponse {
 
 #[cfg(test)]
 mod tests {
+    use crate::routes;
     use axum::http::StatusCode;
+    use axum::Router;
     use axum::{body::Body, http::Request};
     use tower::ServiceExt;
 
-    use crate::config::Config;
-    use crate::server::get_app;
-
     #[tokio::test]
     async fn test_health_check() {
-        color_eyre::install().unwrap();
-        dotenv::dotenv().ok();
-        let settings = Config::from_env().unwrap();
-
-        let app = get_app(&settings).await.unwrap();
+        let app = Router::new().nest("/", routes::web());
 
         let response = app
             .oneshot(Request::builder().uri("/health-check").body(Body::empty()).unwrap())
