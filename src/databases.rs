@@ -29,6 +29,19 @@ pub async fn init(settings: &Config) -> CliResult<Pool<MySql>> {
     Ok(pool)
 }
 
+#[cfg(test)]
+pub async fn init_test(url: &str) -> CliResult<Pool<MySql>> {
+    let pool = MySqlPoolOptions::new()
+        .max_connections(1)
+        .min_connections(1)
+        .test_before_acquire(true)
+        .connect(url)
+        .await
+        .map_err(|err| CliError::DatabaseError(err.to_string()))?;
+
+    Ok(pool)
+}
+
 /// Initialize database connection pool for Redis
 pub async fn init_redis(settings: &Config) -> CliResult<r2d2::Pool<redis::Client>> {
     let url = &settings.redis_url;

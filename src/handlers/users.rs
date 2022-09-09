@@ -173,7 +173,6 @@ pub async fn forgotten_password(
 }
 
 // Route: PATCH "/api/v1/update-password/:token"
-// TODO: New password and current password must be different!
 #[instrument(skip(pool))]
 pub async fn update_password(
     Path(token): Path<Uuid>,
@@ -199,3 +198,29 @@ pub async fn update_password(
         }),
     }
 }
+
+// #[cfg(test)]
+// mod tests {
+//     use crate::utils::test_helper::TestAppBuilder;
+//     use axum::http::StatusCode;
+//     use axum::{body::Body, http::Request};
+//     use tower::ServiceExt;
+
+//     #[tokio::test]
+//     async fn test_login() {
+//         let app = TestAppBuilder::new().add_api_routes().await.build().router;
+
+//         let response = app
+//             .oneshot(
+//                 Request::builder()
+//                     .method("POST")
+//                     .uri("/api/v1/login")
+//                     .body(Body::empty())
+//                     .unwrap(),
+//             )
+//             .await
+//             .unwrap();
+
+//         assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+//     }
+// }

@@ -64,7 +64,7 @@ where
                     // Content Type
                     parts.headers.insert(
                         axum::http::header::CONTENT_TYPE,
-                        HeaderValue::from_static("application/json"),
+                        HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
                     );
 
                     // Body
