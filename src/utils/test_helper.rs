@@ -66,7 +66,8 @@ impl TestDatabase {
     }
 
     fn get_url() -> String {
-        dotenv::dotenv().ok();
+        let e = dotenv::dotenv().ok();
+        dbg!(e);
 
         let url = std::env::var("DATABASE_URL").expect("DATABASE_URL missing from environment");
 
