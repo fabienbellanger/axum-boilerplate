@@ -29,7 +29,6 @@ pub async fn init(settings: &Config) -> CliResult<Pool<MySql>> {
     Ok(pool)
 }
 
-#[cfg(test)]
 pub async fn init_test(url: &str) -> CliResult<Pool<MySql>> {
     let pool = MySqlPoolOptions::new()
         .max_connections(1)
