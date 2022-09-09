@@ -142,6 +142,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_health_check() {
+        color_eyre::install().unwrap();
+        dotenv::dotenv().ok();
         let settings = Config::from_env().unwrap();
 
         let app = get_app(&settings).await.unwrap();
