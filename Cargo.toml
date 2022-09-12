@@ -22,7 +22,7 @@ ws = []
 [dependencies]
 
 # Axum
-axum = { version = "0.5.15", features = ["headers", "ws"] }
+axum = { version = "0.5.16", features = ["headers", "ws"] }
 
 # Tower
 tower = { version = "0.4.13", features = ["timeout"] }
@@ -61,7 +61,7 @@ futures = "0.3.24"
 jsonwebtoken = "8.1.1"
 lazy_static = "1.4.0"
 lettre = "0.10.1"
-mailchecker = "5.0.0"
+mailchecker = "5.0.1"
 serde = { version = "1.0.144", features = ["derive"] }
 serde_json = "1.0.85"
 sha2 = "0.10.5"
@@ -69,3 +69,4 @@ tokio = { version = "1.21.0", features = ["full"] }
 uuid = { version = "1.1.2", features = ["serde", "v4"] }
 validator = { version = "0.16.0", features = ["derive"] }
 mime = "0.3.16"
+rand = "0.8.5"
