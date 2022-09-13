@@ -1,38 +1,62 @@
 //! Test helper for unit tests
 
 use axum::{Extension, Router};
-use axum_boilerplate::{databases, routes};
+use axum_boilerplate::routes;
 use sqlx::{Connection, MySql, MySqlConnection, MySqlPool};
 
 #[derive(Debug)]
 pub struct TestApp {
     pub router: Router,
+    pub database: Option<TestDatabase>,
+}
+
+impl TestApp {
+    pub async fn drop_database(&self) {
+        if let Some(database) = &self.database {
+            database.drop_database().await;
+        }
+    }
 }
 
 pub struct TestAppBuilder {
     router: Router,
+    database: Option<TestDatabase>,
 }
 
 impl TestAppBuilder {
     pub fn new() -> Self {
-        Self { router: Router::new() }
+        Self {
+            router: Router::new(),
+            database: None,
+        }
     }
 
     pub fn add_web_routes(self) -> Self {
         let router = self.router.nest("/", routes::web());
-        Self { router }
+        Self {
+            router,
+            database: self.database,
+        }
     }
 
-    pub async fn _add_api_routes(self) -> Self {
-        let pool = databases::init_test("mysql://root:root@127.0.0.1:3306/axum_test")
-            .await
-            .unwrap();
-        let router = self.router.nest("/api/v1", routes::api()).layer(Extension(pool));
-        Self { router }
+    pub async fn add_api_routes(self) -> Self {
+        let db = TestDatabase::new().await;
+
+        let router = self
+            .router
+            .nest("/api/v1", routes::api())
+            .layer(Extension(db.pool.clone()));
+        Self {
+            router,
+            database: Some(db),
+        }
     }
 
     pub fn build(self) -> TestApp {
-        TestApp { router: self.router }
+        TestApp {
+            router: self.router,
+            database: self.database,
+        }
     }
 }
 
@@ -88,14 +112,16 @@ impl TestDatabase {
 }
 
 // TODO: Not Work!
-// impl Drop for TestDatabase {
-//     fn drop(&mut self) {
-//         // Drop the DB Pool
-//         let _ = self.pool.take();
+impl Drop for TestDatabase {
+    fn drop(&mut self) {
+        // Drop the DB Pool
+        let _ = self.pool.take();
 
-//         futures::executor::block_on(self.drop_database());
-//     }
-// }
+        // futures::executor::block_on(self.drop_database());
+        // let rt = tokio::runtime::Handle::current();
+        // rt.block_on(self.drop_database());
+    }
+}
 
 /// Parse database URL and return the database name in a separate variable
 fn parse_url(url: &str) -> (&str, &str) {
