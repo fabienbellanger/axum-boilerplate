@@ -86,7 +86,7 @@ impl TestDatabase {
         }
     }
 
-    pub async fn database(&self) -> MySqlPool {
+    pub async fn _database(&self) -> MySqlPool {
         self.pool.clone().unwrap()
     }
 

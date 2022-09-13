@@ -28,7 +28,14 @@ async fn test_api_login() {
             Request::builder()
                 .uri("/api/v1/login")
                 .method("POST")
-                .body(Body::empty())
+                .body(
+                    serde_json::json!({
+                        "username": "test@gmail.com",
+                        "password": "00000000"
+                    })
+                    .to_string()
+                    .into(),
+                )
                 .unwrap(),
         )
         .await
