@@ -28,6 +28,7 @@ pub async fn login(
     ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<Json<LoginResponse>> {
     warn!("LOGIN handler");
+
     validate_request_data(&payload)?;
 
     // Search user in database and return `LoginResponse`
@@ -59,9 +60,12 @@ pub async fn login(
                         expires_at: expires_at.to_rfc3339_opts(SecondsFormat::Secs, true),
                     }))
                 }
-                _ => Err(AppError::InternalError {
-                    message: String::from("error during JWT generation"),
-                }),
+                _ => {
+                    dbg!("error during JWT generation");
+                    Err(AppError::InternalError {
+                        message: String::from("error during JWT generation"),
+                    })
+                }
             }
         }
     }

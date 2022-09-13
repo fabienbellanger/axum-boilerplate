@@ -28,6 +28,7 @@ async fn test_api_login() {
             Request::builder()
                 .uri("/api/v1/login")
                 .method("POST")
+                .header("Content-Type", "application/json")
                 .body(
                     serde_json::json!({
                         "username": "test@gmail.com",
@@ -42,6 +43,8 @@ async fn test_api_login() {
         .unwrap();
 
     app.drop_database().await;
+
+    dbg!(&response);
 
     assert_eq!(response.status(), StatusCode::OK);
 }
