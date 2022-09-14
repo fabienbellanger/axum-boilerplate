@@ -142,7 +142,7 @@ impl Drop for TestDatabase {
     fn drop(&mut self) {
         // Drop the DB Pool
         let _ = self.pool.take();
-
+        println!("DROP TestDatabase");
         // futures::executor::block_on(self.drop_database());
         // let rt = tokio::runtime::Handle::current();
         // rt.block_on(self.drop_database());
