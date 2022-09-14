@@ -47,34 +47,45 @@ impl TestAppBuilder {
     pub async fn add_api_routes(self) -> Self {
         let db = TestDatabase::new().await;
 
-        // Log layer
+        let router = self
+            .router
+            .nest("/api/v1", routes::api())
+            .layer(Extension(db.database().await));
+        Self {
+            router,
+            database: Some(db),
+        }
+    }
+
+    #[allow(unused)]
+    pub fn with_logger(self) -> Self {
         logger::init("development", "", "").unwrap();
         let layers = ServiceBuilder::new()
             .set_x_request_id(MakeRequestUuid)
             .layer(layers::logger::LoggerLayer)
             .into_inner();
 
-        // State Layer
+        Self {
+            router: self.router.layer(layers),
+            database: self.database,
+        }
+    }
+
+    pub fn with_state(self) -> Self {
         let state = State {
-            jwt_secret_key: "secret".to_owned(),
-            jwt_lifetime: 1,
-            smtp_host: String::new(),
-            smtp_port: 0,
-            smtp_timeout: 0,
+            jwt_secret_key: String::from("mysecretjwtkey"),
+            jwt_lifetime: 1025,
+            smtp_host: String::from("127.0.0.1"),
+            smtp_port: 1025,
+            smtp_timeout: 30,
             forgotten_password_expiration_duration: 1,
-            forgotten_password_base_url: String::new(),
-            forgotten_password_email_from: String::new(),
+            forgotten_password_base_url: String::from("http://localhost"),
+            forgotten_password_email_from: String::from("contact@test.com"),
         };
 
-        let router = self
-            .router
-            .nest("/api/v1", routes::api())
-            .layer(Extension(db.database().await))
-            .layer(layers)
-            .layer(Extension(SharedState::new(state)));
         Self {
-            router,
-            database: Some(db),
+            router: self.router.layer(Extension(SharedState::new(state))),
+            database: self.database,
         }
     }
 

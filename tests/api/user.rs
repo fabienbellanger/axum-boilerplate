@@ -6,7 +6,12 @@ use tower::ServiceExt;
 
 #[tokio::test]
 async fn test_api_login_unauthorized_user() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.build();
+    let app: TestApp = TestAppBuilder::new()
+        .add_api_routes()
+        .await
+        //.with_logger()
+        .with_state()
+        .build();
 
     let response = app
         .router
