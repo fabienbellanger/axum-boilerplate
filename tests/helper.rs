@@ -1,8 +1,13 @@
 //! Test helper for unit tests
 
 use axum::{Extension, Router};
-use axum_boilerplate::routes;
+use axum_boilerplate::{
+    layers::{self, MakeRequestUuid, SharedState, State},
+    logger, routes,
+};
 use sqlx::{Connection, MySql, MySqlConnection, MySqlPool};
+use tower::ServiceBuilder;
+use tower_http::ServiceBuilderExt;
 
 #[derive(Debug)]
 pub struct TestApp {
@@ -42,10 +47,31 @@ impl TestAppBuilder {
     pub async fn add_api_routes(self) -> Self {
         let db = TestDatabase::new().await;
 
+        // Log layer
+        logger::init("development", "", "").unwrap();
+        let layers = ServiceBuilder::new()
+            .set_x_request_id(MakeRequestUuid)
+            .layer(layers::logger::LoggerLayer)
+            .into_inner();
+
+        // State Layer
+        let state = State {
+            jwt_secret_key: "secret".to_owned(),
+            jwt_lifetime: 1,
+            smtp_host: String::new(),
+            smtp_port: 0,
+            smtp_timeout: 0,
+            forgotten_password_expiration_duration: 1,
+            forgotten_password_base_url: String::new(),
+            forgotten_password_email_from: String::new(),
+        };
+
         let router = self
             .router
             .nest("/api/v1", routes::api())
-            .layer(Extension(db.pool.clone()));
+            .layer(Extension(db.database().await))
+            .layer(layers)
+            .layer(Extension(SharedState::new(state)));
         Self {
             router,
             database: Some(db),
@@ -86,7 +112,7 @@ impl TestDatabase {
         }
     }
 
-    pub async fn _database(&self) -> MySqlPool {
+    pub async fn database(&self) -> MySqlPool {
         self.pool.clone().unwrap()
     }
 

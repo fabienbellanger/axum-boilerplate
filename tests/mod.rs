@@ -4,6 +4,7 @@ use crate::helper::TestAppBuilder;
 use axum::http::StatusCode;
 use axum::{body::Body, http::Request};
 use helper::TestApp;
+use serde_json::Value;
 use tower::ServiceExt;
 
 #[tokio::test]
@@ -18,7 +19,7 @@ async fn test_health_check() {
 }
 
 #[tokio::test]
-async fn test_api_login() {
+async fn test_api_login_unauthorized_user() {
     let app: TestApp = TestAppBuilder::new().add_api_routes().await.build();
 
     let response = app
@@ -44,7 +45,16 @@ async fn test_api_login() {
 
     app.drop_database().await;
 
-    dbg!(&response);
+    assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
 
-    assert_eq!(response.status(), StatusCode::OK);
+    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
+    let body: Value = serde_json::from_slice(&body).unwrap();
+
+    assert_eq!(
+        body,
+        serde_json::json!({
+            "code": 401,
+            "message": "Unauthorized"
+        })
+    );
 }
