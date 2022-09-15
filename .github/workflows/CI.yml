@@ -20,6 +20,6 @@ jobs:
     - name: Clippy
       run: cargo clippy
     - name: Run tests
-      run: DATABASE_URL=mysql://root:root@127.0.0.1:3306/axum cargo test --verbose
+      run: DATABASE_URL=mysql://root:root@127.0.0.1:3306/axum cargo test --verbose -- --test-threads 1
     - name: Build
       run: cargo build --verbose

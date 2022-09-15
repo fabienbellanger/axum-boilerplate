@@ -1,4 +1,5 @@
-use crate::api::helpers::user::{create_and_authenticate, create_user_request, login_request};
+use super::helpers::user::{create_and_authenticate, create_user_request, get_all, login_request};
+use super::helpers::TestUser;
 use crate::helper::{TestApp, TestAppBuilder};
 use axum::http::StatusCode;
 
@@ -52,7 +53,7 @@ async fn test_api_user_creation_success() {
             "firstname": "Toto"
         })
         .to_string(),
-        token,
+        &token,
     )
     .await;
 
@@ -75,11 +76,42 @@ async fn test_api_user_creation_invalid_password() {
             "firstname": "Toto"
         })
         .to_string(),
-        token,
+        &token,
     )
     .await;
 
     app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn test_api_user_list_all() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (_response, token) = create_and_authenticate(&app).await;
+
+    // Create 2 users
+    for i in 1..3 {
+        create_user_request(
+            &app,
+            serde_json::json!({
+                "username": format!("test-user-creation-{i}@test.com"),
+                "password": "00000000",
+                "lastname": "Test",
+                "firstname": format!("Toto {i}"),
+            })
+            .to_string(),
+            &token,
+        )
+        .await;
+    }
+
+    let response = get_all(&app, &token).await;
+
+    app.drop_database().await;
+
+    assert_eq!(response.status_code, StatusCode::OK);
+
+    let users: Vec<TestUser> = serde_json::from_str(&response.body.to_string()).expect("error when deserializing body");
+    assert_eq!(users.len(), 3);
 }

@@ -9,6 +9,12 @@ use sqlx::{Connection, MySql, MySqlConnection, MySqlPool};
 use tower::ServiceBuilder;
 use tower_http::ServiceBuilderExt;
 
+//
+// Examples:
+// - https://github.com/davidpdrsn/witter/blob/master/backend/src/tests/test_helpers/test_db.rs
+// - https://github.com/tokio-rs/axum/blob/main/examples/testing/src/main.rs
+//
+
 #[derive(Debug)]
 pub struct TestApp {
     pub router: Router,
@@ -101,10 +107,6 @@ impl TestAppBuilder {
     }
 }
 
-//
-// Example: https://github.com/davidpdrsn/witter/blob/master/backend/src/tests/test_helpers/test_db.rs
-//
-
 #[derive(Debug)]
 pub struct TestDatabase {
     url: String,
@@ -156,11 +158,8 @@ impl TestDatabase {
 impl Drop for TestDatabase {
     fn drop(&mut self) {
         // Drop the DB Pool
-        let _ = self.pool.take();
-        println!("DROP TestDatabase");
-        // futures::executor::block_on(self.drop_database());
-        // let rt = tokio::runtime::Handle::current();
-        // rt.block_on(self.drop_database());
+        // let _ = self.pool.take();
+        // println!("DROP TestDatabase");
     }
 }
 
