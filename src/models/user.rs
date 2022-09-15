@@ -51,7 +51,7 @@ pub struct Login {
     pub password: String,
 }
 
-#[derive(Serialize, Debug, Validate)]
+#[derive(Deserialize, Serialize, Debug, Validate)]
 pub struct LoginResponse {
     pub id: String,
     pub lastname: String,

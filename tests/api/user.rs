@@ -1,4 +1,4 @@
-use crate::api::helpers::user::login_request;
+use crate::api::helpers::user::{create_and_authenticate, create_user_request, login_request};
 use crate::helper::{TestApp, TestAppBuilder};
 use axum::http::StatusCode;
 
@@ -26,4 +26,60 @@ async fn test_api_login_unauthorized_user() {
             "message": "Unauthorized"
         })
     );
+}
+
+#[tokio::test]
+async fn test_api_login_authorized_user() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (response, _token) = create_and_authenticate(&app).await;
+
+    app.drop_database().await;
+
+    assert_eq!(response.status_code, StatusCode::OK);
+}
+
+#[tokio::test]
+async fn test_api_user_creation_success() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (_response, token) = create_and_authenticate(&app).await;
+
+    let response = create_user_request(
+        &app,
+        serde_json::json!({
+            "username": "test-user-creation@test.com",
+            "password": "00000000",
+            "lastname": "Test",
+            "firstname": "Toto"
+        })
+        .to_string(),
+        token,
+    )
+    .await;
+
+    app.drop_database().await;
+
+    assert_eq!(response.status_code, StatusCode::OK);
+}
+
+#[tokio::test]
+async fn test_api_user_creation_invalid_password() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (_response, token) = create_and_authenticate(&app).await;
+
+    let response = create_user_request(
+        &app,
+        serde_json::json!({
+            "username": "test-user-creation@test.com",
+            "password": "0000000",
+            "lastname": "Test",
+            "firstname": "Toto"
+        })
+        .to_string(),
+        token,
+    )
+    .await;
+
+    app.drop_database().await;
+
+    assert_eq!(response.status_code, StatusCode::BAD_REQUEST);
 }

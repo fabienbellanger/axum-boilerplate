@@ -16,6 +16,10 @@ pub struct TestApp {
 }
 
 impl TestApp {
+    pub fn database(&self) -> &TestDatabase {
+        self.database.as_ref().expect("database error")
+    }
+
     pub async fn drop_database(&self) {
         if let Some(database) = &self.database {
             database.drop_database().await;
