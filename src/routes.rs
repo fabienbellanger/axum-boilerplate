@@ -18,7 +18,6 @@ pub fn web() -> Router {
 }
 
 /// Return WebSocket routes list
-#[cfg(feature = "ws")]
 pub fn ws() -> Router {
     Router::new()
         .route("/", get(handlers::ws::simple_ws_handler))

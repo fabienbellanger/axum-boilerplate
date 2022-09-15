@@ -6,19 +6,15 @@ use crate::{
 };
 use axum::{error_handling::HandleErrorLayer, routing::get_service, Extension, Router};
 use color_eyre::Result;
-#[cfg(feature = "ws")]
 use std::collections::HashSet;
-#[cfg(feature = "ws")]
 use std::sync::{Arc, Mutex};
 use std::{net::SocketAddr, time::Duration};
 use tokio::signal;
-#[cfg(feature = "ws")]
 use tokio::sync::broadcast;
 use tower::ServiceBuilder;
 use tower_http::{services::ServeDir, ServiceBuilderExt};
 
 /// State for WebSocket chat example
-#[cfg(feature = "ws")]
 pub struct ChatAppState {
     pub user_set: Mutex<HashSet<String>>,
     pub tx: broadcast::Sender<String>,
@@ -77,11 +73,8 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
 
     // Chat app state
     // --------------
-    #[cfg(feature = "ws")]
     let user_set = Mutex::new(HashSet::new());
-    #[cfg(feature = "ws")]
     let (tx, _rx) = broadcast::channel(100);
-    #[cfg(feature = "ws")]
     let chat_app_state = Arc::new(ChatAppState { user_set, tx });
 
     // Routing
@@ -93,7 +86,6 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
         )
         .nest("/api/v1", routes::api().layer(cors));
 
-    #[cfg(feature = "ws")]
     let app = app.nest("/ws", routes::ws());
 
     let app = app
@@ -108,7 +100,6 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
             settings.limiter_white_list.clone(),
         ));
 
-    #[cfg(feature = "ws")]
     let app = app.layer(Extension(chat_app_state));
 
     let app = app

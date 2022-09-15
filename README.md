@@ -6,10 +6,6 @@
 
 [Axum Doc](https://docs.rs/axum/latest/axum)
 
-## Features
-
-- `ws`: Enable WebSocket support
-
 ## Cargo watch
 
 cargo-watch repository: [Github](https://github.com/passcod/cargo-watch)
