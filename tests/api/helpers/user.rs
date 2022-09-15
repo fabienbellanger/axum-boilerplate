@@ -2,45 +2,16 @@
 
 use super::TestResponse;
 use crate::helper::{TestApp, TestDatabase};
-use axum::http::Request;
 use axum_boilerplate::{
     models::user::{LoginResponse, Role, User},
     repositories::user::UserRepository,
 };
 use chrono::Utc;
-use hyper::Body;
-use serde_json::Value;
-use std::collections::HashMap;
-use tower::ServiceExt;
 use uuid::Uuid;
-
-// TODO: Factor request with a generic function
 
 /// Login request helper
 pub async fn login_request(app: &TestApp, body: String) -> TestResponse {
-    let response = app
-        .router
-        .clone()
-        .oneshot(
-            Request::builder()
-                .uri("/api/v1/login")
-                .method("POST")
-                .header("Content-Type", "application/json")
-                .body(body.into())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    let status_code = response.status();
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let body: Value = serde_json::from_slice(&body).unwrap();
-
-    TestResponse {
-        status_code,
-        body,
-        headers: HashMap::new(),
-    }
+    TestResponse::new(app, "/api/v1/login", "POST", Some(body), None).await
 }
 
 /// Create a user for authentication
@@ -89,56 +60,10 @@ pub async fn create_and_authenticate(app: &TestApp) -> (TestResponse, String) {
 
 /// User creation request helper
 pub async fn create_user_request(app: &TestApp, body: String, token: &str) -> TestResponse {
-    let response = app
-        .router
-        .clone()
-        .oneshot(
-            Request::builder()
-                .uri("/api/v1/users")
-                .method("POST")
-                .header("Content-Type", "application/json")
-                .header("Authorization", format!("Bearer {token}"))
-                .body(body.into())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    let status_code = response.status();
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let body: Value = serde_json::from_slice(&body).unwrap();
-
-    TestResponse {
-        status_code,
-        body,
-        headers: HashMap::new(),
-    }
+    TestResponse::new(app, "/api/v1/users", "POST", Some(body), Some(token)).await
 }
 
 /// Return all users
 pub async fn get_all(app: &TestApp, token: &str) -> TestResponse {
-    let response = app
-        .router
-        .clone()
-        .oneshot(
-            Request::builder()
-                .uri("/api/v1/users")
-                .method("GET")
-                .header("Content-Type", "application/json")
-                .header("Authorization", format!("Bearer {token}"))
-                .body(Body::empty())
-                .unwrap(),
-        )
-        .await
-        .unwrap();
-
-    let status_code = response.status();
-    let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-    let body: Value = serde_json::from_slice(&body).unwrap();
-
-    TestResponse {
-        status_code,
-        body,
-        headers: HashMap::new(),
-    }
+    TestResponse::new(app, "/api/v1/users", "GET", None, Some(token)).await
 }
