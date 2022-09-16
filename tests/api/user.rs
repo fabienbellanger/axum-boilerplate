@@ -1,4 +1,4 @@
-use super::helpers::user::{create_and_authenticate, create_user_request, get_all, login_request};
+use super::helpers::user::{create_and_authenticate, create_user_request, get_all, get_one, login_request};
 use super::helpers::TestUser;
 use crate::helper::{TestApp, TestAppBuilder};
 use axum::http::StatusCode;
@@ -114,4 +114,35 @@ async fn test_api_user_list_all() {
 
     let users: Vec<TestUser> = serde_json::from_str(&response.body.to_string()).expect("error when deserializing body");
     assert_eq!(users.len(), 3);
+}
+
+#[tokio::test]
+async fn test_api_user_list_one() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (_response, token) = create_and_authenticate(&app).await;
+
+    // Create a user
+    let response = create_user_request(
+        &app,
+        serde_json::json!({
+            "username": "test-user-creation@test.com",
+            "password": "00000000",
+            "lastname": "Test",
+            "firstname": "Toto",
+        })
+        .to_string(),
+        &token,
+    )
+    .await;
+
+    // Get user ID
+    let user: TestUser = serde_json::from_str(&response.body.to_string()).expect("error when deserializing body");
+
+    let response = get_one(&app, &token, user.id).await;
+
+    app.drop_database().await;
+
+    assert_eq!(response.status_code, StatusCode::OK);
+
+    // TODO: Check response body
 }

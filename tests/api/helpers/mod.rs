@@ -47,7 +47,7 @@ impl TestResponse {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct TestUser {
     pub id: String,
     pub lastname: String,

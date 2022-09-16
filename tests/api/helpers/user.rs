@@ -67,3 +67,8 @@ pub async fn create_user_request(app: &TestApp, body: String, token: &str) -> Te
 pub async fn get_all(app: &TestApp, token: &str) -> TestResponse {
     TestResponse::new(app, "/api/v1/users", "GET", None, Some(token)).await
 }
+
+/// Reurn a user
+pub async fn get_one(app: &TestApp, token: &str, id: String) -> TestResponse {
+    TestResponse::new(app, &format!("/api/v1/users/{id}"), "GET", None, Some(token)).await
+}
