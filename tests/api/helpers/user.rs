@@ -9,11 +9,6 @@ use axum_boilerplate::{
 use chrono::Utc;
 use uuid::Uuid;
 
-/// Login request helper
-pub async fn login_request(app: &TestApp, body: String) -> TestResponse {
-    TestResponse::new(app, "/api/v1/login", "POST", Some(body), None).await
-}
-
 /// Create a user for authentication
 async fn create_user(db: &TestDatabase) -> User {
     let password = String::from("00000000");
@@ -58,6 +53,11 @@ pub async fn create_and_authenticate(app: &TestApp) -> (TestResponse, String) {
     (response, res.token)
 }
 
+/// Login request helper
+pub async fn login_request(app: &TestApp, body: String) -> TestResponse {
+    TestResponse::new(app, "/api/v1/login", "POST", Some(body), None).await
+}
+
 /// User creation request helper
 pub async fn create_user_request(app: &TestApp, body: String, token: &str) -> TestResponse {
     TestResponse::new(app, "/api/v1/users", "POST", Some(body), Some(token)).await
@@ -68,7 +68,12 @@ pub async fn get_all(app: &TestApp, token: &str) -> TestResponse {
     TestResponse::new(app, "/api/v1/users", "GET", None, Some(token)).await
 }
 
-/// Reurn a user
-pub async fn get_one(app: &TestApp, token: &str, id: String) -> TestResponse {
+/// Return a user
+pub async fn get_one(app: &TestApp, token: &str, id: &str) -> TestResponse {
     TestResponse::new(app, &format!("/api/v1/users/{id}"), "GET", None, Some(token)).await
+}
+
+/// Delete a user
+pub async fn delete(app: &TestApp, token: &str, id: &str) -> TestResponse {
+    TestResponse::new(app, &format!("/api/v1/users/{id}"), "DELETE", None, Some(token)).await
 }

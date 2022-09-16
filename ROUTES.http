@@ -1,7 +1,7 @@
 # Variables
 # ---------
 @baseUrl = http://{{$dotenv SERVER_URL}}:{{$dotenv SERVER_PORT}}/api/v1
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJmMGMyMTgzNy1hMjFkLTRhNmItYjY3OS0yOTgxYzdiZmMxZjciLCJleHAiOjE2NTMzODc2MDgsImlhdCI6MTY1MzMwMTIwOCwibmJmIjoxNjUzMzAxMjA4LCJ1c2VyX2lkIjoiZjBjMjE4MzctYTIxZC00YTZiLWI2NzktMjk4MWM3YmZjMWY3IiwidXNlcl9sYXN0bmFtZSI6IlRlc3QiLCJ1c2VyX2ZpcnN0bmFtZSI6IlRvdG8gMiIsInVzZXJfZW1haWwiOiJ0ZXN0QGdtYWlsLmNvbSIsInVzZXJfcm9sZXMiOiJBRE1JTiIsInVzZXJfbGltaXQiOjEwfQ.k38Ch2FWom6xkYuj76dZCfhYAjQmhBQaTdwa2FuUY_pC1TEy_7_hwMsYU42917rlvEhwrUQ5lZHgkZYRJpHRyA
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJmMGMyMTgzNy1hMjFkLTRhNmItYjY3OS0yOTgxYzdiZmMxZjciLCJleHAiOjE2NjM0MjgwMjIsImlhdCI6MTY2MzM0MTYyMiwibmJmIjoxNjYzMzQxNjIyLCJ1c2VyX2lkIjoiZjBjMjE4MzctYTIxZC00YTZiLWI2NzktMjk4MWM3YmZjMWY3IiwidXNlcl9yb2xlcyI6IkFETUlOIiwidXNlcl9saW1pdCI6MTB9.NvckcEn98TQE2usHLtXAKbSkuNSnZxaYl5kK7E2dTzlX9LFfVeBSBMe42YpzaOyonpFjkm9fYTzlxSUDtj3xMg
 
 
 # Users
@@ -55,7 +55,7 @@ Authorization: Bearer {{token}}
 ###
 
 # User information
-GET {{baseUrl}}/users/{{userId}}
+GET {{baseUrl}}/users/ddd{{userId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 ###

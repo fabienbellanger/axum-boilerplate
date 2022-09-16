@@ -36,8 +36,10 @@ impl TestResponse {
         let response = app.router.clone().oneshot(request.unwrap()).await.unwrap();
 
         let status_code = response.status();
-        let body = hyper::body::to_bytes(response.into_body()).await.unwrap();
-        let body: Value = serde_json::from_slice(&body).unwrap();
+        let body = hyper::body::to_bytes(response.into_body())
+            .await
+            .expect("failed to convert body into bytes");
+        let body: Value = serde_json::from_slice(&body).unwrap_or(Value::Null);
 
         TestResponse {
             status_code,

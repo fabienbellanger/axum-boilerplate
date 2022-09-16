@@ -1,4 +1,4 @@
-use super::helpers::user::{create_and_authenticate, create_user_request, get_all, get_one, login_request};
+use super::helpers::user::{create_and_authenticate, create_user_request, delete, get_all, get_one, login_request};
 use super::helpers::TestUser;
 use crate::helper::{TestApp, TestAppBuilder};
 use axum::http::StatusCode;
@@ -16,7 +16,6 @@ async fn test_api_login_unauthorized_user() {
         .to_string(),
     )
     .await;
-
     app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::UNAUTHORIZED);
@@ -33,7 +32,6 @@ async fn test_api_login_unauthorized_user() {
 async fn test_api_login_authorized_user() {
     let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
     let (response, _token) = create_and_authenticate(&app).await;
-
     app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::OK);
@@ -56,7 +54,6 @@ async fn test_api_user_creation_success() {
         &token,
     )
     .await;
-
     app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::OK);
@@ -79,7 +76,6 @@ async fn test_api_user_creation_invalid_password() {
         &token,
     )
     .await;
-
     app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::BAD_REQUEST);
@@ -107,7 +103,6 @@ async fn test_api_user_list_all() {
     }
 
     let response = get_all(&app, &token).await;
-
     app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::OK);
@@ -137,12 +132,73 @@ async fn test_api_user_list_one() {
 
     // Get user ID
     let user: TestUser = serde_json::from_str(&response.body.to_string()).expect("error when deserializing body");
+    let user_id = user.id;
 
-    let response = get_one(&app, &token, user.id).await;
-
+    // Get one user by its ID
+    let response = get_one(&app, &token, &user_id).await;
     app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::OK);
 
-    // TODO: Check response body
+    let user: TestUser = serde_json::from_str(&response.body.to_string()).expect("error when deserializing body");
+    assert_eq!(user.id, user_id);
+}
+
+#[tokio::test]
+async fn test_api_user_get_one_bad_parameter() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (_response, token) = create_and_authenticate(&app).await;
+
+    // Create a user
+    let response = create_user_request(
+        &app,
+        serde_json::json!({
+            "username": "test-user-creation@test.com",
+            "password": "00000000",
+            "lastname": "Test",
+            "firstname": "Toto",
+        })
+        .to_string(),
+        &token,
+    )
+    .await;
+
+    // Get user ID
+    let _user: TestUser = serde_json::from_str(&response.body.to_string()).expect("error when deserializing body");
+
+    // Get one user by its ID
+    let response = get_one(&app, &token, "bad_id").await;
+    app.drop_database().await;
+
+    assert_eq!(response.status_code, StatusCode::BAD_REQUEST);
+}
+
+#[tokio::test]
+async fn test_api_user_delete() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (_response, token) = create_and_authenticate(&app).await;
+
+    // Create a user
+    let response = create_user_request(
+        &app,
+        serde_json::json!({
+            "username": "test-user-creation@test.com",
+            "password": "00000000",
+            "lastname": "Test",
+            "firstname": "Toto",
+        })
+        .to_string(),
+        &token,
+    )
+    .await;
+
+    // Get user ID
+    let user: TestUser = serde_json::from_str(&response.body.to_string()).expect("error when deserializing body");
+    let user_id = user.id;
+
+    // Get one user by its ID
+    let response = delete(&app, &token, &user_id).await;
+    app.drop_database().await;
+
+    assert_eq!(response.status_code, StatusCode::NO_CONTENT);
 }
