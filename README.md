@@ -105,3 +105,4 @@ cargo doc --open --no-deps --document-private-items
 - [ ] Rate limiter middleware
   - [ ] Add documentation
   - [x] Add white list from `.env`
+- [ ] Add OpenAPI documentation [RapiDoc](https://rapidocweb.com/examples.html)
