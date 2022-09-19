@@ -77,3 +77,8 @@ pub async fn get_one(app: &TestApp, token: &str, id: &str) -> TestResponse {
 pub async fn delete(app: &TestApp, token: &str, id: &str) -> TestResponse {
     TestResponse::new(app, &format!("/api/v1/users/{id}"), "DELETE", None, Some(token)).await
 }
+
+/// Update a user
+pub async fn update(app: &TestApp, body: String, token: &str, id: &str) -> TestResponse {
+    TestResponse::new(app, &format!("/api/v1/users/{id}"), "PUT", Some(body), Some(token)).await
+}

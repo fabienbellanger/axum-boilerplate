@@ -59,3 +59,9 @@ pub struct TestUser {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
+
+impl TestUser {
+    pub fn from_body(body: &str) -> Self {
+        serde_json::from_str(body).expect("error when deserializing body")
+    }
+}
