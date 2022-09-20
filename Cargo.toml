@@ -48,7 +48,7 @@ r2d2 = "0.8.10"
 redis = { version = "0.21.6", features = ["r2d2"] }
 
 # Tera
-tera = "1.17.0"
+tera = "1.17.1"
 
 async-stream = "0.3.3"
 bytes = "1.2.1"

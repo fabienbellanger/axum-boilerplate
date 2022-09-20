@@ -89,6 +89,14 @@ Run with private items:
 cargo doc --open --no-deps --document-private-items
 ```
 
+### OpenAPI
+
+OpenAPI documentation using [Rapidoc](https://rapidocweb.com/)
+
+YAML file: `assets/doc/doc_api_v1.yml`
+
+URL: `<baseURL>/doc/index.html`
+
 ## TODO:
 
 - [x] Custom errors
@@ -105,4 +113,4 @@ cargo doc --open --no-deps --document-private-items
 - [ ] Rate limiter middleware
   - [ ] Add documentation
   - [x] Add white list from `.env`
-- [ ] Add OpenAPI documentation [RapiDoc](https://rapidocweb.com/examples.html)
+- [x] Add OpenAPI documentation [RapiDoc](https://rapidocweb.com/examples.html)

@@ -2,7 +2,7 @@ openapi: '3.0.2'
 info:
   title: Axum Boilerplate
   version: '1.0'
-  description: This is a REST API test that used Axum rust framework
+  description: Test REST API using Axum rust framework
   contact:
     name: Fabien Bellanger
     email: valentil@gmail.com
@@ -123,6 +123,135 @@ paths:
             $ref: "#/components/responses/BadRequest"
         '401':
             $ref: "#/components/responses/Unauthorized"
+        '404':
+            $ref: "#/components/responses/NotFound"
+        '500':
+            $ref: "#/components/responses/InternalServerError"
+    put:
+      summary: ""
+      description: Update user
+      tags:
+        - "Users"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: User ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreation'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+            $ref: "#/components/responses/BadRequest"
+        '401':
+            $ref: "#/components/responses/Unauthorized"
+        '404':
+            $ref: "#/components/responses/NotFound"
+        '500':
+            $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: ""
+      description: Delete a user
+      tags:
+        - "Users"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: User ID
+      responses:
+        '204':
+          description: No Content
+        '400':
+            $ref: "#/components/responses/BadRequest"
+        '401':
+            $ref: "#/components/responses/Unauthorized"
+        '404':
+            $ref: "#/components/responses/NotFound"
+        '500':
+            $ref: "#/components/responses/InternalServerError"
+  /forgotten-password/{email}:
+    post:
+      summary: ""
+      description: Forgotten password request
+      tags:
+        - "Users"
+      parameters:
+        - in: path
+          name: email
+          schema:
+            type: string
+            format: email
+          required: true
+          description: User email
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordReset'
+        '400':
+            $ref: "#/components/responses/BadRequest"
+        '401':
+            $ref: "#/components/responses/Unauthorized"
+        '404':
+            $ref: "#/components/responses/NotFound"
+        '405':
+            $ref: "#/components/responses/MethodNotAllowed"
+        '500':
+            $ref: "#/components/responses/InternalServerError"
+  /update-password/{token}:
+    patch:
+      summary: ""
+      description: Set a new user password
+      tags:
+        - "Users"
+      parameters:
+        - in: path
+          name: token
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Token to reset password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdatePassword"
+            example:
+              password: "11111111"
+      responses:
+        '200':
+          description: OK
+        '400':
+            $ref: "#/components/responses/BadRequest"
+        '401':
+            $ref: "#/components/responses/Unauthorized"
+        '404':
+            $ref: "#/components/responses/NotFound"
+        '405':
+            $ref: "#/components/responses/MethodNotAllowed"
         '500':
             $ref: "#/components/responses/InternalServerError"
 components:
@@ -144,6 +273,17 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ResponseError'
+        text/plain:
+          schema:
+            type: string
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseError'
+    MethodNotAllowed:
+      description: Method Not Allowed
     InternalServerError:
       description: Internal Server Error
       content:
@@ -259,15 +399,19 @@ components:
     PasswordReset:
       type: object
       properties:
-        user_id:
-          type: string
-          format: uuid
         token:
           type: string
         expired_at:
           type: string
           format: date-time
       required:
-        - user_id
         - token
         - expired_at
+    UserUpdatePassword:
+      type: object
+      properties:
+        password:
+          type: string
+          minLength: 8
+      required:
+        - password
