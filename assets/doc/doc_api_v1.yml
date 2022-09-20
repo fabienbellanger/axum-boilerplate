@@ -1,0 +1,273 @@
+openapi: '3.0.2'
+info:
+  title: Axum Boilerplate
+  version: '1.0'
+  description: This is a REST API test that used Axum rust framework
+  contact:
+    name: Fabien Bellanger
+    email: valentil@gmail.com
+  license:
+    name: MIT
+    url: https://mit-license.org/
+servers:
+  - url: http://localhost:{port}/api/v1
+    description: Local server
+    variables:
+      port:
+        enum:
+          - "8087"
+        default: "8087"
+security:
+  - bearerAuth: []
+paths:
+  /login:
+    post:
+      description: Authenticate a user
+      tags:
+        - "Authentication"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+            example:
+              username: test@gmail.com
+              password: "00000000"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+            $ref: "#/components/responses/BadRequest"
+        '401':
+            $ref: "#/components/responses/Unauthorized"
+        '500':
+            $ref: "#/components/responses/InternalServerError"
+  /users:
+    get:
+      summary: ""
+      description: List all users
+      tags:
+        - "Users"
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: 
+                  $ref: '#/components/schemas/User'
+        '400':
+            $ref: "#/components/responses/BadRequest"
+        '401':
+            $ref: "#/components/responses/Unauthorized"
+        '500':
+            $ref: "#/components/responses/InternalServerError"
+    post:
+      summary: ""
+      description: User creation
+      tags:
+        - "Users"
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreation'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+            $ref: "#/components/responses/BadRequest"
+        '401':
+            $ref: "#/components/responses/Unauthorized"
+        '500':
+            $ref: "#/components/responses/InternalServerError"
+  /users/{id}:
+    get:
+      summary: ""
+      description: Get one user
+      tags:
+        - "Users"
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: User ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+            $ref: "#/components/responses/BadRequest"
+        '401':
+            $ref: "#/components/responses/Unauthorized"
+        '500':
+            $ref: "#/components/responses/InternalServerError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    Unauthorized:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseError'
+    BadRequest:
+      description: Invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseError'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseError'
+  schemas:
+    ResponseError:
+      type: object
+      properties:
+        code:
+          type: integer
+          minimum: 100
+          maximum: 527
+        message:
+          type: string
+      required:
+        - code
+        - message
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+      required:
+        - username
+        - password
+    LoginResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        lastname:
+          type: string
+        firstname:
+          type: string
+        username:
+          type: string
+          format: email
+        roles:
+          type: string
+          enum: ["USER", "MANAGER"]
+        token:
+          type: string
+        expired_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - lastname
+        - firstname
+        - username
+        - roles
+        - token
+        - expired_at
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        lastname:
+          type: string
+        firstname:
+          type: string
+        username:
+          type: string
+          format: email
+        roles:
+          type: string
+          enum: ["USER", "MANAGER"]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - lastname
+        - firstname
+        - username
+        - roles
+        - created_at
+        - updated_at
+    UserCreation:
+      type: object
+      properties:
+        lastname:
+          type: string
+        firstname:
+          type: string
+        username:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        roles:
+          type: string
+          enum: ["USER", "MANAGER"]
+      required:
+        - lastname
+        - firstname
+        - username
+        - password
+        - roles
+    PasswordReset:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        token:
+          type: string
+        expired_at:
+          type: string
+          format: date-time
+      required:
+        - user_id
+        - token
+        - expired_at
