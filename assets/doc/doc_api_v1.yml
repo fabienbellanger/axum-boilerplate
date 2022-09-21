@@ -47,6 +47,71 @@ paths:
             $ref: "#/components/responses/Unauthorized"
         '500':
             $ref: "#/components/responses/InternalServerError"
+  /forgotten-password/{email}:
+    post:
+      summary: ""
+      description: Forgotten password request
+      tags:
+        - "User password"
+      parameters:
+        - in: path
+          name: email
+          schema:
+            type: string
+            format: email
+          required: true
+          description: User email
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordReset'
+        '400':
+            $ref: "#/components/responses/BadRequest"
+        '401':
+            $ref: "#/components/responses/Unauthorized"
+        '404':
+            $ref: "#/components/responses/NotFound"
+        '405':
+            $ref: "#/components/responses/MethodNotAllowed"
+        '500':
+            $ref: "#/components/responses/InternalServerError"
+  /update-password/{token}:
+    patch:
+      summary: ""
+      description: Set a new user password
+      tags:
+        - "User password"
+      parameters:
+        - in: path
+          name: token
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Token to reset password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdatePassword"
+            example:
+              password: "11111111"
+      responses:
+        '200':
+          description: OK
+        '400':
+            $ref: "#/components/responses/BadRequest"
+        '401':
+            $ref: "#/components/responses/Unauthorized"
+        '404':
+            $ref: "#/components/responses/NotFound"
+        '405':
+            $ref: "#/components/responses/MethodNotAllowed"
+        '500':
+            $ref: "#/components/responses/InternalServerError"
   /users:
     get:
       summary: ""
@@ -187,71 +252,6 @@ paths:
             $ref: "#/components/responses/Unauthorized"
         '404':
             $ref: "#/components/responses/NotFound"
-        '500':
-            $ref: "#/components/responses/InternalServerError"
-  /forgotten-password/{email}:
-    post:
-      summary: ""
-      description: Forgotten password request
-      tags:
-        - "Users"
-      parameters:
-        - in: path
-          name: email
-          schema:
-            type: string
-            format: email
-          required: true
-          description: User email
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PasswordReset'
-        '400':
-            $ref: "#/components/responses/BadRequest"
-        '401':
-            $ref: "#/components/responses/Unauthorized"
-        '404':
-            $ref: "#/components/responses/NotFound"
-        '405':
-            $ref: "#/components/responses/MethodNotAllowed"
-        '500':
-            $ref: "#/components/responses/InternalServerError"
-  /update-password/{token}:
-    patch:
-      summary: ""
-      description: Set a new user password
-      tags:
-        - "Users"
-      parameters:
-        - in: path
-          name: token
-          schema:
-            type: string
-            format: uuid
-          required: true
-          description: Token to reset password
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserUpdatePassword"
-            example:
-              password: "11111111"
-      responses:
-        '200':
-          description: OK
-        '400':
-            $ref: "#/components/responses/BadRequest"
-        '401':
-            $ref: "#/components/responses/Unauthorized"
-        '404':
-            $ref: "#/components/responses/NotFound"
-        '405':
-            $ref: "#/components/responses/MethodNotAllowed"
         '500':
             $ref: "#/components/responses/InternalServerError"
 components:
