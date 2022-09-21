@@ -5,14 +5,14 @@ use crate::emails::SmtpConfig;
 use crate::models::auth::Jwt;
 use crate::models::user::{Login, PasswordReset, User, UserCreation, UserUpdatePassword};
 use crate::repositories::user::{PasswordResetRepository, UserRepository};
-use crate::utils::extractors::ExtractRequestId;
+use crate::utils::extractors::{ExtractRequestId, Path};
 use crate::utils::validation::validate_request_data;
 use crate::{
     errors::{AppError, AppResult},
     layers::SharedState,
     models::user::LoginResponse,
 };
-use axum::extract::{Extension, Json, Path};
+use axum::extract::{Extension, Json};
 use axum::http::StatusCode;
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use futures::TryStreamExt;
