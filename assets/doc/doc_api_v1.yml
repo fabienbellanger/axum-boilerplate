@@ -8,7 +8,7 @@ info:
     email: valentil@gmail.com
   license:
     name: MIT
-    url: https://mit-license.org/
+    url: https://github.com/fabienbellanger/axum-boilerplate/blob/main/LICENSE
 servers:
   - url: http://localhost:{port}/api/v1
     description: Local server
