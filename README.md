@@ -95,7 +95,7 @@ OpenAPI documentation using [Rapidoc](https://rapidocweb.com/)
 
 YAML file: `assets/doc/doc_api_v1.yml`
 
-URL: `<baseURL>/doc/index.html`
+URL: `<baseURL>/doc/api-v1.html`
 
 ## TODO:
 
