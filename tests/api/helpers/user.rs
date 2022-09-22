@@ -82,3 +82,8 @@ pub async fn delete(app: &TestApp, token: &str, id: &str) -> TestResponse {
 pub async fn update(app: &TestApp, body: String, token: &str, id: &str) -> TestResponse {
     TestResponse::new(app, &format!("/api/v1/users/{id}"), "PUT", Some(body), Some(token)).await
 }
+
+/// Forgotten password
+pub async fn forgotten_password(app: &TestApp, email: &str) -> TestResponse {
+    TestResponse::new(app, &format!("/api/v1/forgotten-password/{email}"), "POST", None, None).await
+}

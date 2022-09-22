@@ -10,7 +10,8 @@ use tower::ServiceExt;
 
 use crate::helper::TestApp;
 
-///
+/// HTTP response for test
+#[derive(Debug)]
 pub struct TestResponse {
     pub status_code: StatusCode,
     pub headers: HashMap<String, String>,
@@ -61,6 +62,18 @@ pub struct TestUser {
 }
 
 impl TestUser {
+    pub fn from_body(body: &str) -> Self {
+        serde_json::from_str(body).expect("error when deserializing body")
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct TestPasswordReset {
+    pub token: String,
+    pub expired_at: DateTime<Utc>,
+}
+
+impl TestPasswordReset {
     pub fn from_body(body: &str) -> Self {
         serde_json::from_str(body).expect("error when deserializing body")
     }

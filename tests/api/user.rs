@@ -1,9 +1,11 @@
 use super::helpers::user::{
-    create_and_authenticate, create_user_request, delete, get_all, get_one, login_request, update,
+    create_and_authenticate, create_user_request, delete, forgotten_password, get_all, get_one, login_request, update,
 };
 use super::helpers::TestUser;
+use crate::api::helpers::TestPasswordReset;
 use crate::helper::{TestApp, TestAppBuilder};
 use axum::http::StatusCode;
+use uuid::Uuid;
 
 #[tokio::test]
 async fn test_api_login_unauthorized_user() {
@@ -246,4 +248,61 @@ async fn test_api_user_update() {
     assert_eq!(user.lastname, String::from("Test 1"));
     assert_eq!(user.firstname, String::from("Tutu"));
     assert_eq!(user.username, String::from("test-user-creation@test.com"));
+}
+
+#[tokio::test]
+async fn test_api_user_forgotten_password() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (_response, token) = create_and_authenticate(&app).await;
+
+    // Create a user
+    let _response = create_user_request(
+        &app,
+        serde_json::json!({
+            "username": "test-user-creation@test.com",
+            "password": "00000000",
+            "lastname": "Test",
+            "firstname": "Toto",
+        })
+        .to_string(),
+        &token,
+    )
+    .await;
+
+    let response = forgotten_password(&app, "test-user-creation@test.com").await;
+    app.drop_database().await;
+
+    assert_eq!(response.status_code, StatusCode::OK);
+
+    let body = TestPasswordReset::from_body(&response.body.to_string());
+    let uuid = Uuid::parse_str(&body.token).expect("invalid uuid");
+    assert_eq!(uuid.get_version_num(), 4);
+
+    let now = chrono::Utc::now();
+    assert!(body.expired_at > now);
+}
+
+#[tokio::test]
+async fn test_api_user_forgotten_password_email_not_found() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (_response, token) = create_and_authenticate(&app).await;
+
+    // Create a user
+    let _response = create_user_request(
+        &app,
+        serde_json::json!({
+            "username": "test-user-creation@test.com",
+            "password": "00000000",
+            "lastname": "Test",
+            "firstname": "Toto",
+        })
+        .to_string(),
+        &token,
+    )
+    .await;
+
+    let response = forgotten_password(&app, "test-user-creation_1@test.com").await;
+    app.drop_database().await;
+
+    assert_eq!(response.status_code, StatusCode::NOT_FOUND);
 }
