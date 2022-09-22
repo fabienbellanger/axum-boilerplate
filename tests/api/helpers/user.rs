@@ -4,7 +4,7 @@ use super::TestResponse;
 use crate::helper::{TestApp, TestDatabase};
 use axum_boilerplate::{
     models::user::{LoginResponse, Role, User},
-    repositories::user::UserRepository,
+    repositories::user::{PasswordResetRepository, UserRepository},
 };
 use chrono::Utc;
 use uuid::Uuid;
@@ -32,6 +32,18 @@ async fn create_user(db: &TestDatabase) -> User {
     user.password = password;
 
     user
+}
+
+/// Is password reset token already in database?
+pub async fn is_password_reset_token_still_in_database(db: &TestDatabase, token: &str) -> bool {
+    let pool = db.database().await;
+    if let Ok(result) = PasswordResetRepository::get_user_id_from_token(&pool, token.to_string()).await {
+        return match result {
+            Some(_) => true,
+            None => false,
+        };
+    }
+    false
 }
 
 /// Create, authenticate a user and return `TestResponse` and the generated JWT
@@ -86,4 +98,16 @@ pub async fn update(app: &TestApp, body: String, token: &str, id: &str) -> TestR
 /// Forgotten password
 pub async fn forgotten_password(app: &TestApp, email: &str) -> TestResponse {
     TestResponse::new(app, &format!("/api/v1/forgotten-password/{email}"), "POST", None, None).await
+}
+
+/// Change user password
+pub async fn update_password(app: &TestApp, token: &str, body: String) -> TestResponse {
+    TestResponse::new(
+        app,
+        &format!("/api/v1/update-password/{token}"),
+        "PATCH",
+        Some(body),
+        None,
+    )
+    .await
 }

@@ -1,5 +1,6 @@
 use super::helpers::user::{
-    create_and_authenticate, create_user_request, delete, forgotten_password, get_all, get_one, login_request, update,
+    create_and_authenticate, create_user_request, delete, forgotten_password, get_all, get_one,
+    is_password_reset_token_still_in_database, login_request, update, update_password,
 };
 use super::helpers::TestUser;
 use crate::api::helpers::TestPasswordReset;
@@ -305,4 +306,101 @@ async fn test_api_user_forgotten_password_email_not_found() {
     app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn test_api_user_update_password() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (_response, token) = create_and_authenticate(&app).await;
+
+    // Create a user
+    let _response = create_user_request(
+        &app,
+        serde_json::json!({
+            "username": "test-user-creation@test.com",
+            "password": "00000000",
+            "lastname": "Test",
+            "firstname": "Toto",
+        })
+        .to_string(),
+        &token,
+    )
+    .await;
+
+    // Get a reset password token
+    let response = forgotten_password(&app, "test-user-creation@test.com").await;
+    let token = TestPasswordReset::from_body(&response.body.to_string()).token;
+
+    let response = update_password(
+        &app,
+        &token,
+        serde_json::json!({
+            "password": "11111111",
+        })
+        .to_string(),
+    )
+    .await;
+
+    assert_eq!(response.status_code, StatusCode::OK);
+
+    // Try to login with new password
+    let response = login_request(
+        &app,
+        serde_json::json!({
+            "username": "test-user-creation@test.com",
+            "password": "11111111"
+        })
+        .to_string(),
+    )
+    .await;
+
+    assert_eq!(response.status_code, StatusCode::OK);
+
+    // Is token still in database?
+    let still_in_db = is_password_reset_token_still_in_database(app.database(), &token).await;
+    app.drop_database().await;
+
+    assert!(!still_in_db);
+}
+
+#[tokio::test]
+async fn test_api_user_update_password_with_old_password() {
+    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let (_response, token) = create_and_authenticate(&app).await;
+
+    // Create a user
+    let _response = create_user_request(
+        &app,
+        serde_json::json!({
+            "username": "test-user-creation@test.com",
+            "password": "00000000",
+            "lastname": "Test",
+            "firstname": "Toto",
+        })
+        .to_string(),
+        &token,
+    )
+    .await;
+
+    // Get a reset password token
+    let response = forgotten_password(&app, "test-user-creation@test.com").await;
+    let token = TestPasswordReset::from_body(&response.body.to_string()).token;
+
+    let response = update_password(
+        &app,
+        &token,
+        serde_json::json!({
+            "password": "00000000",
+        })
+        .to_string(),
+    )
+    .await;
+
+    assert_eq!(response.status_code, StatusCode::BAD_REQUEST);
+
+    // Is token still in database?
+    let still_in_db = is_password_reset_token_still_in_database(app.database(), &token).await;
+    app.drop_database().await;
+
+    assert!(still_in_db);
 }

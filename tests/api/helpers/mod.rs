@@ -63,7 +63,7 @@ pub struct TestUser {
 
 impl TestUser {
     pub fn from_body(body: &str) -> Self {
-        serde_json::from_str(body).expect("error when deserializing body")
+        serde_json::from_str(body).expect("error when deserializing user body")
     }
 }
 
@@ -75,6 +75,6 @@ pub struct TestPasswordReset {
 
 impl TestPasswordReset {
     pub fn from_body(body: &str) -> Self {
-        serde_json::from_str(body).expect("error when deserializing body")
+        serde_json::from_str(body).expect("error when deserializing password reset body")
     }
 }
