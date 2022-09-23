@@ -1,5 +1,6 @@
 //! Authentification module
 
+use crate::errors::AppError;
 use axum::http::{header, HeaderMap};
 use chrono::Utc;
 use color_eyre::Result;
@@ -48,14 +49,12 @@ pub struct Jwt {}
 
 impl Jwt {
     /// Generate JWT
-    /// TODO: Params in a struct
-    /// TODO: Use custom error instead of Box<dyn std::error::Error>
     pub fn generate(
         user_id: String,
         roles: String,
         secret_key: String,
         jwt_lifetime: i64,
-    ) -> Result<(String, i64), Box<dyn std::error::Error>> {
+    ) -> Result<(String, i64), AppError> {
         let header = Header::new(Algorithm::HS512);
         let now = Utc::now().timestamp_nanos() / 1_000_000_000; // nanosecond -> second
         let expired_at = now + (jwt_lifetime * 3600);
@@ -70,16 +69,26 @@ impl Jwt {
             user_limit: 10, // TODO: From DB
         };
 
-        let token = encode(&header, &payload, &EncodingKey::from_secret(secret_key.as_bytes()))?;
+        let token = encode(&header, &payload, &EncodingKey::from_secret(secret_key.as_bytes())).map_err(|err| {
+            error!("error during JWT encoding: {err}");
+            AppError::InternalError {
+                message: "error during JWT encoding".to_string(),
+            }
+        })?;
 
         Ok((token, expired_at))
     }
 
     /// Parse JWT
-    /// TODO: Use custom error instead of Box<dyn std::error::Error>
-    pub fn parse(token: &str, secret_key: String) -> Result<Claims, Box<dyn std::error::Error>> {
+    pub fn parse(token: &str, secret_key: String) -> Result<Claims, AppError> {
         let validation = Validation::new(Algorithm::HS512);
-        let token = decode::<Claims>(token, &DecodingKey::from_secret(secret_key.as_bytes()), &validation)?;
+        let token =
+            decode::<Claims>(token, &DecodingKey::from_secret(secret_key.as_bytes()), &validation).map_err(|err| {
+                error!("error during JWT decoding: {err}");
+                AppError::InternalError {
+                    message: "error during JWT decoding".to_string(),
+                }
+            })?;
 
         Ok(token.claims)
     }
