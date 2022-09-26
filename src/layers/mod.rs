@@ -1,5 +1,6 @@
 //! Application layers modules
 
+pub mod basic_auth;
 pub mod jwt;
 pub mod logger;
 pub mod prometheus;

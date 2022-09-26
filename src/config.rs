@@ -60,6 +60,9 @@ pub struct Config {
     pub forgotten_password_email_from: String,
 
     pub enable_prometheus_metrics: bool,
+
+    pub basic_auth_username: String,
+    pub basic_auth_password: String,
 }
 
 impl Config {

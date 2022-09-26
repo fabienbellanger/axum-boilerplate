@@ -1,8 +1,9 @@
 //! Prometheus metrics layer
 
-use crate::errors::AppError;
+use crate::{errors::AppError, APP_NAME};
 use axum::{extract::MatchedPath, middleware::Next, response::IntoResponse};
 use hyper::Request;
+use metrics::{histogram, increment_counter};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
 use std::time::Instant;
 
@@ -11,6 +12,7 @@ pub const SECONDS_DURATION_BUCKETS: &[f64; 11] = &[0.005, 0.01, 0.025, 0.05, 0.1
 pub struct PrometheusMetric {}
 
 impl PrometheusMetric {
+    /// Return a new `PrometheusHandle`
     pub fn get_handle() -> Result<PrometheusHandle, AppError> {
         PrometheusBuilder::new()
             .set_buckets_for_metric(
@@ -26,6 +28,7 @@ impl PrometheusMetric {
             })
     }
 
+    /// Layer tracking requests
     pub async fn get_layer<B>(req: Request<B>, next: Next<B>) -> impl IntoResponse {
         let start = Instant::now();
         let path = if let Some(matched_path) = req.extensions().get::<MatchedPath>() {
@@ -39,16 +42,15 @@ impl PrometheusMetric {
 
         let latency = start.elapsed().as_secs_f64();
         let status = response.status().as_u16().to_string();
-
         let labels = [
             ("method", method.to_string()),
             ("path", path),
-            ("service", crate::APP_NAME.to_owned()),
+            ("service", APP_NAME.to_owned()),
             ("status", status),
         ];
 
-        metrics::increment_counter!("http_requests_total", &labels);
-        metrics::histogram!("http_requests_duration_seconds", latency, &labels);
+        increment_counter!("http_requests_total", &labels);
+        histogram!("http_requests_duration_seconds", latency, &labels);
 
         response
     }
