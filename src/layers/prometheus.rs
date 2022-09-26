@@ -40,7 +40,12 @@ impl PrometheusMetric {
         let latency = start.elapsed().as_secs_f64();
         let status = response.status().as_u16().to_string();
 
-        let labels = [("method", method.to_string()), ("path", path), ("status", status)];
+        let labels = [
+            ("method", method.to_string()),
+            ("path", path),
+            ("service", crate::APP_NAME.to_owned()),
+            ("status", status),
+        ];
 
         metrics::increment_counter!("http_requests_total", &labels);
         metrics::histogram!("http_requests_duration_seconds", latency, &labels);
