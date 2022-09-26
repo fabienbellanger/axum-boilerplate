@@ -2,6 +2,7 @@
 
 pub mod jwt;
 pub mod logger;
+pub mod prometheus;
 pub mod rate_limiter;
 
 use crate::config::Config;

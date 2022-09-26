@@ -108,7 +108,7 @@ URL: `<baseURL>/doc/api-v1.html`
   - [x] Simple WebSocket example
   - [x] Chat WebSocket example
 - [x] Add Tera
-- [ ] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs))
+- [x] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs))
 - [ ] Add Basic Auth
 - [ ] Rate limiter middleware
   - [ ] Add documentation

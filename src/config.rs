@@ -58,6 +58,8 @@ pub struct Config {
     pub forgotten_password_expiration_duration: i64,
     pub forgotten_password_base_url: String,
     pub forgotten_password_email_from: String,
+
+    pub enable_prometheus_metrics: bool,
 }
 
 impl Config {

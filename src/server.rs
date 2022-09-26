@@ -1,13 +1,21 @@
 use crate::{
     config::Config,
     databases, handlers,
-    layers::{self, MakeRequestUuid, SharedState, State},
+    layers::{self, prometheus::PrometheusMetric, MakeRequestUuid, SharedState, State},
     logger, routes,
 };
-use axum::{error_handling::HandleErrorLayer, routing::get_service, Extension, Router};
+use axum::{
+    error_handling::HandleErrorLayer,
+    middleware,
+    routing::{get, get_service},
+    Extension, Router,
+};
 use color_eyre::Result;
 use std::collections::HashSet;
-use std::sync::{Arc, Mutex};
+use std::{
+    future::ready,
+    sync::{Arc, Mutex},
+};
 use std::{net::SocketAddr, time::Duration};
 use tokio::signal;
 use tokio::sync::broadcast;
@@ -77,32 +85,46 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     let (tx, _rx) = broadcast::channel(100);
     let chat_app_state = Arc::new(ChatAppState { user_set, tx });
 
-    // Routing
-    // -------
-    let app = Router::new()
+    // Routing - API
+    // -------------
+    let mut app = Router::new()
         .fallback(
             get_service(ServeDir::new("assets").append_index_html_on_directories(true))
                 .handle_error(handlers::static_file_error),
         )
         .nest("/api/v1", routes::api().layer(cors));
 
-    let app = app.nest("/ws", routes::ws());
+    // Routing - WebSocket
+    // -------------------
+    app = app.nest("/ws", routes::ws()).layer(Extension(chat_app_state));
 
-    let app = app
-        .nest("/", routes::web())
-        .layer(layers::rate_limiter::RateLimiterLayer::new(
-            &redis_pool,
-            settings.jwt_secret_key.clone(),
-            settings.redis_prefix.clone(),
-            settings.limiter_enabled,
-            settings.limiter_requests_by_second,
-            settings.limiter_expire_in_seconds,
-            settings.limiter_white_list.clone(),
-        ));
+    // Routing - Web
+    // -------------
+    app = app.nest("/", routes::web());
 
-    let app = app.layer(Extension(chat_app_state));
+    // Prometheus metrics
+    // ------------------
+    let enable_prometheus_metrics = settings.enable_prometheus_metrics;
+    if enable_prometheus_metrics {
+        let handle = PrometheusMetric::get_handle()?;
+        app = app
+            .nest("/metrics", get(move || ready(handle.render())))
+            .route_layer(middleware::from_fn(PrometheusMetric::get_layer));
+    }
 
-    let app = app
+    // Rate limiter
+    // ------------
+    app = app.layer(layers::rate_limiter::RateLimiterLayer::new(
+        &redis_pool,
+        settings.jwt_secret_key.clone(),
+        settings.redis_prefix.clone(),
+        settings.limiter_enabled,
+        settings.limiter_requests_by_second,
+        settings.limiter_expire_in_seconds,
+        settings.limiter_white_list.clone(),
+    ));
+
+    app = app
         .layer(Extension(pool))
         .layer(Extension(redis_pool))
         .layer(layers)
