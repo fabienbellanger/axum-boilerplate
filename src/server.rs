@@ -108,7 +108,13 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     if enable_prometheus_metrics {
         let handle = PrometheusMetric::get_handle()?;
         app = app
-            .nest("/metrics", get(move || ready(handle.render())))
+            .nest(
+                "/metrics",
+                get(move || ready(handle.render())).layer(layers::basic_auth::BadicAuthLayer {
+                    username: "toto".to_string(), // TODO: Get .env value
+                    password: "toto".to_string(), // TODO: Get .env value
+                }),
+            )
             .route_layer(middleware::from_fn(PrometheusMetric::get_layer));
     }
 

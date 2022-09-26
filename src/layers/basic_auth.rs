@@ -1,19 +1,22 @@
 //! Basic Auth layer
 
-use crate::layers::header_value_to_str;
-use axum::{body::Body, http::Request, response::Response};
+use axum::{
+    body::{Body, Full},
+    http::{header, response::Parts, HeaderValue, Request},
+    response::Response,
+};
+use bytes::Bytes;
 use futures::future::BoxFuture;
+use http_auth_basic::Credentials;
+use hyper::StatusCode;
 use std::task::{Context, Poll};
 use tower::{Layer, Service};
 
-// pub struct Credentials {
-//     pub username: String,
-//     pub paswword: String,
-// }
+use crate::errors::AppErrorMessage;
 
 pub struct BadicAuthLayer {
     pub username: String,
-    pub password: String,
+    pub password: String, // Option<String> ?
 }
 
 impl<S> Layer<S> for BadicAuthLayer {
@@ -51,16 +54,76 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let _resquest_headers = request.headers();
-        dbg!(self.username.clone(), self.password.clone());
+        // let auth_header_value = String::from("Basic dXNlcm5hbWU6cGFzc3dvcmQ=");
+        // let credentials = Credentials::from_header(auth_header_value).unwrap();
+        // dbg!(credentials);
 
         // Use: https://crates.io/crates/http-auth-basic
 
+        let auth = request
+            .headers()
+            .get(header::AUTHORIZATION)
+            .and_then(|h| h.to_str().ok())
+            .unwrap_or_default()
+            .to_string();
+        let username = self.username.clone();
+        let password = self.password.clone();
+
         let future = self.inner.call(request);
         Box::pin(async move {
-            let response: Response = future.await?;
+            let mut response = Response::default();
+
+            // TODO: Improve code!
+            response = match auth.is_empty() {
+                true => {
+                    let (mut parts, _body) = response.into_parts();
+                    let message = from_parts(&mut parts, StatusCode::UNAUTHORIZED, "Unauthorized");
+                    Response::from_parts(parts, axum::body::boxed(Full::from(message)))
+                }
+                false => match Credentials::from_header(auth.to_string()) {
+                    Err(_) => {
+                        let (mut parts, _body) = response.into_parts();
+                        let message = from_parts(&mut parts, StatusCode::UNAUTHORIZED, "Unauthorized");
+                        Response::from_parts(parts, axum::body::boxed(Full::from(message)))
+                    }
+                    Ok(credentials) => {
+                        if credentials.user_id == username && credentials.password == password {
+                            future.await?
+                        } else {
+                            let (mut parts, _body) = response.into_parts();
+                            let message = from_parts(&mut parts, StatusCode::UNAUTHORIZED, "Unauthorized");
+                            Response::from_parts(parts, axum::body::boxed(Full::from(message)))
+                        }
+                    }
+                },
+            };
 
             Ok(response)
         })
     }
+}
+
+// TODO: Generic?
+fn from_parts(parts: &mut Parts, status_code: StatusCode, message: &str) -> Bytes {
+    // Status
+    parts.status = status_code;
+
+    // Content Type
+    parts.headers.insert(
+        header::CONTENT_TYPE,
+        HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
+    );
+    if status_code == StatusCode::UNAUTHORIZED {
+        parts.headers.insert(
+            header::WWW_AUTHENTICATE,
+            HeaderValue::from_static("basic realm=RESTRICTED"),
+        );
+    }
+
+    // Body
+    let msg = serde_json::json!(AppErrorMessage {
+        code: status_code.as_u16(),
+        message: String::from(message),
+    });
+    Bytes::from(msg.to_string())
 }
