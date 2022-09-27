@@ -40,6 +40,9 @@ pub enum AppError {
 
     #[display(fmt = "Too Many Requests")]
     TooManyRequests,
+
+    #[display(fmt = "Method Not Allowed")]
+    MethodNotAllowed,
 }
 
 impl AppError {
@@ -51,6 +54,7 @@ impl AppError {
             Self::Unauthorized => "Unauthorized".to_owned(),
             Self::Timeout => "Request Timeout".to_owned(),
             Self::TooManyRequests => "Too Many Requests".to_owned(),
+            Self::MethodNotAllowed => "Method Not Allowed".to_owned(),
         }
     }
 }
@@ -66,6 +70,7 @@ impl IntoResponse for AppError {
             AppError::BadRequest { .. } => StatusCode::BAD_REQUEST,
             AppError::Timeout { .. } => StatusCode::REQUEST_TIMEOUT,
             AppError::TooManyRequests { .. } => StatusCode::TOO_MANY_REQUESTS,
+            AppError::MethodNotAllowed { .. } => StatusCode::METHOD_NOT_ALLOWED,
         };
 
         let body = Json(json!(AppErrorMessage {

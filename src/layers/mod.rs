@@ -7,13 +7,50 @@ pub mod prometheus;
 pub mod rate_limiter;
 
 use crate::config::Config;
+use crate::errors::{AppError, AppErrorMessage};
+use axum::headers::HeaderName;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN};
+use axum::http::response::Parts;
 use axum::http::{HeaderValue, Method, Request};
+use axum::middleware::Next;
+use axum::response::IntoResponse;
+use bytes::Bytes;
+use hyper::{header, StatusCode};
 use std::str::from_utf8;
 use std::sync::Arc;
 use tower_http::cors::{AllowOrigin, Any, CorsLayer};
 use tower_http::request_id::{MakeRequestId, RequestId};
 use uuid::Uuid;
+
+/// Contruct response body from `Parts`, status code, message and headers
+pub fn body_from_parts(
+    parts: &mut Parts,
+    status_code: StatusCode,
+    message: &str,
+    headers: Option<Vec<(HeaderName, HeaderValue)>>,
+) -> Bytes {
+    // Status
+    parts.status = status_code;
+
+    // Headers
+    parts.headers.insert(
+        header::CONTENT_TYPE,
+        HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
+    );
+    if let Some(headers) = headers {
+        for header in headers {
+            parts.headers.insert(header.0, header.1);
+        }
+    }
+
+    // Body
+    let msg = serde_json::json!(AppErrorMessage {
+        code: status_code.as_u16(),
+        message: String::from(message),
+    });
+
+    Bytes::from(msg.to_string())
+}
 
 // ================ Request ID ================
 
@@ -93,6 +130,18 @@ pub fn cors(config: &Config) -> CorsLayer {
                 }))
                 .allow_credentials(true)
         }
+    }
+}
+
+// =============== Override some HTTP errors ================
+
+/// Layer which override some HTTP errors by using `AppError`
+pub async fn override_http_errors<B>(req: Request<B>, next: Next<B>) -> impl IntoResponse {
+    let response = next.run(req).await;
+
+    match response.status() {
+        StatusCode::METHOD_NOT_ALLOWED => AppError::MethodNotAllowed.into_response(),
+        _ => response,
     }
 }
 

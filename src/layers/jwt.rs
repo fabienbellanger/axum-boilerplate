@@ -1,12 +1,12 @@
 //! JWT layer
 
-use crate::{errors::AppErrorMessage, layers, models::auth::Claims};
+use super::body_from_parts;
+use crate::{layers, models::auth::Claims};
 use axum::{
-    body::{Body, Full},
-    http::{header, HeaderValue, Request, StatusCode},
+    body::{boxed, Body, Full},
+    http::{Request, StatusCode},
     response::Response,
 };
-use bytes::Bytes;
 use futures::future::BoxFuture;
 use std::task::{Context, Poll};
 use tower::{Layer, Service};
@@ -57,24 +57,8 @@ where
                 true => future.await?,
                 false => {
                     let (mut parts, _body) = response.into_parts();
-
-                    // Status
-                    parts.status = StatusCode::UNAUTHORIZED;
-
-                    // Content Type
-                    parts.headers.insert(
-                        header::CONTENT_TYPE,
-                        HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
-                    );
-
-                    // Body
-                    let msg = serde_json::json!(AppErrorMessage {
-                        code: StatusCode::UNAUTHORIZED.as_u16(),
-                        message: String::from("Unauthorized"),
-                    });
-                    let msg = Bytes::from(msg.to_string());
-
-                    Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
+                    let msg = body_from_parts(&mut parts, StatusCode::UNAUTHORIZED, "Unauthorized", None);
+                    Response::from_parts(parts, boxed(Full::from(msg)))
                 }
             };
 

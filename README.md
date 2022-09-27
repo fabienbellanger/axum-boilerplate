@@ -109,7 +109,7 @@ URL: `<baseURL>/doc/api-v1.html`
   - [x] Chat WebSocket example
 - [x] Add Tera
 - [x] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs))
-- [ ] Add Basic Auth middleware (use [http-auth-basic](https://crates.io/crates/http-auth-basic))
+- [x] Add Basic Auth middleware (use [http-auth-basic](https://crates.io/crates/http-auth-basic))
 - [ ] Rate limiter middleware
   - [ ] Add documentation
   - [x] Add white list from `.env`

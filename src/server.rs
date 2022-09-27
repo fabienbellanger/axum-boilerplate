@@ -1,7 +1,10 @@
 use crate::{
     config::Config,
     databases, handlers,
-    layers::{self, prometheus::PrometheusMetric, MakeRequestUuid, SharedState, State},
+    layers::{
+        self, basic_auth::BasicAuthLayer, prometheus::PrometheusMetric, rate_limiter::RateLimiterLayer,
+        MakeRequestUuid, SharedState, State,
+    },
     logger, routes,
 };
 use axum::{
@@ -110,17 +113,17 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
         app = app
             .nest(
                 "/metrics",
-                get(move || ready(handle.render())).layer(layers::basic_auth::BadicAuthLayer {
-                    username: "toto".to_string(), // TODO: Get .env value
-                    password: "toto".to_string(), // TODO: Get .env value
-                }),
+                get(move || ready(handle.render())).layer(BasicAuthLayer::new(
+                    &settings.basic_auth_username,
+                    &settings.basic_auth_password,
+                )),
             )
             .route_layer(middleware::from_fn(PrometheusMetric::get_layer));
     }
 
     // Rate limiter
     // ------------
-    app = app.layer(layers::rate_limiter::RateLimiterLayer::new(
+    app = app.layer(RateLimiterLayer::new(
         &redis_pool,
         settings.jwt_secret_key.clone(),
         settings.redis_prefix.clone(),
@@ -131,6 +134,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     ));
 
     app = app
+        .layer(middleware::from_fn(layers::override_http_errors))
         .layer(Extension(pool))
         .layer(Extension(redis_pool))
         .layer(layers)

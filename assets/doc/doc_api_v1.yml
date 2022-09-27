@@ -286,6 +286,10 @@ components:
             $ref: '#/components/schemas/ResponseError'
     MethodNotAllowed:
       description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseError'
     InternalServerError:
       description: Internal Server Error
       content:

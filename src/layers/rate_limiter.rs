@@ -1,16 +1,13 @@
 //! Rate limiter module
 
-use crate::{
-    errors::AppErrorMessage,
-    models::auth::{self, Claims},
-};
+use super::body_from_parts;
+use crate::models::auth::{self, Claims};
 use axum::{
     body::{Body, Full},
     extract::ConnectInfo,
     http::{response::Parts, HeaderValue, Request, StatusCode},
     response::Response,
 };
-use bytes::Bytes;
 use chrono::Utc;
 use derive_more::{Display, Error};
 use futures::future::BoxFuture;
@@ -154,44 +151,15 @@ where
                     // --------
                     let (mut parts, _body) = response.into_parts();
 
-                    // Status
-                    parts.status = StatusCode::TOO_MANY_REQUESTS;
-
                     // Headers
                     set_headers(&mut parts, limit, remaining, reset);
-                    parts.headers.insert(
-                        axum::http::header::CONTENT_TYPE,
-                        HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
-                    );
 
-                    // Body
-                    let msg = serde_json::json!(AppErrorMessage {
-                        code: StatusCode::TOO_MANY_REQUESTS.as_u16(),
-                        message: String::from("Too Many Requests"),
-                    });
-                    let msg = Bytes::from(msg.to_string());
-
+                    let msg = body_from_parts(&mut parts, StatusCode::TOO_MANY_REQUESTS, "Too Many Requests", None);
                     Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
                 }
                 Err(err) => {
                     let (mut parts, _body) = response.into_parts();
-
-                    // Status
-                    parts.status = StatusCode::INTERNAL_SERVER_ERROR;
-
-                    // Content Type
-                    parts.headers.insert(
-                        axum::http::header::CONTENT_TYPE,
-                        HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
-                    );
-
-                    // Body
-                    let msg = serde_json::json!(AppErrorMessage {
-                        code: StatusCode::INTERNAL_SERVER_ERROR.as_u16(),
-                        message: err.to_string(),
-                    });
-                    let msg = Bytes::from(msg.to_string());
-
+                    let msg = body_from_parts(&mut parts, StatusCode::INTERNAL_SERVER_ERROR, &err.to_string(), None);
                     Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
                 }
             };
