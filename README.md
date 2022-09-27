@@ -21,6 +21,12 @@ With all features:
 cargo watch -x 'run --all-features --bin axum-boilerplate-bin'
 ```
 
+## Unit tests
+
+```bash
+cargo test -- --test-threads=1
+```
+
 ## Benchmark
 
 Use [Drill](https://github.com/fcsonline/drill)
