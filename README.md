@@ -120,3 +120,4 @@ URL: `<baseURL>/doc/api-v1.html`
   - [ ] Add documentation
   - [x] Add white list from `.env`
 - [x] Add OpenAPI documentation [RapiDoc](https://rapidocweb.com/examples.html)
+- [ ] Add Docker support
