@@ -121,3 +121,5 @@ URL: `<baseURL>/doc/api-v1.html`
   - [x] Add white list from `.env`
 - [x] Add OpenAPI documentation [RapiDoc](https://rapidocweb.com/examples.html)
 - [ ] Add Docker support
+  - [rust-web-server-template](https://github.com/nullren/rust-web-server-template)
+  - [axum-demo](https://github.com/linux-china/axum-demo)
