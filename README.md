@@ -124,6 +124,9 @@ URL: `<baseURL>/doc/api-v1.html`
 
 ## TODO:
 
+- [ ] Add pagination mecanism
+- [ ] Improve global documentation
+- [ ] Complete README.md to explain the boilerplate
 - [x] Custom errors
 - [x] Add CLI
 - [x] Add JWT ([Example](https://github.com/tokio-rs/axum/blob/main/examples/jwt/src/main.rs))
@@ -137,8 +140,10 @@ URL: `<baseURL>/doc/api-v1.html`
 - [x] Add Basic Auth middleware (use [http-auth-basic](https://crates.io/crates/http-auth-basic))
 - [ ] Rate limiter middleware
   - [ ] Add documentation
+  - [ ] Optimize code
   - [x] Add white list from `.env`
 - [x] Add OpenAPI documentation [RapiDoc](https://rapidocweb.com/examples.html)
-- [x] Add Docker support
+- [-] Add Docker support
+  - [ ] Create a first user to use API
   - [rust-web-server-template](https://github.com/nullren/rust-web-server-template)
   - [axum-demo](https://github.com/linux-china/axum-demo)

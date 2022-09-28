@@ -86,7 +86,7 @@ pub async fn create(
 }
 
 // Route: GET /api/v1/users
-// TODO: Add pagination
+// TODO: Add pagination, sort and filter
 #[instrument(skip(pool))]
 pub async fn get_all(Extension(pool): Extension<Pool<MySql>>) -> AppResult<Json<Vec<User>>> {
     let mut stream = UserRepository::get_all(&pool);
