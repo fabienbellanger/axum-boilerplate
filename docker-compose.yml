@@ -1,0 +1,74 @@
+version: '3.9'
+
+services:
+  mariadb:
+    container_name: axum_boilerplate_mariadb
+    image: mariadb:latest
+    ports:
+      - "3308:3306"
+    volumes:
+      - database:/var/lib/mysql:delegated
+    environment:
+      MYSQL_ROOT_PASSWORD: axum
+      MYSQL_DATABASE: axum
+      MYSQL_USER: axum
+      MYSQL_PASSWORD: axum
+    networks:
+      - backend
+    restart: "no"
+
+  adminer:
+    container_name: axum_boilerplate_adminer
+    image: adminer:latest
+    ports:
+      - 8083:8080
+    links:
+      - mariadb:db
+    networks:
+      - backend
+    restart: "no"
+
+  maildev:
+    container_name: axum_boilerplate_maildev
+    image: djfarrelly/maildev
+    ports:
+        - "1081:80"
+        - "1026:25"
+    networks:
+        - backend
+    restart: "no"
+  
+  redis:
+    container_name: axum_boilerplate_redis
+    image: redis:latest
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis:/var/lib/redis:delegated
+    environment:
+      REDIS_REPLICATION_MODE: master
+    networks:
+      - backend
+    restart: "no"
+
+  server:
+    container_name: axum_boilerplate_server
+    build:
+      context: .
+    ports:
+      - "8087:8087"
+    links:
+      - mariadb:db
+    networks:
+      - backend
+    restart: "no"
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  database:
+    external: false
+  redis:
+    external: false

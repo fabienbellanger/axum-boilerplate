@@ -21,6 +21,23 @@ With all features:
 cargo watch -x 'run --all-features --bin axum-boilerplate-bin'
 ```
 
+## Cargo audit
+
+cargo-audit repository: [Github](https://github.com/RustSec/rustsec/tree/main/cargo-audit)
+
+Installation:
+
+```bash
+cargo install cargo-audit --features=fix
+```
+
+Usage:
+
+```bash
+cargo audit
+cargo audit fix
+```
+
 ## Unit tests
 
 ```bash
@@ -67,6 +84,8 @@ sqlx migrate revert
 ### Offline mode
 
 Used for Github Actions or Docker
+
+/!\ Be careful, `sqlx` and `sqlx-cli` must have the same version !
 
 ```bash
 cargo sqlx prepare -- --bin <app name in Cargo.toml>
@@ -120,6 +139,6 @@ URL: `<baseURL>/doc/api-v1.html`
   - [ ] Add documentation
   - [x] Add white list from `.env`
 - [x] Add OpenAPI documentation [RapiDoc](https://rapidocweb.com/examples.html)
-- [ ] Add Docker support
+- [x] Add Docker support
   - [rust-web-server-template](https://github.com/nullren/rust-web-server-template)
   - [axum-demo](https://github.com/linux-china/axum-demo)

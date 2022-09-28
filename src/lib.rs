@@ -23,7 +23,7 @@ extern crate serde;
 
 use tera::Tera;
 
-/// Application name (for CLI)
+/// Application name
 pub const APP_NAME: &str = "Axum Boilerplate";
 /// Application author name (for CLI)
 pub const APP_AUTHOR: &str = "Fabien Bellanger";
