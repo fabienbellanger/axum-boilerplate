@@ -206,7 +206,7 @@ mod tests {
         assert!(!PasswordScorer::valid("azerty"));
 
         // Valid
-        dbg!(passwords::scorer::score(&passwords::analyzer::analyze("Ad15,df7js")));
-        assert!(PasswordScorer::valid("Ad15,df7js"));
+        dbg!(passwords::scorer::score(&passwords::analyzer::analyze("Ad;5Z7js")));
+        assert!(PasswordScorer::valid("Ad;5Z7js"));
     }
 }
