@@ -130,7 +130,7 @@ impl Role {
 pub struct PasswordScorer {}
 
 impl PasswordScorer {
-    /// Valid that a password is strong enough (score >= 'good')
+    /// Valid that a password is strong enough
     ///
     /// A password whose score is:
     /// - 0 ~ 20 is very dangerous (may be cracked within few seconds)
@@ -206,7 +206,6 @@ mod tests {
         assert!(!PasswordScorer::valid("azerty"));
 
         // Valid
-        dbg!(passwords::scorer::score(&passwords::analyzer::analyze("Ad;5Z7js")));
-        assert!(PasswordScorer::valid("Ad;5Z7js"));
+        assert!(PasswordScorer::valid("Wl6,Ak4;6a"));
     }
 }

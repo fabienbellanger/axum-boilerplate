@@ -3,7 +3,7 @@
 use crate::config::Config;
 use crate::databases;
 use crate::errors::{CliError, CliResult};
-use crate::models::user::{User, UserCreation};
+use crate::models::user::{PasswordScorer, User, UserCreation};
 use crate::repositories::user::UserRepository;
 use clap::{Parser, Subcommand};
 use std::io::{self, Write};
@@ -137,6 +137,11 @@ async fn register(lastname: &str, firstname: &str, username: &str, password: &st
         std::process::exit(1);
     }
     println!();
+
+    // Check password strength
+    // -----------------------
+    let is_password_strong = PasswordScorer::valid(password);
+    dbg!(is_password_strong);
 
     // Add user in database
     // --------------------
