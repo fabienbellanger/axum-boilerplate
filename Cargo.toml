@@ -19,11 +19,11 @@ path = "src/bin/main.rs"
 [dependencies]
 
 # Axum
-axum = { version = "0.5.16", features = ["headers", "ws"] }
+axum = {version = "0.5.16", features = ["headers", "ws"]}
 
 # Tower
-tower = { version = "0.4.13", features = ["timeout"] }
-tower-http = { version = "0.3.4", features = ["cors", "fs", "request-id"] }
+tower = {version = "0.4.13", features = ["timeout"]}
+tower-http = {version = "0.3.4", features = ["cors", "fs", "request-id"]}
 
 # Hyper
 hyper = "0.14.20"
@@ -33,7 +33,7 @@ env_logger = "0.9.1"
 log = "0.4.17"
 tracing = "0.1.36"
 tracing-appender = "0.2.2"
-tracing-subscriber = { version = "0.3.15", features = ["registry", "env-filter", "fmt", "json"] }
+tracing-subscriber = {version = "0.3.15", features = ["registry", "env-filter", "fmt", "json"]}
 
 # Error
 color-eyre = "0.6.2"
@@ -41,11 +41,11 @@ eyre = "0.6.8"
 thiserror = "1.0.37"
 
 # sqlx
-sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls", "chrono", "mysql", "macros", "bigdecimal", "migrate", "offline"] }
+sqlx = {version = "0.6.2", features = ["runtime-tokio-native-tls", "chrono", "mysql", "macros", "bigdecimal", "migrate", "offline"]}
 
 # Redis
 r2d2 = "0.8.10"
-redis = { version = "0.21.6", features = ["r2d2"] }
+redis = {version = "0.21.6", features = ["r2d2"]}
 
 # Tera
 tera = "1.17.1"
@@ -56,8 +56,8 @@ metrics-exporter-prometheus = "0.11.0"
 
 async-stream = "0.3.3"
 bytes = "1.2.1"
-chrono = { version = "0.4.22", features = ["serde"] }
-clap = { version = "4.0.2", features = ["derive"] }
+chrono = {version = "0.4.22", features = ["serde"]}
+clap = {version = "4.0.2", features = ["derive"]}
 config = "0.13.2"
 derive_more = "0.99.17"
 dotenv = "0.15.0"
@@ -68,10 +68,11 @@ lazy_static = "1.4.0"
 lettre = "0.10.1"
 mailchecker = "5.0.1"
 mime = "0.3.16"
+passwords = {version = "3.1.9", features = ["common-password"]}
 rand = "0.8.5"
-serde = { version = "1.0.145", features = ["derive"] }
+serde = {version = "1.0.145", features = ["derive"]}
 serde_json = "1.0.85"
 sha2 = "0.10.6"
-tokio = { version = "1.21.2", features = ["full"] }
-uuid = { version = "1.1.2", features = ["serde", "v4"] }
-validator = { version = "0.16.0", features = ["derive"] }
+tokio = {version = "1.21.2", features = ["full"]}
+uuid = {version = "1.1.2", features = ["serde", "v4"]}
+validator = {version = "0.16.0", features = ["derive"]}

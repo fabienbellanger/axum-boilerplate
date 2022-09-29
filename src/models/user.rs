@@ -104,6 +104,7 @@ impl Display for Role {
 
 impl Role {
     /// Try to return a `Role` if string role is valid
+    /// TODO: Implement From trait instead!
     fn try_from_str(role: &str) -> Option<Self> {
         let mut roles = HashMap::with_capacity(3);
         roles.insert(format!("{}", Self::User), Self::User);
@@ -122,6 +123,27 @@ impl Role {
             .iter()
             .filter_map(|r| Self::try_from_str(*r))
             .collect()
+    }
+}
+
+/// Use to test if a password is strong enought
+pub struct PasswordScorer {}
+
+impl PasswordScorer {
+    /// Valid that a password is strong enough (score >= 'good')
+    ///
+    /// A password whose score is:
+    /// - 0 ~ 20 is very dangerous (may be cracked within few seconds)
+    /// - 20 ~ 40 is dangerous
+    /// - 40 ~ 60 is very weak
+    /// - 60 ~ 80 is weak
+    /// - 80 ~ 90 is good
+    /// - 90 ~ 95 is strong
+    /// - 95 ~ 99 is very strong
+    /// - 99 ~ 100 is invulnerable
+    pub fn valid(password: &str) -> bool {
+        let score = passwords::scorer::score(&passwords::analyzer::analyze(password));
+        score >= 80.0
     }
 }
 
@@ -174,5 +196,17 @@ mod tests {
 
         assert_eq!(Role::get_list(""), HashSet::new());
         assert_eq!(Role::get_list(" "), HashSet::new());
+    }
+
+    #[test]
+    fn test_passwords_score() {
+        // Not valid
+        assert!(!PasswordScorer::valid(""));
+        assert!(!PasswordScorer::valid("azerty"));
+        assert!(!PasswordScorer::valid("azerty"));
+
+        // Valid
+        dbg!(passwords::scorer::score(&passwords::analyzer::analyze("Ad15,df7js")));
+        assert!(PasswordScorer::valid("Ad15,df7js"));
     }
 }

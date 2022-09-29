@@ -143,6 +143,8 @@ make docker-cli-register
 - [ ] Improve global documentation
 - [ ] Complete README.md to explain the boilerplate
 - [ ] Add scopes (currently roles) to routes
+- [ ] Add password scorer [passwords](https://docs.rs/passwords/latest/passwords/) (paramter in .env?)
+- [ ] Improve AppState by using a struct
 - [x] Custom errors
 - [x] Add CLI
 - [x] Add JWT ([Example](https://github.com/tokio-rs/axum/blob/main/examples/jwt/src/main.rs))
