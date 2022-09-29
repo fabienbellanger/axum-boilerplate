@@ -54,8 +54,6 @@ pub async fn start_server() -> Result<()> {
 }
 
 pub async fn get_app(settings: &Config) -> Result<Router> {
-    // https://github.com/wolf4ood/realworld-axum/blob/main/src/web/src/app.rs
-
     // Tracing
     // -------
     logger::init(&settings.environment, &settings.logs_path, &settings.logs_file)?;

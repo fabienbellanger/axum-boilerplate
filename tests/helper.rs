@@ -1,11 +1,13 @@
 //! Test helper for unit tests
 
+use std::time::Duration;
+
 use axum::{Extension, Router};
 use axum_boilerplate::{
     layers::{self, MakeRequestUuid, SharedState, State},
     logger, routes,
 };
-use sqlx::{Connection, MySql, MySqlConnection, MySqlPool};
+use sqlx::{mysql::MySqlPoolOptions, Connection, MySql, MySqlConnection, MySqlPool};
 use tower::ServiceBuilder;
 use tower_http::ServiceBuilderExt;
 
@@ -13,7 +15,7 @@ use tower_http::ServiceBuilderExt;
 // Examples:
 // - https://github.com/davidpdrsn/witter/blob/master/backend/src/tests/test_helpers/test_db.rs
 // - https://github.com/tokio-rs/axum/blob/main/examples/testing/src/main.rs
-//
+// - https://github.com/wolf4ood/realworld-axum/blob/main/src/web/src/app.rs
 
 #[derive(Debug)]
 pub struct TestApp {
@@ -135,9 +137,18 @@ impl TestDatabase {
 
     /// Drop database after the test
     pub async fn drop_database(&self) {
-        let (conn, db_name) = parse_url(&self.url);
+        let (_conn, db_name) = parse_url(&self.url);
 
-        let mut pool = MySqlConnection::connect(conn).await.unwrap();
+        let pool = MySqlPoolOptions::new()
+            .max_connections(1)
+            .min_connections(1)
+            .max_lifetime(Some(Duration::from_secs(5)))
+            .acquire_timeout(Duration::from_secs(5))
+            .idle_timeout(Duration::from_secs(5))
+            .test_before_acquire(false)
+            .connect(&self.url)
+            .await
+            .expect("error during MySQL pool creation");
 
         let sql = format!(
             r#"
@@ -147,10 +158,16 @@ impl TestDatabase {
             WHERE `db` = '{}'"#,
             &db_name
         );
-        sqlx::query::<MySql>(&sql).execute(&mut pool).await.unwrap();
+        sqlx::query::<MySql>(&sql)
+            .execute(&pool)
+            .await
+            .expect("error during killing database processes");
 
         let sql = format!(r#"DROP DATABASE `{}`"#, &db_name);
-        sqlx::query::<MySql>(&sql).execute(&mut pool).await.unwrap();
+        sqlx::query::<MySql>(&sql)
+            .execute(&pool)
+            .await
+            .expect("error when dropping database");
     }
 }
 

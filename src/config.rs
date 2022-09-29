@@ -39,6 +39,7 @@ pub struct Config {
     pub database_max_lifetime: u64,
     pub database_connect_timeout: u64,
     pub database_idle_timeout: u64,
+    pub database_auto_migrate: bool,
 
     pub redis_url: String,
     pub redis_prefix: String,

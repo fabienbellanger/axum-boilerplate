@@ -6,7 +6,7 @@ use sqlx::mysql::MySqlPoolOptions;
 use sqlx::{MySql, Pool};
 use std::time::Duration;
 
-/// Initialize database connection pool for MySQL
+/// Initialize MySQL connection pool
 pub async fn init(settings: &Config) -> CliResult<Pool<MySql>> {
     let url = &settings.database_url;
     let max_connections = settings.database_max_connections;
@@ -26,17 +26,13 @@ pub async fn init(settings: &Config) -> CliResult<Pool<MySql>> {
         .await
         .map_err(|err| CliError::DatabaseError(err.to_string()))?;
 
-    Ok(pool)
-}
-
-pub async fn init_test(url: &str) -> CliResult<Pool<MySql>> {
-    let pool = MySqlPoolOptions::new()
-        .max_connections(1)
-        .min_connections(1)
-        .test_before_acquire(true)
-        .connect(url)
-        .await
-        .map_err(|err| CliError::DatabaseError(err.to_string()))?;
+    if settings.database_auto_migrate {
+        info!("Run database migrations");
+        sqlx::migrate!("./migrations")
+            .run(&pool)
+            .await
+            .map_err(|err| CliError::DatabaseError(format!("failed to run database migrations: {}", err)))?
+    }
 
     Ok(pool)
 }

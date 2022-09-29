@@ -122,11 +122,27 @@ YAML file: `assets/doc/doc_api_v1.yml`
 
 URL: `<baseURL>/doc/api-v1.html`
 
+## Docker
+
+Run:
+
+```bash
+make docker
+```
+
+To create the admin user:
+
+```bash
+make docker-cli-build # If not already launch or if no change
+make docker-cli-register
+```
+
 ## TODO:
 
-- [ ] Add pagination mecanism
+- [ ] Add pagination, sort and filter mecanisms
 - [ ] Improve global documentation
 - [ ] Complete README.md to explain the boilerplate
+- [ ] Add scopes (currently roles) to routes
 - [x] Custom errors
 - [x] Add CLI
 - [x] Add JWT ([Example](https://github.com/tokio-rs/axum/blob/main/examples/jwt/src/main.rs))
@@ -143,7 +159,7 @@ URL: `<baseURL>/doc/api-v1.html`
   - [ ] Optimize code
   - [x] Add white list from `.env`
 - [x] Add OpenAPI documentation [RapiDoc](https://rapidocweb.com/examples.html)
-- [-] Add Docker support
-  - [ ] Create a first user to use API
+- [x] Add Docker support
+  - [x] Create a first user to use API
   - [rust-web-server-template](https://github.com/nullren/rust-web-server-template)
   - [axum-demo](https://github.com/linux-china/axum-demo)

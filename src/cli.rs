@@ -27,7 +27,7 @@ enum Commands {
     Serve,
 
     /// Register user
-    #[clap(about = "User registration", long_about = None)]
+    #[clap(about = "Create a new user with ADMIN role", long_about = None)]
     Register {
         /// User lastname
         #[clap(
@@ -35,7 +35,7 @@ enum Commands {
             short = 'l',
             long,
             value_name = "Lastname",
-            takes_value = true,
+            num_args = 1,
             help = "Lastname"
         )]
         lastname: String,
@@ -46,7 +46,7 @@ enum Commands {
             short = 'f',
             long,
             value_name = "Firstname",
-            takes_value = true,
+            num_args = 1,
             help = "Firstname"
         )]
         firstname: String,
@@ -57,7 +57,7 @@ enum Commands {
             short = 'u',
             long,
             value_name = "Email",
-            takes_value = true,
+            num_args = 1,
             help = "Username (email)"
         )]
         username: String,
@@ -68,7 +68,7 @@ enum Commands {
             short = 'p',
             long,
             value_name = "Password",
-            takes_value = true,
+            num_args = 1,
             help = "Password (at least 8 characters)"
         )]
         password: String,

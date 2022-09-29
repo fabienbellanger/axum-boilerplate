@@ -55,10 +55,12 @@ services:
     container_name: axum_boilerplate_server
     build:
       context: .
+      dockerfile: Dockerfile
     ports:
       - "8087:8087"
     links:
-      - mariadb:db
+      - mariadb
+      - redis
     networks:
       - backend
     restart: "no"
@@ -69,6 +71,8 @@ networks:
 
 volumes:
   database:
+    name: axum_boilerplate_database
     external: false
   redis:
+    name: axum_boilerplate_redis
     external: false

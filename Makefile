@@ -10,7 +10,9 @@
 	docker-up \
 	docker-up-no-daemon \
 	docker-down \
-	docker-down-rm
+	docker-down-rm \
+	docker-cli-build \
+	docker-cli-register
 
 .DEFAULT_GOAL=help
 
@@ -18,6 +20,7 @@
 APP_NAME="Axum Boilerplate"
 CURRENT_PATH=$(shell pwd)
 DOCKER_COMPOSE=docker-compose
+DOCKER=docker
 CARGO=cargo
 CARGO_BIN_NAME=axum-boilerplate-bin
 
@@ -31,7 +34,7 @@ check:
 
 ## test: Launch unit tests in a single thread
 test:
-	$(CARGO) test -- --test-threads=1
+	$(CARGO) test -- --test-threads=1 --nocapture
 
 ## clean: Remove target directory
 clean:
@@ -67,6 +70,14 @@ docker-down:
 ## docker-down-rm: Stop running containers and remove linked volumes
 docker-down-rm:
 	$(DOCKER_COMPOSE) down --remove-orphans --volumes
+
+## docker-cli-build: Build project for CLI
+docker-cli-build:
+	$(DOCKER) build -f Dockerfile.cli -t axum-boilerplate-cli .
+
+## docker-cli-register: Run CLI container to register an admin user
+docker-cli-register:
+	$(DOCKER) run -i --rm --net axum-boilerplate_backend --link axum_boilerplate_mariadb axum-boilerplate-cli register -l Admin -f Admin -u admin@gmail.com -p 00000000
 
 help: Makefile
 	@echo
