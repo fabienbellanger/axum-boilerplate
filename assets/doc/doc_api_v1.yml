@@ -2,7 +2,7 @@ openapi: '3.0.2'
 info:
   title: Axum Boilerplate
   version: '1.0'
-  description: Test REST API using Axum rust framework
+  description: REST API using Axum Rust Web framework
   contact:
     name: Fabien Bellanger
     email: valentil@gmail.com
@@ -122,6 +122,27 @@ paths:
         - "Users"
       security:
         - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 0
+          required: false
+          description: Page number
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            maximum: 500
+          required: false
+          description: Limit of links per page
+        - in: query
+          name: search
+          schema:
+            type: string
+          required: false
+          description: Search
       responses:
         '200':
           description: OK
@@ -135,6 +156,8 @@ paths:
             $ref: "#/components/responses/BadRequest"
         '401':
             $ref: "#/components/responses/Unauthorized"
+        '422':
+            $ref: "#/components/responses/UnprocessableEntity"
         '500':
             $ref: "#/components/responses/InternalServerError"
     post:
@@ -286,6 +309,12 @@ components:
             $ref: '#/components/schemas/ResponseError'
     MethodNotAllowed:
       description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ResponseError'
+    UnprocessableEntity:
+      description: Unprocessable Entity
       content:
         application/json:
           schema:

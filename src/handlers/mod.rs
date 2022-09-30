@@ -6,6 +6,7 @@ pub mod ws;
 
 use crate::errors::AppError;
 use axum::{http::StatusCode, response::IntoResponse, BoxError};
+use serde::Deserialize;
 use std::io;
 use tower::timeout::error::Elapsed;
 
@@ -26,4 +27,13 @@ pub async fn static_file_error(err: io::Error) -> impl IntoResponse {
         StatusCode::INTERNAL_SERVER_ERROR,
         format!("Unhandled internal error: {}", err),
     )
+}
+
+/// Query parameters used to paginate, sort and search
+// TODO: Add sort
+#[derive(Debug, Deserialize)]
+pub struct PaginateSearchSortQuery {
+    pub page: Option<isize>,
+    pub limit: Option<usize>,
+    pub search: Option<String>,
 }

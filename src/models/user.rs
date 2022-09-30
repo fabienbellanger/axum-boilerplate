@@ -145,7 +145,7 @@ const PASSWORD_STRENGTH_STRONG: Range<f64> = 90f64..95f64;
 const PASSWORD_STRENGTH_VERY_STRONG: Range<f64> = 95f64..99f64;
 const PASSWORD_STRENGTH_INVULNERABLE: RangeInclusive<f64> = 99f64..=100f64;
 
-/// Use to test if a password is strong enought
+/// Used to test if a password is strong enought
 pub struct PasswordScorer {}
 
 impl PasswordScorer {
@@ -224,6 +224,7 @@ mod tests {
 
         // Valid
         assert!(PasswordScorer::valid("", PasswordStrength::Dangerous));
+        assert!(PasswordScorer::valid("azerty", PasswordStrength::Dangerous));
         assert!(PasswordScorer::valid("Wl6,Ak4;6a", PasswordStrength::Good));
         assert!(PasswordScorer::valid(
             "WlH5Y;8!fs81#6,Ak4;6a(HJ27hgh6g=1",

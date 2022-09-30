@@ -8,13 +8,15 @@ pub mod rate_limiter;
 
 use crate::config::Config;
 use crate::errors::{AppError, AppErrorMessage};
+use axum::body::Full;
 use axum::headers::HeaderName;
 use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN};
 use axum::http::response::Parts;
 use axum::http::{HeaderValue, Method, Request};
 use axum::middleware::Next;
-use axum::response::IntoResponse;
+use axum::response::{IntoResponse, Response};
 use bytes::Bytes;
+use hyper::body::to_bytes;
 use hyper::{header, StatusCode};
 use std::str::from_utf8;
 use std::sync::Arc;
@@ -138,10 +140,24 @@ pub fn cors(config: &Config) -> CorsLayer {
 /// Layer which override some HTTP errors by using `AppError`
 pub async fn override_http_errors<B>(req: Request<B>, next: Next<B>) -> impl IntoResponse {
     let response = next.run(req).await;
+    let (parts, body) = response.into_parts();
 
-    match response.status() {
-        StatusCode::METHOD_NOT_ALLOWED => AppError::MethodNotAllowed.into_response(),
-        _ => response,
+    match to_bytes(body).await {
+        Ok(body_bytes) => match String::from_utf8(body_bytes.to_vec()) {
+            Ok(body) => match parts.status {
+                StatusCode::METHOD_NOT_ALLOWED => AppError::MethodNotAllowed.into_response(),
+                StatusCode::UNPROCESSABLE_ENTITY => AppError::UnprocessableEntity { message: body }.into_response(),
+                _ => Response::from_parts(parts, axum::body::boxed(Full::from(body))),
+            },
+            Err(err) => AppError::InternalError {
+                message: err.to_string(),
+            }
+            .into_response(),
+        },
+        Err(err) => AppError::InternalError {
+            message: err.to_string(),
+        }
+        .into_response(),
     }
 }
 

@@ -1,5 +1,6 @@
 .PHONY: help \
 	serve \
+	watch \
 	check \
 	test \
 	clean \
@@ -27,6 +28,10 @@ CARGO_BIN_NAME=axum-boilerplate-bin
 ## serve: Start web server
 serve:
 	$(CARGO) run -- serve
+
+## serve: Start web server with hot reload
+watch:
+	$(CARGO) watch -x "run -- serve"
 
 ## check: Run clippy, rustfmt and audit
 check:

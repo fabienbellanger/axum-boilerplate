@@ -12,12 +12,14 @@ use crate::{
     layers::SharedState,
     models::user::LoginResponse,
 };
-use axum::extract::{Extension, Json};
+use axum::extract::{Extension, Json, Query};
 use axum::http::StatusCode;
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use futures::TryStreamExt;
 use sqlx::{MySql, Pool};
 use uuid::Uuid;
+
+use super::PaginateSearchSortQuery;
 
 // Route: POST /api/v1/login
 #[instrument(name = "Login", skip(pool, state), level = "warn")]
@@ -88,7 +90,10 @@ pub async fn create(
 // Route: GET /api/v1/users
 // TODO: Add pagination, sort and filter
 #[instrument(skip(pool))]
-pub async fn get_all(Extension(pool): Extension<Pool<MySql>>) -> AppResult<Json<Vec<User>>> {
+pub async fn get_all(
+    Extension(pool): Extension<Pool<MySql>>,
+    Query(params): Query<PaginateSearchSortQuery>,
+) -> AppResult<Json<Vec<User>>> {
     let mut stream = UserRepository::get_all(&pool);
     let mut users: Vec<User> = Vec::new();
     while let Some(row) = stream.try_next().await? {

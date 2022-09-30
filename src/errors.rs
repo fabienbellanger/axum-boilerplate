@@ -32,6 +32,9 @@ pub enum AppError {
     #[display(fmt = "{}", message)]
     NotFound { message: String },
 
+    #[display(fmt = "{}", message)]
+    UnprocessableEntity { message: String },
+
     #[display(fmt = "Request Timeout")]
     Timeout,
 
@@ -51,6 +54,7 @@ impl AppError {
             Self::NotFound { message: m } => m.to_owned(),
             Self::BadRequest { message: m } => m.to_owned(),
             Self::InternalError { message: m } => m.to_owned(),
+            Self::UnprocessableEntity { message: m } => m.to_owned(),
             Self::Unauthorized => "Unauthorized".to_owned(),
             Self::Timeout => "Request Timeout".to_owned(),
             Self::TooManyRequests => "Too Many Requests".to_owned(),
@@ -71,6 +75,7 @@ impl IntoResponse for AppError {
             AppError::Timeout { .. } => StatusCode::REQUEST_TIMEOUT,
             AppError::TooManyRequests { .. } => StatusCode::TOO_MANY_REQUESTS,
             AppError::MethodNotAllowed { .. } => StatusCode::METHOD_NOT_ALLOWED,
+            AppError::UnprocessableEntity { .. } => StatusCode::UNPROCESSABLE_ENTITY,
         };
 
         let body = Json(json!(AppErrorMessage {

@@ -1,7 +1,7 @@
 # Variables
 # ---------
 @baseUrl = http://{{$dotenv SERVER_URL}}:{{$dotenv SERVER_PORT}}/api/v1
-@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiI0MzIzYTFiMS0yMDZiLTQyYzctYTdlNS1iY2I0NWY3ZjYzMzUiLCJleHAiOjE2NjM4Nzc4NDgsImlhdCI6MTY2Mzc5MTQ0OCwibmJmIjoxNjYzNzkxNDQ4LCJ1c2VyX2lkIjoiNDMyM2ExYjEtMjA2Yi00MmM3LWE3ZTUtYmNiNDVmN2Y2MzM1IiwidXNlcl9yb2xlcyI6IkFETUlOIiwidXNlcl9saW1pdCI6MTB9.uzCjmTx8nflI4t2eY4Riz7H5GxleUN6peps4XJJOTIehh3B2e3nY1nb8-CQ1yjZav5raejEiDGhFUSy3cmiTcA
+@token = eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJmMGMyMTgzNy1hMjFkLTRhNmItYjY3OS0yOTgxYzdiZmMxZjciLCJleHAiOjE2NjQ2MjYwNDYsImlhdCI6MTY2NDUzOTY0NiwibmJmIjoxNjY0NTM5NjQ2LCJ1c2VyX2lkIjoiZjBjMjE4MzctYTIxZC00YTZiLWI2NzktMjk4MWM3YmZjMWY3IiwidXNlcl9yb2xlcyI6IkFETUlOIiwidXNlcl9saW1pdCI6MTB9.yS8Xiq6r7URR-RArp-Jt5UyuB-hkcVia1PXIaB60z3U6NHtU9YKtifdzpRTtBEOLqxd2YXShI4q4Qlh1B1OBMw
 
 
 # Users
@@ -36,7 +36,7 @@ Content-Type: application/json
 ###
 
 # Register
-POST {{baseUrl}}/users
+POST {{baseUrl}}/users?page=0&limit=100&search=doe
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -49,7 +49,7 @@ Authorization: Bearer {{token}}
 ###
 
 # Users list
-GET {{baseUrl}}/users
+GET {{baseUrl}}/users?page=0&limit=100
 Content-Type: application/json
 Authorization: Bearer {{token}}
 ###
