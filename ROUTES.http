@@ -49,7 +49,7 @@ Authorization: Bearer {{token}}
 ###
 
 # Users list
-GET {{baseUrl}}/users?page=0&limit=100
+GET {{baseUrl}}/users?page=4&limit=100
 Content-Type: application/json
 Authorization: Bearer {{token}}
 ###

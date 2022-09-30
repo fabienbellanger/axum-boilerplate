@@ -1,16 +1,19 @@
 //! API users handlers
 
-use crate::emails::forgotten_password::ForgottenPasswordEmail;
-use crate::emails::SmtpConfig;
-use crate::models::auth::Jwt;
-use crate::models::user::{Login, PasswordReset, User, UserCreation, UserUpdatePassword};
-use crate::repositories::user::{PasswordResetRepository, UserRepository};
-use crate::utils::extractors::{ExtractRequestId, Path};
-use crate::utils::validation::validate_request_data;
 use crate::{
+    emails::{forgotten_password::ForgottenPasswordEmail, SmtpConfig},
     errors::{AppError, AppResult},
     layers::SharedState,
-    models::user::LoginResponse,
+    models::{
+        auth::Jwt,
+        user::{Login, LoginResponse, PasswordReset, User, UserCreation, UserUpdatePassword},
+    },
+    repositories::user::{PasswordResetRepository, UserRepository},
+    utils::{
+        extractors::{ExtractRequestId, Path},
+        query::PaginateQuery,
+        validation::validate_request_data,
+    },
 };
 use axum::extract::{Extension, Json, Query};
 use axum::http::StatusCode;
@@ -18,8 +21,6 @@ use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use futures::TryStreamExt;
 use sqlx::{MySql, Pool};
 use uuid::Uuid;
-
-use super::PaginateSearchSortQuery;
 
 // Route: POST /api/v1/login
 #[instrument(name = "Login", skip(pool, state), level = "warn")]
@@ -92,8 +93,11 @@ pub async fn create(
 #[instrument(skip(pool))]
 pub async fn get_all(
     Extension(pool): Extension<Pool<MySql>>,
-    Query(params): Query<PaginateSearchSortQuery>,
+    Query(mut pagination): Query<PaginateQuery>,
 ) -> AppResult<Json<Vec<User>>> {
+    pagination.build();
+    dbg!(&pagination);
+
     let mut stream = UserRepository::get_all(&pool);
     let mut users: Vec<User> = Vec::new();
     while let Some(row) = stream.try_next().await? {
