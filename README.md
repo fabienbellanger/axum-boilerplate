@@ -155,7 +155,7 @@ make docker-cli-register
   - [x] Chat WebSocket example
 - [x] Add Tera
 - [-] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs))
-  - [ ] Add Prometheus + Grafana to Docker
+  - [ ] Add Prometheus + Grafana to Docker ([Example](https://github.com/stefanprodan/dockprom))
 - [x] Add Basic Auth middleware (use [http-auth-basic](https://crates.io/crates/http-auth-basic))
 - [ ] Rate limiter middleware
   - [ ] Add documentation
