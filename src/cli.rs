@@ -3,7 +3,7 @@
 use crate::config::Config;
 use crate::databases;
 use crate::errors::{CliError, CliResult};
-use crate::models::user::{PasswordScorer, User, UserCreation};
+use crate::models::user::{PasswordScorer, PasswordStrength, User, UserCreation};
 use crate::repositories::user::UserRepository;
 use clap::{Parser, Subcommand};
 use std::io::{self, Write};
@@ -118,12 +118,15 @@ async fn register(lastname: &str, firstname: &str, username: &str, password: &st
         return Err(CliError::Error(String::from(
             "invalid password (at least 8 characters)",
         )));
+    } else if !PasswordScorer::valid(password, PasswordStrength::Strong) {
+        // For a user with ADMIN role, the password must be strong enough
+        return Err(CliError::Error(String::from("password is not enought strong")));
     }
 
     // User validation
     // ---------------
     print!(
-        "\nFirstname: {}\nLastname:  {}\nUsername:  {}\nPassword:  {}\n\nAre you sure that user information are correct? (y/N) ",
+        "\nFirstname: {}\nLastname:  {}\nUsername:  {}\nPassword:  {}\n\nAre you sure that user information are correct? (Y/n) ",
         firstname, lastname, username, password
     );
     io::stdout().flush().map_err(|err| CliError::Error(err.to_string()))?;
@@ -133,15 +136,10 @@ async fn register(lastname: &str, firstname: &str, username: &str, password: &st
         .map_err(|err| CliError::Error(err.to_string()))?;
     input = input.trim().to_string();
 
-    if input.to_lowercase() != *"y" {
+    if input.to_lowercase() != *"y" && !input.is_empty() {
         std::process::exit(1);
     }
     println!();
-
-    // Check password strength
-    // -----------------------
-    let is_password_strong = PasswordScorer::valid(password);
-    dbg!(is_password_strong);
 
     // Add user in database
     // --------------------

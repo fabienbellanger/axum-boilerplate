@@ -6,7 +6,7 @@ use sqlx::types::chrono::{DateTime, Utc};
 use std::{
     collections::{HashMap, HashSet},
     fmt::Display,
-    ops::Add,
+    ops::{Add, Range, RangeInclusive},
 };
 use uuid::Uuid;
 use validator::Validate;
@@ -126,24 +126,41 @@ impl Role {
     }
 }
 
+/// Password strength
+pub enum PasswordStrength {
+    Dangerous,    // 0..40
+    VeryWeak,     // 40..60
+    Weak,         // 60..80
+    Good,         // 80..90
+    Strong,       // 90..95
+    VeryStrong,   // 95..99
+    Invulnerable, // 99..100
+}
+
+const PASSWORD_STRENGTH_DANGEROUS: Range<f64> = 0f64..40f64;
+const PASSWORD_STRENGTH_VERY_WEAK: Range<f64> = 40f64..60f64;
+const PASSWORD_STRENGTH_WEAK: Range<f64> = 60f64..80f64;
+const PASSWORD_STRENGTH_GOOD: Range<f64> = 80f64..90f64;
+const PASSWORD_STRENGTH_STRONG: Range<f64> = 90f64..95f64;
+const PASSWORD_STRENGTH_VERY_STRONG: Range<f64> = 95f64..99f64;
+const PASSWORD_STRENGTH_INVULNERABLE: RangeInclusive<f64> = 99f64..=100f64;
+
 /// Use to test if a password is strong enought
 pub struct PasswordScorer {}
 
 impl PasswordScorer {
     /// Valid that a password is strong enough
-    ///
-    /// A password whose score is:
-    /// - 0 ~ 20 is very dangerous (may be cracked within few seconds)
-    /// - 20 ~ 40 is dangerous
-    /// - 40 ~ 60 is very weak
-    /// - 60 ~ 80 is weak
-    /// - 80 ~ 90 is good
-    /// - 90 ~ 95 is strong
-    /// - 95 ~ 99 is very strong
-    /// - 99 ~ 100 is invulnerable
-    pub fn valid(password: &str) -> bool {
+    pub fn valid(password: &str, strength: PasswordStrength) -> bool {
         let score = passwords::scorer::score(&passwords::analyzer::analyze(password));
-        score >= 80.0
+        match strength {
+            PasswordStrength::Dangerous => PASSWORD_STRENGTH_DANGEROUS.contains(&score),
+            PasswordStrength::VeryWeak => PASSWORD_STRENGTH_VERY_WEAK.contains(&score),
+            PasswordStrength::Weak => PASSWORD_STRENGTH_WEAK.contains(&score),
+            PasswordStrength::Good => PASSWORD_STRENGTH_GOOD.contains(&score),
+            PasswordStrength::Strong => PASSWORD_STRENGTH_STRONG.contains(&score),
+            PasswordStrength::VeryStrong => PASSWORD_STRENGTH_VERY_STRONG.contains(&score),
+            PasswordStrength::Invulnerable => PASSWORD_STRENGTH_INVULNERABLE.contains(&score),
+        }
     }
 }
 
@@ -201,11 +218,16 @@ mod tests {
     #[test]
     fn test_passwords_score() {
         // Not valid
-        assert!(!PasswordScorer::valid(""));
-        assert!(!PasswordScorer::valid("azerty"));
-        assert!(!PasswordScorer::valid("azerty"));
+        assert!(!PasswordScorer::valid("", PasswordStrength::Strong));
+        assert!(!PasswordScorer::valid("azerty", PasswordStrength::Strong));
+        assert!(!PasswordScorer::valid("azerty", PasswordStrength::Strong));
 
         // Valid
-        assert!(PasswordScorer::valid("Wl6,Ak4;6a"));
+        assert!(PasswordScorer::valid("", PasswordStrength::Dangerous));
+        assert!(PasswordScorer::valid("Wl6,Ak4;6a", PasswordStrength::Good));
+        assert!(PasswordScorer::valid(
+            "WlH5Y;8!fs81#6,Ak4;6a(HJ27hgh6g=1",
+            PasswordStrength::Invulnerable
+        ));
     }
 }
