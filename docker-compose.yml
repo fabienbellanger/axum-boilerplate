@@ -95,7 +95,7 @@ services:
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
-      - /:/rootfs:ro
+      # - /:/rootfs:ro # Does not work on macOS
     command:
       - '--path.procfs=/host/proc'
       - '--path.rootfs=/rootfs'
