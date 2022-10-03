@@ -1,13 +1,12 @@
 //! WebSocklet handlers
 
-use crate::server::ChatAppState;
+use crate::layers::{ChatState, SharedChatState};
 use axum::{
     extract::ws::{Message, WebSocket, WebSocketUpgrade},
     response::IntoResponse,
     Extension,
 };
 use futures::{sink::SinkExt, stream::StreamExt};
-use std::sync::Arc;
 
 /// Simple WebSocket handler
 pub async fn simple_ws_handler(ws: WebSocketUpgrade) -> impl IntoResponse {
@@ -61,14 +60,11 @@ async fn handle_simple_socket(mut socket: WebSocket) {
 }
 
 /// Chat WebSocket handler
-pub async fn chat_ws_handler(
-    ws: WebSocketUpgrade,
-    Extension(state): Extension<Arc<ChatAppState>>,
-) -> impl IntoResponse {
+pub async fn chat_ws_handler(ws: WebSocketUpgrade, Extension(state): Extension<SharedChatState>) -> impl IntoResponse {
     ws.on_upgrade(|socket| websocket(socket, state))
 }
 
-async fn websocket(stream: WebSocket, state: Arc<ChatAppState>) {
+async fn websocket(stream: WebSocket, state: SharedChatState) {
     // By splitting we can send and receive at the same time
     let (mut sender, mut receiver) = stream.split();
 
@@ -141,7 +137,7 @@ async fn websocket(stream: WebSocket, state: Arc<ChatAppState>) {
 }
 
 /// Check if username is valid and not already
-fn check_username(state: &ChatAppState, string: &mut String, name: &str) {
+fn check_username(state: &ChatState, string: &mut String, name: &str) {
     let mut user_set = state.user_set.lock().unwrap();
 
     if !user_set.contains(name) {

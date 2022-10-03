@@ -26,7 +26,7 @@ pub async fn init(settings: &Config) -> CliResult<Pool<MySql>> {
         .await
         .map_err(|err| CliError::DatabaseError(err.to_string()))?;
 
-    if settings.database_auto_migrate {
+    if settings.database_auto_migration {
         info!("Run database migrations");
         sqlx::migrate!("./migrations")
             .run(&pool)

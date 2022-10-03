@@ -38,11 +38,6 @@ impl Claims {
             None => None,
         }
     }
-
-    /// Extract claims from token
-    pub fn from_token(token: &str, secret_key: String) -> Option<Self> {
-        Jwt::parse(token, secret_key).ok()
-    }
 }
 
 pub struct Jwt {}
@@ -80,6 +75,9 @@ impl Jwt {
     }
 
     /// Parse JWT
+    // TODO: [BUG] When rate limiter is enabled and a protected route is called without token
+    // `error!("error during JWT decoding: {err}");` is called twice
+    // `extract_from_request` should return a `Result<Option<Claims>>`
     pub fn parse(token: &str, secret_key: String) -> Result<Claims, AppError> {
         let validation = Validation::new(Algorithm::HS512);
         let token =

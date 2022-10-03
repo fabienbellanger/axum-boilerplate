@@ -1,7 +1,8 @@
 .PHONY: help \
 	serve \
 	watch \
-	check \
+	lint \
+	lint-audit \
 	test \
 	clean \
 	sqlx-prepare \
@@ -33,9 +34,13 @@ serve:
 watch:
 	$(CARGO) watch -x "run -- serve"
 
-## check: Run clippy, rustfmt and audit
-check:
-	$(CARGO) clippy && $(CARGO) fmt && $(CARGO) audit
+## lint: Run clippy and rustfmt
+lint:
+	$(CARGO) clippy && $(CARGO) fmt
+
+## lint-audit: Run clippy, rustfmt and audit
+lint-audit: lint
+	$(CARGO) audit
 
 ## test: Launch unit tests in a single thread
 test:

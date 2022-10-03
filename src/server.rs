@@ -2,8 +2,8 @@ use crate::{
     config::Config,
     databases, handlers,
     layers::{
-        self, basic_auth::BasicAuthLayer, prometheus::PrometheusMetric, rate_limiter::RateLimiterLayer,
-        MakeRequestUuid, SharedState, State,
+        self, basic_auth::BasicAuthLayer, prometheus::PrometheusMetric, rate_limiter::RateLimiterLayer, ChatState,
+        MakeRequestUuid, SharedChatState, SharedState, State,
     },
     logger, routes,
 };
@@ -15,21 +15,12 @@ use axum::{
 };
 use color_eyre::Result;
 use std::collections::HashSet;
-use std::{
-    future::ready,
-    sync::{Arc, Mutex},
-};
+use std::{future::ready, sync::Mutex};
 use std::{net::SocketAddr, time::Duration};
 use tokio::signal;
 use tokio::sync::broadcast;
 use tower::ServiceBuilder;
 use tower_http::{services::ServeDir, ServiceBuilderExt};
-
-/// State for WebSocket chat example
-pub struct ChatAppState {
-    pub user_set: Mutex<HashSet<String>>,
-    pub tx: broadcast::Sender<String>,
-}
 
 /// Starts API server
 pub async fn start_server() -> Result<()> {
@@ -62,10 +53,6 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     // --------
     let pool = databases::init(settings).await?;
 
-    // Redis
-    // -----
-    let redis_pool = databases::init_redis(settings).await?;
-
     // CORS
     // ----
     let cors = layers::cors(settings);
@@ -84,7 +71,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     // --------------
     let user_set = Mutex::new(HashSet::new());
     let (tx, _rx) = broadcast::channel(100);
-    let chat_app_state = Arc::new(ChatAppState { user_set, tx });
+    let chat_state = SharedChatState::new(ChatState { user_set, tx });
 
     // Routing - API
     // -------------
@@ -97,7 +84,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
 
     // Routing - WebSocket
     // -------------------
-    app = app.nest("/ws", routes::ws()).layer(Extension(chat_app_state));
+    app = app.nest("/ws", routes::ws()).layer(Extension(chat_state));
 
     // Routing - Web
     // -------------
@@ -105,8 +92,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
 
     // Prometheus metrics
     // ------------------
-    let enable_prometheus_metrics = settings.enable_prometheus_metrics;
-    if enable_prometheus_metrics {
+    if settings.prometheus_metrics_enabled {
         let handle = PrometheusMetric::get_handle()?;
         app = app
             .nest(
@@ -121,20 +107,27 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
 
     // Rate limiter
     // ------------
-    app = app.layer(RateLimiterLayer::new(
-        &redis_pool,
-        settings.jwt_secret_key.clone(),
-        settings.redis_prefix.clone(),
-        settings.limiter_enabled,
-        settings.limiter_requests_by_second,
-        settings.limiter_expire_in_seconds,
-        settings.limiter_white_list.clone(),
-    ));
+    if settings.limiter_enabled {
+        // Redis
+        // -----
+        let redis_pool = databases::init_redis(settings).await?;
+
+        app = app
+            .layer(RateLimiterLayer::new(
+                &redis_pool,
+                settings.jwt_secret_key.clone(),
+                settings.redis_prefix.clone(),
+                settings.limiter_enabled,
+                settings.limiter_requests_by_second,
+                settings.limiter_expire_in_seconds,
+                settings.limiter_white_list.clone(),
+            ))
+            .layer(Extension(redis_pool));
+    }
 
     app = app
         .layer(middleware::from_fn(layers::override_http_errors))
         .layer(Extension(pool))
-        .layer(Extension(redis_pool))
         .layer(layers)
         .layer(Extension(SharedState::new(State::init(settings))));
 

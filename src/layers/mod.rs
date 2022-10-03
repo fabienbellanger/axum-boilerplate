@@ -10,16 +10,20 @@ use crate::config::Config;
 use crate::errors::{AppError, AppErrorMessage};
 use axum::body::Full;
 use axum::headers::HeaderName;
-use axum::http::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN};
-use axum::http::response::Parts;
-use axum::http::{HeaderValue, Method, Request};
+use axum::http::{
+    header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN},
+    response::Parts,
+    HeaderValue, Method, Request,
+};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use bytes::Bytes;
 use hyper::body::to_bytes;
 use hyper::{header, StatusCode};
+use std::collections::HashSet;
 use std::str::from_utf8;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use tokio::sync::broadcast;
 use tower_http::cors::{AllowOrigin, Any, CorsLayer};
 use tower_http::request_id::{MakeRequestId, RequestId};
 use uuid::Uuid;
@@ -77,14 +81,6 @@ pub type SharedState = Arc<State>;
 
 #[derive(Default, Debug)]
 pub struct State {
-    // pub jwt_secret_key: String,
-    // pub jwt_lifetime: i64,
-    // pub smtp_host: String,
-    // pub smtp_port: u16,
-    // pub smtp_timeout: u64,
-    // pub forgotten_password_expiration_duration: i64,
-    // pub forgotten_password_base_url: String,
-    // pub forgotten_password_email_from: String,
     pub config: ConfigState,
 }
 
@@ -92,14 +88,6 @@ impl State {
     /// Initialize `State` with configuration data (`.env`)
     pub fn init(config: &Config) -> Self {
         Self {
-            // jwt_secret_key: config.jwt_secret_key.clone(),
-            // jwt_lifetime: config.jwt_lifetime,
-            // smtp_host: config.smtp_host.clone(),
-            // smtp_port: config.smtp_port,
-            // smtp_timeout: config.smtp_timeout,
-            // forgotten_password_expiration_duration: config.forgotten_password_expiration_duration,
-            // forgotten_password_base_url: config.forgotten_password_base_url.clone(),
-            // forgotten_password_email_from: config.forgotten_password_email_from.clone(),
             config: config.clone().into(),
         }
     }
@@ -118,7 +106,7 @@ pub struct ConfigState {
 }
 
 impl From<Config> for ConfigState {
-    fn from<'b>(config: Config) -> Self {
+    fn from(config: Config) -> Self {
         Self {
             jwt_secret_key: config.jwt_secret_key.clone(),
             jwt_lifetime: config.jwt_lifetime,
@@ -127,9 +115,17 @@ impl From<Config> for ConfigState {
             smtp_timeout: config.smtp_timeout,
             forgotten_password_expiration_duration: config.forgotten_password_expiration_duration,
             forgotten_password_base_url: config.forgotten_password_base_url.clone(),
-            forgotten_password_email_from: config.forgotten_password_email_from.clone(),
+            forgotten_password_email_from: config.forgotten_password_email_from,
         }
     }
+}
+
+pub type SharedChatState = Arc<ChatState>;
+
+/// State for WebSocket chat example
+pub struct ChatState {
+    pub user_set: Mutex<HashSet<String>>,
+    pub tx: broadcast::Sender<String>,
 }
 
 // ================ CORS ================
