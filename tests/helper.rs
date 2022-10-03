@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use axum::{Extension, Router};
 use axum_boilerplate::{
-    layers::{self, MakeRequestUuid, SharedState, State},
+    layers::{self, ConfigState, MakeRequestUuid, SharedState, State},
     logger, routes,
 };
 use sqlx::{mysql::MySqlPoolOptions, Connection, MySql, MySqlConnection, MySqlPool};
@@ -85,14 +85,16 @@ impl TestAppBuilder {
 
     pub fn with_state(self) -> Self {
         let state = State {
-            jwt_secret_key: String::from("mysecretjwtkey"),
-            jwt_lifetime: 1025,
-            smtp_host: String::from("127.0.0.1"),
-            smtp_port: 1025,
-            smtp_timeout: 30,
-            forgotten_password_expiration_duration: 1,
-            forgotten_password_base_url: String::from("http://localhost"),
-            forgotten_password_email_from: String::from("contact@test.com"),
+            config: ConfigState {
+                jwt_secret_key: String::from("mysecretjwtkey"),
+                jwt_lifetime: 1025,
+                smtp_host: String::from("127.0.0.1"),
+                smtp_port: 1025,
+                smtp_timeout: 30,
+                forgotten_password_expiration_duration: 1,
+                forgotten_password_base_url: String::from("http://localhost"),
+                forgotten_password_email_from: String::from("contact@test.com"),
+            },
         };
 
         Self {

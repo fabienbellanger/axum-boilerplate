@@ -40,8 +40,8 @@ pub async fn login(
         None => Err(AppError::Unauthorized {}),
         Some(user) => {
             // Token generation
-            let secret = state.jwt_secret_key.clone();
-            let jwt_lifetime = state.jwt_lifetime;
+            let secret = state.config.jwt_secret_key.clone();
+            let jwt_lifetime = state.config.jwt_lifetime;
             let roles = match user.roles {
                 Some(roles) => roles,
                 None => String::new(),
@@ -163,7 +163,7 @@ pub async fn forgotten_password(
             message: String::from("no user found"),
         }),
         Some(user) => {
-            let mut password_reset = PasswordReset::new(user.id, state.forgotten_password_expiration_duration);
+            let mut password_reset = PasswordReset::new(user.id, state.config.forgotten_password_expiration_duration);
 
             // Save in database
             PasswordResetRepository::create_or_update(&pool, &mut password_reset).await?;
@@ -171,12 +171,12 @@ pub async fn forgotten_password(
             // Send email
             ForgottenPasswordEmail::send(
                 &SmtpConfig {
-                    host: state.smtp_host.clone(),
-                    port: state.smtp_port,
-                    timeout: state.smtp_timeout,
+                    host: state.config.smtp_host.clone(),
+                    port: state.config.smtp_port,
+                    timeout: state.config.smtp_timeout,
                 },
-                state.forgotten_password_base_url.clone(),
-                state.forgotten_password_email_from.clone(),
+                state.config.forgotten_password_base_url.clone(),
+                state.config.forgotten_password_email_from.clone(),
                 email,
                 password_reset.token.clone(),
             )?;

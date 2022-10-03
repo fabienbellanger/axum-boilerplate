@@ -44,7 +44,7 @@ where
         let is_authorized = match request.extensions().get::<layers::SharedState>() {
             Some(state) => {
                 let state = state.clone();
-                Claims::extract_from_request(request.headers(), state.jwt_secret_key.clone()).is_some()
+                Claims::extract_from_request(request.headers(), state.config.jwt_secret_key.clone()).is_some()
             }
             _ => false,
         };

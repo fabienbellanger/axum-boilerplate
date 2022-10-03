@@ -77,6 +77,36 @@ pub type SharedState = Arc<State>;
 
 #[derive(Default, Debug)]
 pub struct State {
+    // pub jwt_secret_key: String,
+    // pub jwt_lifetime: i64,
+    // pub smtp_host: String,
+    // pub smtp_port: u16,
+    // pub smtp_timeout: u64,
+    // pub forgotten_password_expiration_duration: i64,
+    // pub forgotten_password_base_url: String,
+    // pub forgotten_password_email_from: String,
+    pub config: ConfigState,
+}
+
+impl State {
+    /// Initialize `State` with configuration data (`.env`)
+    pub fn init(config: &Config) -> Self {
+        Self {
+            // jwt_secret_key: config.jwt_secret_key.clone(),
+            // jwt_lifetime: config.jwt_lifetime,
+            // smtp_host: config.smtp_host.clone(),
+            // smtp_port: config.smtp_port,
+            // smtp_timeout: config.smtp_timeout,
+            // forgotten_password_expiration_duration: config.forgotten_password_expiration_duration,
+            // forgotten_password_base_url: config.forgotten_password_base_url.clone(),
+            // forgotten_password_email_from: config.forgotten_password_email_from.clone(),
+            config: config.clone().into(),
+        }
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct ConfigState {
     pub jwt_secret_key: String,
     pub jwt_lifetime: i64,
     pub smtp_host: String,
@@ -87,9 +117,8 @@ pub struct State {
     pub forgotten_password_email_from: String,
 }
 
-impl State {
-    /// Initialize `State` with configuration data (`.env`)
-    pub fn init(config: &Config) -> Self {
+impl From<Config> for ConfigState {
+    fn from<'b>(config: Config) -> Self {
         Self {
             jwt_secret_key: config.jwt_secret_key.clone(),
             jwt_lifetime: config.jwt_lifetime,
