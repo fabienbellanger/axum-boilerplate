@@ -36,7 +36,7 @@ Content-Type: application/json
 ###
 
 # Register
-POST {{baseUrl}}/users?page=0&limit=100&search=doe
+POST {{baseUrl}}/users
 Content-Type: application/json
 Authorization: Bearer {{token}}
 

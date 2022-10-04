@@ -55,7 +55,7 @@ services:
     container_name: axum_boilerplate_server
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev # Change by Dockerfile for production
     ports:
       - "8087:8087"
     links:
@@ -106,6 +106,22 @@ services:
       - "9100:9100"
     # expose:
     #   - 9100
+    networks:
+      - monitoring
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    volumes:
+      - ./docker/alertmanager:/etc/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+    restart: "no"
+    ports:
+      - "9093:9093"
+    expose:
+      - 9093
     networks:
       - monitoring
 

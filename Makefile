@@ -86,8 +86,8 @@ docker-cli-build:
 	$(DOCKER) build -f Dockerfile.cli -t axum-boilerplate-cli .
 
 ## docker-cli-register: Run CLI container to register an admin user
-docker-cli-register:
-	$(DOCKER) run -i --rm --net axum-boilerplate_backend --link axum_boilerplate_mariadb axum-boilerplate-cli register -l Admin -f Admin -u admin@gmail.com -p 00000000
+docker-cli-register: docker-cli-build
+	$(DOCKER) run -i --rm --net axum-boilerplate_backend --link axum_boilerplate_mariadb axum-boilerplate-cli register -l Admin -f Admin -u admin@gmail.com -p 'K-qy,Kg{<AB*XX;V3}_/x19u>1BBl!d'
 
 help: Makefile
 	@echo
