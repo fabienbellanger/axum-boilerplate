@@ -439,4 +439,30 @@ mod tests {
             }
         );
     }
+
+    #[test]
+    fn test_rate_limiter_check_init_with_jwt_decoding_error() {
+        let requests_by_second = 30;
+        let redis_prefix = "axum_rl_";
+        let claims = Some(Err(AppError::Unauthorized));
+        let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8000);
+        let addr = Some(ConnectInfo(socket));
+        let mut key = "127.0.0.1".to_owned();
+        key.insert_str(0, redis_prefix);
+
+        assert_eq!(
+            RateLimiterCheck::init(
+                claims,
+                addr.as_ref(),
+                &vec!["127.0.0.1".to_owned()],
+                redis_prefix,
+                requests_by_second
+            ),
+            RateLimiterCheck {
+                error: Some(RateLimiterError::JwtDecoding),
+                key: None,
+                limit: 0
+            }
+        );
+    }
 }
