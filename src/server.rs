@@ -115,9 +115,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
         app = app
             .layer(RateLimiterLayer::new(
                 &redis_pool,
-                settings.jwt_secret_key.clone(),
                 settings.redis_prefix.clone(),
-                settings.limiter_enabled,
                 settings.limiter_requests_by_second,
                 settings.limiter_expire_in_seconds,
                 settings.limiter_white_list.clone(),

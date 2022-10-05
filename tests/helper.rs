@@ -7,6 +7,7 @@ use axum_boilerplate::{
     layers::{self, ConfigState, MakeRequestUuid, SharedState, State},
     logger, routes,
 };
+use jsonwebtoken::{DecodingKey, EncodingKey};
 use sqlx::{mysql::MySqlPoolOptions, Connection, MySql, MySqlConnection, MySqlPool};
 use tower::ServiceBuilder;
 use tower_http::ServiceBuilderExt;
@@ -84,9 +85,11 @@ impl TestAppBuilder {
     }
 
     pub fn with_state(self) -> Self {
+        let jwt_secret_key = "mysecretjwtkey";
         let state = State {
             config: ConfigState {
-                jwt_secret_key: String::from("mysecretjwtkey"),
+                jwt_encoding_key: EncodingKey::from_secret(jwt_secret_key.as_bytes()),
+                jwt_decoding_key: DecodingKey::from_secret(jwt_secret_key.as_bytes()),
                 jwt_lifetime: 1025,
                 smtp_host: String::from("127.0.0.1"),
                 smtp_port: 1025,

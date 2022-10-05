@@ -20,6 +20,7 @@ use axum::response::{IntoResponse, Response};
 use bytes::Bytes;
 use hyper::body::to_bytes;
 use hyper::{header, StatusCode};
+use jsonwebtoken::{DecodingKey, EncodingKey};
 use std::collections::HashSet;
 use std::str::from_utf8;
 use std::sync::{Arc, Mutex};
@@ -79,7 +80,7 @@ impl MakeRequestId for MakeRequestUuid {
 /// SharedState
 pub type SharedState = Arc<State>;
 
-#[derive(Default, Debug)]
+// #[derive(Default, Debug)]
 pub struct State {
     pub config: ConfigState,
 }
@@ -87,15 +88,17 @@ pub struct State {
 impl State {
     /// Initialize `State` with configuration data (`.env`)
     pub fn init(config: &Config) -> Self {
+        info!("Init app state");
         Self {
             config: config.clone().into(),
         }
     }
 }
 
-#[derive(Default, Debug)]
+// #[derive(Default, Debug)]
 pub struct ConfigState {
-    pub jwt_secret_key: String,
+    pub jwt_encoding_key: EncodingKey,
+    pub jwt_decoding_key: DecodingKey,
     pub jwt_lifetime: i64,
     pub smtp_host: String,
     pub smtp_port: u16,
@@ -108,7 +111,8 @@ pub struct ConfigState {
 impl From<Config> for ConfigState {
     fn from(config: Config) -> Self {
         Self {
-            jwt_secret_key: config.jwt_secret_key.clone(),
+            jwt_encoding_key: EncodingKey::from_secret(config.jwt_secret_key.clone().as_bytes()),
+            jwt_decoding_key: DecodingKey::from_secret(config.jwt_secret_key.as_bytes()),
             jwt_lifetime: config.jwt_lifetime,
             smtp_host: config.smtp_host.clone(),
             smtp_port: config.smtp_port,

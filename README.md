@@ -9,16 +9,9 @@
 ## Cargo watch
 
 cargo-watch repository: [Github](https://github.com/passcod/cargo-watch)
-Usage:
 
 ```bash
 cargo watch -x 'run --bin axum-boilerplate-bin'
-```
-
-With all features:
-
-```bash
-cargo watch -x 'run --all-features --bin axum-boilerplate-bin'
 ```
 
 ## Cargo audit
@@ -85,7 +78,7 @@ sqlx migrate revert
 
 Used for Github Actions or Docker
 
-/!\ Be careful, `sqlx` and `sqlx-cli` must have the same version !
+/!\ Be careful, `sqlx` and `sqlx-cli` must be in the same version!
 
 ```bash
 cargo sqlx prepare -- --bin <app name in Cargo.toml>
@@ -124,7 +117,7 @@ URL: `<baseURL>/doc/api-v1.html`
 
 ## Docker
 
-Run:
+Run the server:
 
 ```bash
 make docker
@@ -133,7 +126,6 @@ make docker
 To create the admin user:
 
 ```bash
-make docker-cli-build # If not already launch or if no change
 make docker-cli-register
 ```
 
@@ -144,6 +136,7 @@ make docker-cli-register
 - [ ] Complete README.md to explain the boilerplate
 - [ ] Add scopes (currently roles) to routes
 - [ ] Add password scorer [passwords](https://docs.rs/passwords/latest/passwords/) (parameter in .env?)
+- [ ] Add more .env parameters in `SharedState`?
 - [x] Improve AppState by using a struct
 - [x] Custom errors
 - [x] Add CLI
@@ -154,8 +147,6 @@ make docker-cli-register
   - [x] Simple WebSocket example
   - [x] Chat WebSocket example
 - [x] Add Tera
-- [-] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs))
-  - [ ] Add Prometheus + Grafana to Docker ([Example](https://github.com/stefanprodan/dockprom))
 - [x] Add Basic Auth middleware (use [http-auth-basic](https://crates.io/crates/http-auth-basic))
 - [ ] Rate limiter middleware
   - [ ] Add documentation
@@ -163,6 +154,7 @@ make docker-cli-register
   - [x] Add white list from `.env`
 - [x] Add OpenAPI documentation [RapiDoc](https://rapidocweb.com/examples.html)
 - [x] Add Docker support
-  - [x] Create a first user to use API
   - [rust-web-server-template](https://github.com/nullren/rust-web-server-template)
   - [axum-demo](https://github.com/linux-china/axum-demo)
+  - [x] Create a first user to use API
+  - [ ] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs)) or ([Example](https://github.com/stefanprodan/dockprom))

@@ -40,13 +40,13 @@ pub async fn login(
         None => Err(AppError::Unauthorized {}),
         Some(user) => {
             // Token generation
-            let secret = state.config.jwt_secret_key.clone();
+            let encoding_key = &state.config.jwt_encoding_key.clone();
             let jwt_lifetime = state.config.jwt_lifetime;
             let roles = match user.roles {
                 Some(roles) => roles,
                 None => String::new(),
             };
-            let token = Jwt::generate(user.id.to_owned(), roles.clone(), secret, jwt_lifetime);
+            let token = Jwt::generate(user.id.to_owned(), roles.clone(), encoding_key, jwt_lifetime);
 
             match token {
                 Ok(token) => {

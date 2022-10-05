@@ -1,7 +1,10 @@
 //! Rate limiter module
 
-use super::body_from_parts;
-use crate::models::auth::{self, Claims};
+use super::{body_from_parts, SharedState};
+use crate::{
+    errors::AppError,
+    models::auth::{self, Claims},
+};
 use axum::{
     body::{Body, Full},
     extract::ConnectInfo,
@@ -28,9 +31,7 @@ const RETRY_AFTER_HEADER: &str = "retry-after";
 
 pub struct RateLimiterLayer<'a> {
     pub pool: &'a Pool<Client>,
-    pub jwt_secret: String,
     pub redis_prefix: String,
-    pub enabled: bool,
     pub requests_by_second: i64,
     pub expire_in_seconds: i64,
     pub white_list: String,
@@ -39,9 +40,7 @@ pub struct RateLimiterLayer<'a> {
 impl<'a> RateLimiterLayer<'a> {
     pub fn new(
         pool: &'a Pool<Client>,
-        jwt_secret: String,
         redis_prefix: String,
-        enabled: bool,
         requests_by_second: i64,
         expire_in_seconds: i64,
         white_list: String,
@@ -51,9 +50,7 @@ impl<'a> RateLimiterLayer<'a> {
 
         Self {
             pool,
-            jwt_secret,
             redis_prefix,
-            enabled,
             requests_by_second,
             expire_in_seconds,
             white_list,
@@ -69,9 +66,7 @@ impl<'a, S> Layer<S> for RateLimiterLayer<'a> {
         RateLimiterMiddleware {
             inner,
             pool: self.pool.clone(),
-            jwt_secret: self.jwt_secret.clone(),
             redis_prefix: self.redis_prefix.clone(),
-            enabled: self.enabled,
             requests_by_second: self.requests_by_second,
             expire_in_seconds: self.expire_in_seconds,
             white_list,
@@ -83,9 +78,7 @@ impl<'a, S> Layer<S> for RateLimiterLayer<'a> {
 pub struct RateLimiterMiddleware<S> {
     inner: S,
     pool: Pool<Client>,
-    jwt_secret: String,
     redis_prefix: String,
-    enabled: bool,
     requests_by_second: i64,
     expire_in_seconds: i64,
     white_list: Vec<String>,
@@ -106,30 +99,31 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let check_result = match self.enabled {
-            true => {
-                // Redis connection
-                let pool = self.pool.clone();
+        // Redis connection
+        let pool = self.pool.clone();
 
-                // Check JWT claims
-                let claims = auth::Claims::extract_from_request(request.headers(), self.jwt_secret.clone());
-
-                // Get socket address
-                let addr = request.extensions().get::<ConnectInfo<SocketAddr>>();
-
-                // Initialize RateLimiterCheck
-                let check = RateLimiterCheck::init(
-                    claims,
-                    addr,
-                    &self.white_list,
-                    &self.redis_prefix,
-                    self.requests_by_second,
-                );
-
-                check.check_and_update(&pool, self.expire_in_seconds)
+        // Check JWT claims
+        let state = request.extensions().get::<SharedState>();
+        let claims = match state {
+            Some(state) => {
+                auth::Claims::extract_from_request(request.headers(), &state.config.jwt_decoding_key.clone())
             }
-            false => Ok((-1, 0, 0)), // Disabled ie. no limit
+            None => None,
         };
+
+        // Get socket address
+        let addr = request.extensions().get::<ConnectInfo<SocketAddr>>();
+
+        // Initialize RateLimiterCheck
+        let check = RateLimiterCheck::init(
+            claims,
+            addr,
+            &self.white_list,
+            &self.redis_prefix,
+            self.requests_by_second,
+        );
+
+        let check_result = check.check_and_update(&pool, self.expire_in_seconds);
 
         let future = self.inner.call(request);
         Box::pin(async move {
@@ -157,11 +151,19 @@ where
                     let msg = body_from_parts(&mut parts, StatusCode::TOO_MANY_REQUESTS, "Too Many Requests", None);
                     Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
                 }
-                Err(err) => {
-                    let (mut parts, _body) = response.into_parts();
-                    let msg = body_from_parts(&mut parts, StatusCode::INTERNAL_SERVER_ERROR, &err.to_string(), None);
-                    Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
-                }
+                Err(err) => match err {
+                    RateLimiterError::JwtDecoding => {
+                        let (mut parts, _body) = response.into_parts();
+                        let msg = body_from_parts(&mut parts, StatusCode::UNAUTHORIZED, "Unauthorized", None);
+                        Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
+                    }
+                    _ => {
+                        let (mut parts, _body) = response.into_parts();
+                        let msg =
+                            body_from_parts(&mut parts, StatusCode::INTERNAL_SERVER_ERROR, &err.to_string(), None);
+                        Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
+                    }
+                },
             };
 
             Ok(response)
@@ -195,6 +197,7 @@ fn set_headers(parts: &mut Parts, limit: i64, remaining: i64, reset: i64) {
 #[derive(Display, Debug, Error, Clone, PartialEq)]
 enum RateLimiterError {
     Ip,
+    JwtDecoding,
 
     #[display(fmt = "{}", message)]
     Redis {
@@ -246,7 +249,7 @@ impl RateLimiterCheck {
 
     // Initialize `RateLimiterCheck`
     fn init(
-        claims: Option<Claims>,
+        claims: Option<Result<Claims, AppError>>,
         addr: Option<&ConnectInfo<SocketAddr>>,
         white_list: &[String],
         redis_prefix: &str,
@@ -277,12 +280,15 @@ impl RateLimiterCheck {
                     }
                 }
             }
-            Some(claims) => {
-                let mut key = claims.user_id;
-                key.insert_str(0, redis_prefix);
+            Some(claims) => match claims {
+                Ok(claims) => {
+                    let mut key = claims.user_id;
+                    key.insert_str(0, redis_prefix);
 
-                Self::new(None, Some(key), claims.user_limit)
-            }
+                    Self::new(None, Some(key), claims.user_limit)
+                }
+                _ => Self::new(Some(RateLimiterError::JwtDecoding), None, 0),
+            },
         }
     }
 
@@ -372,7 +378,7 @@ mod tests {
 
         requests_by_second = 30;
         let user_id = uuid::Uuid::new_v4().to_string();
-        let claims = Some(Claims {
+        let claims = Some(Ok(Claims {
             sub: String::from("Subject"),
             exp: 123456789,
             iat: 123456789,
@@ -380,7 +386,7 @@ mod tests {
             user_id: user_id.clone(),
             user_roles: String::from("ADMIN"),
             user_limit: 25,
-        });
+        }));
         let addr = None;
         let mut key = user_id.clone();
         key.insert_str(0, redis_prefix);
