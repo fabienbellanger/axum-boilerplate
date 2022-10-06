@@ -1,4 +1,4 @@
-//! Rate limiter module
+//! Rate limiter middleware
 
 use super::{body_from_parts, SharedState};
 use crate::{
@@ -63,6 +63,7 @@ impl<'a, S> Layer<S> for RateLimiterLayer<'a> {
 
     fn layer(&self, inner: S) -> Self::Service {
         let white_list = self.white_list.split(',').map(|s| s.to_string()).collect();
+
         RateLimiterMiddleware {
             inner,
             pool: self.pool.clone(),
@@ -122,8 +123,7 @@ where
             &self.redis_prefix,
             self.requests_by_second,
         );
-
-        let check_result = check.check_and_update(&pool, self.expire_in_seconds);
+        let check_result = check.process(&pool, self.expire_in_seconds);
 
         let future = self.inner.call(request);
         Box::pin(async move {
@@ -227,8 +227,13 @@ impl From<r2d2::Error> for RateLimiterError {
 
 #[derive(Debug, PartialEq)]
 struct RateLimiterCheck {
+    /// Potential error during the check
     error: Option<RateLimiterError>,
+
+    /// Key used by the uniqueness of consumer
     key: Option<String>,
+
+    /// Request limit (-1: unlimited, 0: when error, >=1: request limit)
     limit: i64,
 }
 
@@ -243,11 +248,12 @@ impl Default for RateLimiterCheck {
 }
 
 impl RateLimiterCheck {
+    /// Create a new instance of `RateLimiterCheck`
     fn new(error: Option<RateLimiterError>, key: Option<String>, limit: i64) -> Self {
         Self { error, key, limit }
     }
 
-    // Initialize `RateLimiterCheck`
+    /// Initialize `RateLimiterCheck`
     fn init(
         claims: Option<Result<Claims, AppError>>,
         addr: Option<&ConnectInfo<SocketAddr>>,
@@ -270,6 +276,7 @@ impl RateLimiterCheck {
 
                             // Check if IP address is in white list
                             if white_list.contains(&key) {
+                                // No limit
                                 Self::default()
                             } else {
                                 key.insert_str(0, redis_prefix);
@@ -282,22 +289,23 @@ impl RateLimiterCheck {
             }
             Some(claims) => match claims {
                 Ok(claims) => {
-                    let mut key = claims.user_id;
-                    key.insert_str(0, redis_prefix);
+                    if claims.user_limit == -1 {
+                        // No limit
+                        Self::default()
+                    } else {
+                        let mut key = claims.user_id;
+                        key.insert_str(0, redis_prefix);
 
-                    Self::new(None, Some(key), claims.user_limit)
+                        Self::new(None, Some(key), claims.user_limit)
+                    }
                 }
                 _ => Self::new(Some(RateLimiterError::JwtDecoding), None, 0),
             },
         }
     }
 
-    /// Checks limit, update Redis and returns information for headers
-    fn check_and_update(
-        &self,
-        pool: &Pool<Client>,
-        expire_in_seconds: i64,
-    ) -> Result<(i64, i64, i64), RateLimiterError> {
+    /// Check limit, update Redis and returns information for headers
+    fn process(&self, pool: &Pool<Client>, expire_in_seconds: i64) -> Result<(i64, i64, i64), RateLimiterError> {
         if let Some(err) = &self.error {
             Err(err.clone())
         } else if self.limit == -1 {
