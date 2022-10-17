@@ -45,7 +45,7 @@ sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls", "chrono", "m
 
 # Redis
 r2d2 = "0.8.10"
-redis = { version = "0.21.6", features = ["r2d2"] }
+redis = { version = "0.22.0", features = ["r2d2"] }
 
 # Tera
 tera = "1.17.1"
