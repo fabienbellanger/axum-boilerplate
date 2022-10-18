@@ -8,6 +8,8 @@
 
 use serde::Deserialize;
 
+use crate::errors::AppError;
+
 const PAGINATION_MAX_LIMIT: usize = 500;
 
 /// Query parameters used to paginate API
@@ -15,7 +17,7 @@ const PAGINATION_MAX_LIMIT: usize = 500;
 pub struct PaginateQuery {
     pub page: Option<usize>,
     pub limit: Option<usize>,
-    pub offset: Option<usize>,
+    // pub offset: Option<usize>,
 }
 
 impl PaginateQuery {
@@ -40,10 +42,55 @@ impl PaginateQuery {
         }
 
         // Offset
-        self.offset = match (self.page, self.limit) {
+        // self.offset = match (self.page, self.limit) {
+        //     (Some(page), Some(limit)) => Some((page - 1) * limit),
+        //     _ => Some(0),
+        // };
+    }
+}
+
+/// Parameters used to paginate API
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+pub struct Paginator {
+    pub page: Option<usize>, // TODO: Remove?
+    pub limit: Option<usize>,
+    pub offset: Option<usize>,
+}
+
+// TODO: Manage errors
+impl TryFrom<PaginateQuery> for Paginator {
+    type Error = AppError;
+
+    fn try_from(value: PaginateQuery) -> core::result::Result<Self, Self::Error> {
+        // Page
+        let page = if let Some(page) = value.page {
+            if page < 1 {
+                Some(1)
+            } else {
+                Some(page)
+            }
+        } else {
+            Some(1)
+        };
+
+        // Limit
+        let limit = if let Some(limit) = value.limit {
+            if !(1..=PAGINATION_MAX_LIMIT).contains(&limit) {
+                Some(PAGINATION_MAX_LIMIT)
+            } else {
+                Some(limit)
+            }
+        } else {
+            Some(PAGINATION_MAX_LIMIT)
+        };
+
+        // Offset
+        let offset = match (page, limit) {
             (Some(page), Some(limit)) => Some((page - 1) * limit),
             _ => Some(0),
         };
+
+        Ok(Self { page, limit, offset })
     }
 }
 
@@ -56,14 +103,14 @@ mod test {
         let mut data = PaginateQuery {
             page: None,
             limit: None,
-            offset: None,
+            // offset: None,
         };
         data.build();
         assert_eq!(
             PaginateQuery {
                 page: Some(1),
                 limit: Some(PAGINATION_MAX_LIMIT),
-                offset: Some(0),
+                // offset: Some(0),
             },
             data
         );
@@ -71,14 +118,14 @@ mod test {
         let mut data = PaginateQuery {
             page: None,
             limit: Some(600),
-            offset: None,
+            // offset: None,
         };
         data.build();
         assert_eq!(
             PaginateQuery {
                 page: Some(1),
                 limit: Some(PAGINATION_MAX_LIMIT),
-                offset: Some(0),
+                // offset: Some(0),
             },
             data
         );
@@ -86,14 +133,14 @@ mod test {
         let mut data = PaginateQuery {
             page: Some(0),
             limit: None,
-            offset: None,
+            // offset: None,
         };
         data.build();
         assert_eq!(
             PaginateQuery {
                 page: Some(1),
                 limit: Some(PAGINATION_MAX_LIMIT),
-                offset: Some(0),
+                // offset: Some(0),
             },
             data
         );
@@ -101,14 +148,14 @@ mod test {
         let mut data = PaginateQuery {
             page: Some(2),
             limit: Some(100),
-            offset: None,
+            // offset: None,
         };
         data.build();
         assert_eq!(
             PaginateQuery {
                 page: Some(2),
                 limit: Some(100),
-                offset: Some(100),
+                // offset: Some(100),
             },
             data
         );

@@ -80,6 +80,7 @@ impl UserRepository {
         pagination: &'a PaginateQuery,
     ) -> BoxStream<Result<Result<User, AppError>, sqlx::Error>> {
         dbg!(pagination);
+
         sqlx::query(
             r#"
             SELECT id, username, password, lastname, firstname, roles, rate_limit, created_at, updated_at, deleted_at 
