@@ -1,5 +1,6 @@
 use crate::errors::AppError;
 use crate::models::user::{Login, PasswordReset, User, UserCreation};
+use crate::utils::query::PaginateQuery;
 use chrono::{TimeZone, Utc};
 use futures::stream::BoxStream;
 use sha2::{Digest, Sha512};
@@ -74,7 +75,11 @@ impl UserRepository {
 
     /// Returns all users not deleted
     #[instrument(skip(pool))]
-    pub fn get_all(pool: &MySqlPool) -> BoxStream<Result<Result<User, AppError>, sqlx::Error>> {
+    pub fn get_all<'a>(
+        pool: &'a MySqlPool,
+        pagination: &'a PaginateQuery,
+    ) -> BoxStream<Result<Result<User, AppError>, sqlx::Error>> {
+        dbg!(pagination);
         sqlx::query(
             r#"
             SELECT id, username, password, lastname, firstname, roles, rate_limit, created_at, updated_at, deleted_at 

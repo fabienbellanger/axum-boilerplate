@@ -1,4 +1,4 @@
-//! Query module is used for paginage, sorting and filtering API
+//! Query module is used for paginage, sorting and filtering API (TODO: separate)
 
 // https://www.moesif.com/blog/technical/api-design/REST-API-Design-Filtering-Sorting-and-Pagination/
 

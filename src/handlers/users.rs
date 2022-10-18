@@ -102,9 +102,8 @@ pub async fn get_all(
     Query(mut pagination): Query<PaginateQuery>,
 ) -> AppResult<Json<Vec<User>>> {
     pagination.build();
-    dbg!(&pagination);
 
-    let mut stream = UserRepository::get_all(&pool);
+    let mut stream = UserRepository::get_all(&pool, &pagination);
     let mut users: Vec<User> = Vec::new();
     while let Some(row) = stream.try_next().await? {
         users.push(row?);
