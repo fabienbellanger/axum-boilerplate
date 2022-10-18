@@ -68,7 +68,7 @@ pub struct Config {
     /// Rate limiter enabled
     pub limiter_enabled: bool,
     /// Rate limiter number of requets per second (-1 for no limit)
-    pub limiter_requests_by_second: i64,
+    pub limiter_requests_by_second: i32,
     /// Rate limiter expiration time (-1 for no limit)
     pub limiter_expire_in_seconds: i64,
     /// Rate limiter white list

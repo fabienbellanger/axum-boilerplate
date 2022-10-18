@@ -19,6 +19,7 @@ async fn create_user(db: &TestDatabase) -> User {
         username: String::from("john.doe@test.com"),
         password: password.clone(),
         roles: Some(Role::User.to_string()),
+        rate_limit: 30,
         created_at: Utc::now(),
         updated_at: Utc::now(),
         deleted_at: None,

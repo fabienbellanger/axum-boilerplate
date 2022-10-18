@@ -395,6 +395,8 @@ components:
         roles:
           type: string
           enum: ["USER", "MANAGER"]
+        rate_limit:
+          type: integer
         created_at:
           type: string
           format: date-time
@@ -407,6 +409,7 @@ components:
         - firstname
         - username
         - roles
+        - rate_limit
         - created_at
         - updated_at
     UserCreation:
@@ -425,12 +428,15 @@ components:
         roles:
           type: string
           enum: ["USER", "MANAGER"]
+        rate_limit:
+          type: integer
       required:
         - lastname
         - firstname
         - username
         - password
         - roles
+        - rate_limit
     PasswordReset:
       type: object
       properties:

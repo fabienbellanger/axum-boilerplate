@@ -149,6 +149,7 @@ async fn register(lastname: &str, firstname: &str, username: &str, password: &st
         username: username.to_string(),
         password: password.to_string(),
         roles: Some(String::from("ADMIN")),
+        rate_limit: -1,
     };
     let mut user = User::new(user);
     UserRepository::create(&pool, &mut user)

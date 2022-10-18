@@ -32,7 +32,7 @@ const RETRY_AFTER_HEADER: &str = "retry-after";
 pub struct RateLimiterLayer<'a> {
     pub pool: &'a Pool<Client>,
     pub redis_prefix: String,
-    pub requests_by_second: i64,
+    pub requests_by_second: i32,
     pub expire_in_seconds: i64,
     pub white_list: String,
 }
@@ -41,7 +41,7 @@ impl<'a> RateLimiterLayer<'a> {
     pub fn new(
         pool: &'a Pool<Client>,
         redis_prefix: String,
-        requests_by_second: i64,
+        requests_by_second: i32,
         expire_in_seconds: i64,
         white_list: String,
     ) -> Self {
@@ -80,7 +80,7 @@ pub struct RateLimiterMiddleware<S> {
     inner: S,
     pool: Pool<Client>,
     redis_prefix: String,
-    requests_by_second: i64,
+    requests_by_second: i32,
     expire_in_seconds: i64,
     white_list: Vec<String>,
 }
@@ -172,7 +172,7 @@ where
 }
 
 /// Set middleware specific headers
-fn set_headers(parts: &mut Parts, limit: i64, remaining: i64, reset: i64) {
+fn set_headers(parts: &mut Parts, limit: i32, remaining: i64, reset: i64) {
     if remaining >= 0 {
         // Limit OK
         if let Ok(limit) = HeaderValue::from_str(limit.to_string().as_str()) {
@@ -234,7 +234,7 @@ struct RateLimiterCheck {
     key: Option<String>,
 
     /// Request limit (-1: unlimited, 0: when error, >=1: request limit)
-    limit: i64,
+    limit: i32,
 }
 
 impl Default for RateLimiterCheck {
@@ -249,7 +249,7 @@ impl Default for RateLimiterCheck {
 
 impl RateLimiterCheck {
     /// Create a new instance of `RateLimiterCheck`
-    fn new(error: Option<RateLimiterError>, key: Option<String>, limit: i64) -> Self {
+    fn new(error: Option<RateLimiterError>, key: Option<String>, limit: i32) -> Self {
         Self { error, key, limit }
     }
 
@@ -259,7 +259,7 @@ impl RateLimiterCheck {
         addr: Option<&ConnectInfo<SocketAddr>>,
         white_list: &[String],
         redis_prefix: &str,
-        requests_by_second: i64,
+        requests_by_second: i32,
     ) -> Self {
         match claims {
             None => {
@@ -289,14 +289,14 @@ impl RateLimiterCheck {
             }
             Some(claims) => match claims {
                 Ok(claims) => {
-                    if claims.user_limit == -1 {
+                    if claims.user_rate_limit == -1 {
                         // No limit
                         Self::default()
                     } else {
                         let mut key = claims.user_id;
                         key.insert_str(0, redis_prefix);
 
-                        Self::new(None, Some(key), claims.user_limit)
+                        Self::new(None, Some(key), claims.user_rate_limit)
                     }
                 }
                 _ => Self::new(Some(RateLimiterError::JwtDecoding), None, 0),
@@ -305,7 +305,7 @@ impl RateLimiterCheck {
     }
 
     /// Check limit, update Redis and returns information for headers
-    fn process(&self, pool: &Pool<Client>, expire_in_seconds: i64) -> Result<(i64, i64, i64), RateLimiterError> {
+    fn process(&self, pool: &Pool<Client>, expire_in_seconds: i64) -> Result<(i32, i64, i64), RateLimiterError> {
         if let Some(err) = &self.error {
             Err(err.clone())
         } else if self.limit == -1 {
@@ -313,7 +313,7 @@ impl RateLimiterCheck {
         } else {
             let mut conn = pool.get()?;
             let now = Utc::now().timestamp();
-            let mut remaining = self.limit - 1;
+            let mut remaining = self.limit as i64 - 1;
             let mut reset = expire_in_seconds;
             let mut expired_at = now + expire_in_seconds;
 
@@ -393,7 +393,7 @@ mod tests {
             nbf: 123456789,
             user_id: user_id.clone(),
             user_roles: String::from("ADMIN"),
-            user_limit: 25,
+            user_rate_limit: 25,
         }));
         let addr = None;
         let mut key = user_id.clone();

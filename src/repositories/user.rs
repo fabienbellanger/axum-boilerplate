@@ -36,6 +36,7 @@ impl UserRepository {
                 username: result.username,
                 password: result.password,
                 roles: result.roles,
+                rate_limit: result.rate_limit,
                 created_at: Utc.from_utc_datetime(&result.created_at),
                 updated_at: Utc.from_utc_datetime(&result.updated_at),
                 deleted_at: result.deleted_at.map(|d| Utc.from_utc_datetime(&d)),
@@ -51,8 +52,8 @@ impl UserRepository {
 
         sqlx::query!(
             r#"
-                INSERT INTO users (id, lastname, firstname, username, password, roles, created_at, updated_at, deleted_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO `users` (`id`, `lastname`, `firstname`, `username`, `password`, `roles`, `rate_limit`, `created_at`, `updated_at`, `deleted_at`)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#,
             user.id,
             user.lastname,
@@ -60,6 +61,7 @@ impl UserRepository {
             user.username,
             user.password,
             user.roles,
+            user.rate_limit,
             user.created_at,
             user.updated_at,
             user.deleted_at,
@@ -75,7 +77,7 @@ impl UserRepository {
     pub fn get_all(pool: &MySqlPool) -> BoxStream<Result<Result<User, AppError>, sqlx::Error>> {
         sqlx::query(
             r#"
-            SELECT id, username, password, lastname, firstname, roles, created_at, updated_at, deleted_at 
+            SELECT id, username, password, lastname, firstname, roles, rate_limit, created_at, updated_at, deleted_at 
             FROM users 
             WHERE deleted_at IS NULL"#,
         )
@@ -87,9 +89,10 @@ impl UserRepository {
                 lastname: row.try_get(3)?,
                 firstname: row.try_get(4)?,
                 roles: row.try_get(5)?,
-                created_at: row.try_get(6)?,
-                updated_at: row.try_get(7)?,
-                deleted_at: row.try_get(8)?,
+                rate_limit: row.try_get(6)?,
+                created_at: row.try_get(7)?,
+                updated_at: row.try_get(8)?,
+                deleted_at: row.try_get(9)?,
             })
         })
         .fetch(pool)
@@ -118,6 +121,7 @@ impl UserRepository {
                 username: result.username,
                 password: result.password,
                 roles: result.roles,
+                rate_limit: result.rate_limit,
                 created_at: Utc.from_utc_datetime(&result.created_at),
                 updated_at: Utc.from_utc_datetime(&result.updated_at),
                 deleted_at: result.deleted_at.map(|d| Utc.from_utc_datetime(&d)),
@@ -149,6 +153,7 @@ impl UserRepository {
                 username: result.username,
                 password: result.password,
                 roles: result.roles,
+                rate_limit: result.rate_limit,
                 created_at: Utc.from_utc_datetime(&result.created_at),
                 updated_at: Utc.from_utc_datetime(&result.updated_at),
                 deleted_at: result.deleted_at.map(|d| Utc.from_utc_datetime(&d)),
@@ -176,19 +181,22 @@ impl UserRepository {
     }
 
     /// Update a user
+    // TODO: Check if roles, rate_limit, etc. are valid
     #[instrument(skip(pool))]
     pub async fn update(pool: &MySqlPool, id: String, user: &UserCreation) -> Result<(), AppError> {
         let hashed_password = format!("{:x}", Sha512::digest(user.password.as_bytes()));
         sqlx::query!(
             r#"
                 UPDATE users
-                SET lastname = ?, firstname = ?, username = ?, password = ?, updated_at = ?
+                SET lastname = ?, firstname = ?, username = ?, password = ?, roles = ?, rate_limit = ?, updated_at = ?
                 WHERE id = ?
             "#,
             user.lastname,
             user.firstname,
             user.username,
             hashed_password,
+            user.roles,
+            user.rate_limit,
             Some(Utc::now()),
             id
         )

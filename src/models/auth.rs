@@ -17,7 +17,7 @@ pub struct Claims {
     pub user_roles: String,
 
     /// Max number of request by second (-1: unlimited)
-    pub user_limit: i64,
+    pub user_rate_limit: i32,
 }
 
 impl Claims {
@@ -40,6 +40,7 @@ impl Jwt {
     /// Generate JWT
     pub fn generate(
         user_id: String,
+        user_rate_limit: i32,
         roles: String,
         encoding_key: &EncodingKey,
         jwt_lifetime: i64,
@@ -55,7 +56,7 @@ impl Jwt {
             nbf: now,
             user_id,
             user_roles: roles,
-            user_limit: 10, // TODO: From DB
+            user_rate_limit: user_rate_limit,
         };
 
         let token = encode(&header, &payload, encoding_key).map_err(|err| {

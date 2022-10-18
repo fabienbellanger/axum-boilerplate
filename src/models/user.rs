@@ -20,6 +20,7 @@ pub struct User {
     #[serde(skip_serializing)]
     pub password: String,
     pub roles: Option<String>,
+    pub rate_limit: i32,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     #[serde(skip_serializing)]
@@ -36,6 +37,7 @@ impl User {
             username: user.username,
             password: user.password,
             roles: user.roles,
+            rate_limit: user.rate_limit,
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,
@@ -72,6 +74,7 @@ pub struct UserCreation {
     #[validate(length(min = 8))]
     pub password: String,
     pub roles: Option<String>,
+    pub rate_limit: i32,
 }
 
 #[derive(Deserialize, Debug, Validate)]

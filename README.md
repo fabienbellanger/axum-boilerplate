@@ -137,7 +137,7 @@ make docker-cli-register
 - [ ] Add scopes (currently roles) to routes
 - [ ] Add password scorer [passwords](https://docs.rs/passwords/latest/passwords/) (parameter in .env?)
 - [ ] Add more .env parameters in `SharedState`?
-- [ ] Add user rate limit in database
+- [x] Add user rate limit in database
 - [x] Improve AppState by using a struct
 - [x] Custom errors
 - [x] Add CLI
