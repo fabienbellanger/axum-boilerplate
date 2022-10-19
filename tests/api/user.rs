@@ -53,7 +53,8 @@ async fn test_api_user_creation_success() {
             "username": "test-user-creation@test.com",
             "password": "00000000",
             "lastname": "Test",
-            "firstname": "Toto"
+            "firstname": "Toto",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,
@@ -75,7 +76,8 @@ async fn test_api_user_creation_invalid_password() {
             "username": "test-user-creation@test.com",
             "password": "0000000",
             "lastname": "Test",
-            "firstname": "Toto"
+            "firstname": "Toto",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,
@@ -100,6 +102,7 @@ async fn test_api_user_list_all() {
                 "password": "00000000",
                 "lastname": "Test",
                 "firstname": format!("Toto {i}"),
+                "rate_limit": 10,
             })
             .to_string(),
             &token,
@@ -129,6 +132,7 @@ async fn test_api_user_list_one() {
             "password": "00000000",
             "lastname": "Test",
             "firstname": "Toto",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,
@@ -159,6 +163,7 @@ async fn test_api_user_get_one_bad_parameter() {
             "password": "00000000",
             "lastname": "Test",
             "firstname": "Toto",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,
@@ -188,6 +193,7 @@ async fn test_api_user_delete() {
             "password": "00000000",
             "lastname": "Test",
             "firstname": "Toto",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,
@@ -217,6 +223,7 @@ async fn test_api_user_update() {
             "password": "00000000",
             "lastname": "Test",
             "firstname": "Toto",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,
@@ -234,6 +241,7 @@ async fn test_api_user_update() {
             "password": "00000000",
             "lastname": "Test 1",
             "firstname": "Tutu",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,
@@ -264,6 +272,7 @@ async fn test_api_user_forgotten_password() {
             "password": "00000000",
             "lastname": "Test",
             "firstname": "Toto",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,
@@ -296,6 +305,7 @@ async fn test_api_user_forgotten_password_email_not_found() {
             "password": "00000000",
             "lastname": "Test",
             "firstname": "Toto",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,
@@ -321,6 +331,7 @@ async fn test_api_user_update_password() {
             "password": "00000000",
             "lastname": "Test",
             "firstname": "Toto",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,
@@ -376,6 +387,7 @@ async fn test_api_user_update_password_with_old_password() {
             "password": "00000000",
             "lastname": "Test",
             "firstname": "Toto",
+            "rate_limit": 10,
         })
         .to_string(),
         &token,

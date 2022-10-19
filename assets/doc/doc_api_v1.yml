@@ -124,25 +124,25 @@ paths:
         - bearerAuth: []
       parameters:
         - in: query
-          name: page
+          name: p
           schema:
             type: integer
             default: 0
           required: false
           description: Page number
         - in: query
-          name: limit
+          name: l
           schema:
             type: integer
             maximum: 500
           required: false
           description: Limit of links per page
         - in: query
-          name: search
+          name: s
           schema:
             type: string
           required: false
-          description: Search
+          description: "Sort (Ex.: s=+lastname,-firstname) {+: ASC, -: DESC}"
       responses:
         '200':
           description: OK

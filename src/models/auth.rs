@@ -56,7 +56,7 @@ impl Jwt {
             nbf: now,
             user_id,
             user_roles: roles,
-            user_rate_limit: user_rate_limit,
+            user_rate_limit,
         };
 
         let token = encode(&header, &payload, encoding_key).map_err(|err| {

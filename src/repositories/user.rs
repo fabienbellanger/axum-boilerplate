@@ -1,6 +1,6 @@
 use crate::errors::AppError;
 use crate::models::user::{Login, PasswordReset, User, UserCreation};
-use crate::utils::query::PaginateQuery;
+use crate::utils::query::PaginateSort;
 use chrono::{TimeZone, Utc};
 use futures::stream::BoxStream;
 use sha2::{Digest, Sha512};
@@ -77,9 +77,9 @@ impl UserRepository {
     #[instrument(skip(pool))]
     pub fn get_all<'a>(
         pool: &'a MySqlPool,
-        pagination: &'a PaginateQuery,
+        paginate_sort: &'a PaginateSort,
     ) -> BoxStream<Result<Result<User, AppError>, sqlx::Error>> {
-        dbg!(pagination);
+        dbg!(paginate_sort);
 
         sqlx::query(
             r#"

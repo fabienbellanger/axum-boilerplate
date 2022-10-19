@@ -8,89 +8,86 @@
 
 use serde::Deserialize;
 
-use crate::errors::AppError;
-
 const PAGINATION_MAX_LIMIT: usize = 500;
 
 /// Query parameters used to paginate API
 #[derive(Debug, Deserialize, PartialEq, Eq)]
-pub struct PaginateQuery {
+pub struct PaginateSortQuery {
+    #[serde(rename(deserialize = "p"))]
     pub page: Option<usize>,
+
+    #[serde(rename(deserialize = "l"))]
     pub limit: Option<usize>,
-    // pub offset: Option<usize>,
+
+    #[serde(rename(deserialize = "s"))]
+    pub sort: Option<String>,
 }
 
-impl PaginateQuery {
-    /// Check and update with correct values
-    pub fn build(&mut self) {
-        // Page
-        if let Some(page) = self.page {
-            if page < 1 {
-                self.page = Some(1);
-            }
-        } else {
-            self.page = Some(1);
-        }
-
-        // Limit
-        if let Some(limit) = self.limit {
-            if !(1..=PAGINATION_MAX_LIMIT).contains(&limit) {
-                self.limit = Some(PAGINATION_MAX_LIMIT);
-            }
-        } else {
-            self.limit = Some(PAGINATION_MAX_LIMIT);
-        }
-
-        // Offset
-        // self.offset = match (self.page, self.limit) {
-        //     (Some(page), Some(limit)) => Some((page - 1) * limit),
-        //     _ => Some(0),
-        // };
-    }
-}
-
-/// Parameters used to paginate API
 #[derive(Debug, Deserialize, PartialEq, Eq)]
-pub struct Paginator {
-    pub page: Option<usize>, // TODO: Remove?
-    pub limit: Option<usize>,
-    pub offset: Option<usize>,
+pub enum Sort {
+    /// Ascending sort (`'+'` prefix)
+    Asc,
+
+    /// Descending sort (`'-'` prefix)
+    Desc,
 }
 
-// TODO: Manage errors
-impl TryFrom<PaginateQuery> for Paginator {
-    type Error = AppError;
+/// Parameters used to paginate and/or sort database results
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+pub struct PaginateSort {
+    pub page: usize,
+    pub limit: usize,
+    pub offset: usize,
+    pub sorts: Vec<(String, Sort)>,
+}
 
-    fn try_from(value: PaginateQuery) -> core::result::Result<Self, Self::Error> {
+impl From<PaginateSortQuery> for PaginateSort {
+    fn from(value: PaginateSortQuery) -> Self {
         // Page
-        let page = if let Some(page) = value.page {
-            if page < 1 {
-                Some(1)
-            } else {
-                Some(page)
-            }
-        } else {
-            Some(1)
+        let page = match value.page {
+            Some(page) => match page >= 1 {
+                true => page,
+                false => 1,
+            },
+            None => 1,
         };
 
         // Limit
-        let limit = if let Some(limit) = value.limit {
-            if !(1..=PAGINATION_MAX_LIMIT).contains(&limit) {
-                Some(PAGINATION_MAX_LIMIT)
-            } else {
-                Some(limit)
+        let limit = match value.limit {
+            Some(limit) => {
+                if !(1..=PAGINATION_MAX_LIMIT).contains(&limit) {
+                    PAGINATION_MAX_LIMIT
+                } else {
+                    limit
+                }
             }
-        } else {
-            Some(PAGINATION_MAX_LIMIT)
+            None => PAGINATION_MAX_LIMIT,
         };
 
         // Offset
-        let offset = match (page, limit) {
-            (Some(page), Some(limit)) => Some((page - 1) * limit),
-            _ => Some(0),
-        };
+        let offset = (page - 1) * limit;
 
-        Ok(Self { page, limit, offset })
+        // Sort
+        let mut sorts = vec![];
+        let sort = value.sort.unwrap_or_default();
+        let sort_parts = sort.split(',');
+        for part in sort_parts {
+            let prefix = part.chars().next();
+            if let Some(prefix) = prefix {
+                if prefix == '+' {
+                    sorts.push((part[1..].to_string(), Sort::Asc));
+                } else if prefix == '-' {
+                    sorts.push((part[1..].to_string(), Sort::Desc));
+                }
+            }
+        }
+
+        Self {
+            page,
+            limit,
+            offset,
+            sorts,
+        }
     }
 }
 
@@ -99,63 +96,118 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_paginate() {
-        let mut data = PaginateQuery {
+    fn test_from_paginate_sort_qurey_paginate() {
+        let data = PaginateSortQuery {
             page: None,
             limit: None,
-            // offset: None,
+            sort: None,
         };
-        data.build();
+        let data: PaginateSort = data.into();
         assert_eq!(
-            PaginateQuery {
-                page: Some(1),
-                limit: Some(PAGINATION_MAX_LIMIT),
-                // offset: Some(0),
+            PaginateSort {
+                page: 1,
+                limit: PAGINATION_MAX_LIMIT,
+                offset: 0,
+                sorts: vec![],
             },
             data
         );
 
-        let mut data = PaginateQuery {
+        let data = PaginateSortQuery {
             page: None,
             limit: Some(600),
-            // offset: None,
+            sort: None,
         };
-        data.build();
+        let data: PaginateSort = data.into();
         assert_eq!(
-            PaginateQuery {
-                page: Some(1),
-                limit: Some(PAGINATION_MAX_LIMIT),
-                // offset: Some(0),
+            PaginateSort {
+                page: 1,
+                limit: PAGINATION_MAX_LIMIT,
+                offset: 0,
+                sorts: vec![],
             },
             data
         );
 
-        let mut data = PaginateQuery {
+        let data = PaginateSortQuery {
             page: Some(0),
             limit: None,
-            // offset: None,
+            sort: None,
         };
-        data.build();
+        let data: PaginateSort = data.into();
         assert_eq!(
-            PaginateQuery {
-                page: Some(1),
-                limit: Some(PAGINATION_MAX_LIMIT),
-                // offset: Some(0),
+            PaginateSort {
+                page: 1,
+                limit: PAGINATION_MAX_LIMIT,
+                offset: 0,
+                sorts: vec![],
             },
             data
         );
 
-        let mut data = PaginateQuery {
+        let data = PaginateSortQuery {
             page: Some(2),
             limit: Some(100),
-            // offset: None,
+            sort: None,
         };
-        data.build();
+        let data: PaginateSort = data.into();
         assert_eq!(
-            PaginateQuery {
-                page: Some(2),
-                limit: Some(100),
-                // offset: Some(100),
+            PaginateSort {
+                page: 2,
+                limit: 100,
+                offset: 100,
+                sorts: vec![],
+            },
+            data
+        );
+    }
+
+    #[test]
+    fn test_from_paginate_sort_qurey_sort() {
+        let data = PaginateSortQuery {
+            page: None,
+            limit: None,
+            sort: None,
+        };
+        let data: PaginateSort = data.into();
+        assert_eq!(
+            PaginateSort {
+                page: 1,
+                limit: PAGINATION_MAX_LIMIT,
+                offset: 0,
+                sorts: vec![],
+            },
+            data
+        );
+
+        let data = PaginateSortQuery {
+            page: None,
+            limit: None,
+            sort: Some("+id,-created_at".to_owned()),
+        };
+        let data: PaginateSort = data.into();
+        assert_eq!(
+            PaginateSort {
+                page: 1,
+                limit: PAGINATION_MAX_LIMIT,
+                offset: 0,
+                sorts: vec![("id".to_owned(), Sort::Asc), ("created_at".to_owned(), Sort::Desc)],
+            },
+            data
+        );
+
+        let data = PaginateSortQuery {
+            page: None,
+            limit: None,
+            sort: Some("created_at".to_owned()),
+        };
+        let data: PaginateSort = data.into();
+        assert_eq!(
+            PaginateSort {
+                page: 1,
+                limit: PAGINATION_MAX_LIMIT,
+                offset: 0,
+                sorts: vec![],
             },
             data
         );

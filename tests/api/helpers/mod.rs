@@ -57,6 +57,7 @@ pub struct TestUser {
     pub firstname: String,
     pub username: String,
     pub roles: Option<String>,
+    pub rate_limit: i32,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

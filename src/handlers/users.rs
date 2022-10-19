@@ -11,7 +11,7 @@ use crate::{
     repositories::user::{PasswordResetRepository, UserRepository},
     utils::{
         extractors::{ExtractRequestId, Path},
-        query::PaginateQuery,
+        query::{PaginateSort, PaginateSortQuery},
         validation::validate_request_data,
     },
 };
@@ -99,11 +99,10 @@ pub async fn create(
 #[instrument(skip(pool))]
 pub async fn get_all(
     Extension(pool): Extension<Pool<MySql>>,
-    Query(mut pagination): Query<PaginateQuery>,
+    Query(pagination): Query<PaginateSortQuery>,
 ) -> AppResult<Json<Vec<User>>> {
-    pagination.build();
-
-    let mut stream = UserRepository::get_all(&pool, &pagination);
+    let paginate_sort = PaginateSort::from(pagination);
+    let mut stream = UserRepository::get_all(&pool, &paginate_sort);
     let mut users: Vec<User> = Vec::new();
     while let Some(row) = stream.try_next().await? {
         users.push(row?);
