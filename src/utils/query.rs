@@ -6,18 +6,20 @@
 // - sort (Ex.: ?sort=+lastname,-firstname) {+: ASC, -: DESC}
 // - filter (Ex.: ?lastname=eq:toto&first=ne:tutu&age=lt:18,gt:5) => {eq, ne, gt, ge, lt, le}
 
+use std::fmt::Display;
+
 use serde::Deserialize;
 
-const PAGINATION_MAX_LIMIT: usize = 500;
+const PAGINATION_MAX_LIMIT: u32 = 500;
 
 /// Query parameters used to paginate API
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct PaginateSortQuery {
     #[serde(rename(deserialize = "p"))]
-    pub page: Option<usize>,
+    pub page: Option<u32>,
 
     #[serde(rename(deserialize = "l"))]
-    pub limit: Option<usize>,
+    pub limit: Option<u32>,
 
     #[serde(rename(deserialize = "s"))]
     pub sort: Option<String>,
@@ -32,12 +34,25 @@ pub enum Sort {
     Desc,
 }
 
+impl Display for Sort {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Asc => "ASC",
+                Self::Desc => "DESC",
+            }
+        )
+    }
+}
+
 /// Parameters used to paginate and/or sort database results
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 pub struct PaginateSort {
-    pub page: usize,
-    pub limit: usize,
-    pub offset: usize,
+    pub page: u32,
+    pub limit: u32,
+    pub offset: u32,
     pub sorts: Vec<(String, Sort)>,
 }
 
@@ -88,6 +103,21 @@ impl From<PaginateSortQuery> for PaginateSort {
             offset,
             sorts,
         }
+    }
+}
+
+impl PaginateSort {
+    /// SQL code for pagination
+    pub fn get_pagination_sql(&self) -> String {
+        format!(" LIMIT {} OFFSET {}", self.limit, self.offset)
+    }
+
+    /// SQL code for sorts (ORDER BY)
+    pub fn get_sorts_sql(&self) -> String {
+        for (field, sort) in self.sorts.iter() {
+            dbg!(&field, &sort);
+        }
+        format!(" ")
     }
 }
 

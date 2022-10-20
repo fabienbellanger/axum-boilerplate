@@ -2,9 +2,8 @@ use crate::errors::AppError;
 use crate::models::user::{Login, PasswordReset, User, UserCreation};
 use crate::utils::query::PaginateSort;
 use chrono::{TimeZone, Utc};
-use futures::stream::BoxStream;
+use futures::TryStreamExt;
 use sha2::{Digest, Sha512};
-use sqlx::mysql::MySqlRow;
 use sqlx::{MySqlPool, Row};
 
 pub struct UserRepository;
@@ -73,35 +72,42 @@ impl UserRepository {
         Ok(())
     }
 
-    /// Returns all users not deleted
+    /// Returns all not deleted users
     #[instrument(skip(pool))]
-    pub fn get_all<'a>(
-        pool: &'a MySqlPool,
-        paginate_sort: &'a PaginateSort,
-    ) -> BoxStream<Result<Result<User, AppError>, sqlx::Error>> {
-        dbg!(paginate_sort);
-
-        sqlx::query(
-            r#"
+    pub async fn get_all<'a>(pool: &'a MySqlPool, paginate_sort: &'a PaginateSort) -> Result<Vec<User>, AppError> {
+        let mut query = String::from(
+            "
             SELECT id, username, password, lastname, firstname, roles, rate_limit, created_at, updated_at, deleted_at 
             FROM users 
-            WHERE deleted_at IS NULL"#,
-        )
-        .map(|row: MySqlRow| {
-            Ok(User {
-                id: row.try_get(0)?,
-                username: row.try_get(1)?,
-                password: row.try_get(2)?,
-                lastname: row.try_get(3)?,
-                firstname: row.try_get(4)?,
-                roles: row.try_get(5)?,
-                rate_limit: row.try_get(6)?,
-                created_at: row.try_get(7)?,
-                updated_at: row.try_get(8)?,
-                deleted_at: row.try_get(9)?,
-            })
-        })
-        .fetch(pool)
+            WHERE deleted_at IS NULL
+            ",
+        );
+
+        // Sorts and pagination
+        query.push_str(&paginate_sort.get_sorts_sql());
+        query.push_str(&paginate_sort.get_pagination_sql());
+
+        let mut rows = sqlx::query(&query)
+            .bind(paginate_sort.limit)
+            .bind(paginate_sort.offset)
+            .fetch(pool);
+
+        let mut users = vec![];
+        while let Some(row) = rows.try_next().await? {
+            users.push(User {
+                id: row.try_get("id")?,
+                lastname: row.try_get("lastname")?,
+                firstname: row.try_get("firstname")?,
+                username: row.try_get("username")?,
+                password: row.try_get("password")?,
+                roles: row.try_get("roles")?,
+                rate_limit: row.try_get("rate_limit")?,
+                created_at: row.try_get("created_at")?,
+                updated_at: row.try_get("updated_at")?,
+                deleted_at: row.try_get("deleted_at")?,
+            });
+        }
+        Ok(users)
     }
 
     /// Returns a user by its ID

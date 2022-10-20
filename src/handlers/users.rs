@@ -18,7 +18,6 @@ use crate::{
 use axum::extract::{Extension, Json, Query};
 use axum::http::StatusCode;
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
-use futures::TryStreamExt;
 use sqlx::{MySql, Pool};
 use uuid::Uuid;
 
@@ -85,6 +84,7 @@ pub async fn login(
 pub async fn create(
     Json(payload): Json<UserCreation>,
     Extension(pool): Extension<Pool<MySql>>,
+    ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<Json<User>> {
     validate_request_data(&payload)?;
 
@@ -100,20 +100,21 @@ pub async fn create(
 pub async fn get_all(
     Extension(pool): Extension<Pool<MySql>>,
     Query(pagination): Query<PaginateSortQuery>,
+    ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<Json<Vec<User>>> {
     let paginate_sort = PaginateSort::from(pagination);
-    let mut stream = UserRepository::get_all(&pool, &paginate_sort);
-    let mut users: Vec<User> = Vec::new();
-    while let Some(row) = stream.try_next().await? {
-        users.push(row?);
-    }
+    let users = UserRepository::get_all(&pool, &paginate_sort).await?;
 
     Ok(Json(users))
 }
 
 // Route: GET "/api/v1/users/:id"
 #[instrument(skip(pool))]
-pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> AppResult<Json<User>> {
+pub async fn get_by_id(
+    Path(id): Path<Uuid>,
+    Extension(pool): Extension<Pool<MySql>>,
+    ExtractRequestId(request_id): ExtractRequestId,
+) -> AppResult<Json<User>> {
     let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
     match user {
         Some(user) => Ok(Json(user)),
@@ -125,7 +126,11 @@ pub async fn get_by_id(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MyS
 
 // Route: DELETE "/api/v1/users/:id"
 #[instrument(skip(pool))]
-pub async fn delete(Path(id): Path<Uuid>, Extension(pool): Extension<Pool<MySql>>) -> AppResult<StatusCode> {
+pub async fn delete(
+    Path(id): Path<Uuid>,
+    Extension(pool): Extension<Pool<MySql>>,
+    ExtractRequestId(request_id): ExtractRequestId,
+) -> AppResult<StatusCode> {
     let result = UserRepository::delete(&pool, id.to_string()).await?;
     match result {
         1 => Ok(StatusCode::NO_CONTENT),
@@ -141,6 +146,7 @@ pub async fn update(
     Path(id): Path<Uuid>,
     Json(payload): Json<UserCreation>,
     Extension(pool): Extension<Pool<MySql>>,
+    ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<Json<User>> {
     validate_request_data(&payload)?;
 
@@ -161,6 +167,7 @@ pub async fn forgotten_password(
     Path(email): Path<String>,
     Extension(state): Extension<SharedState>,
     Extension(pool): Extension<Pool<MySql>>,
+    ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<Json<PasswordReset>> {
     match UserRepository::get_by_email(&pool, email.clone()).await? {
         None => Err(AppError::NotFound {
@@ -196,6 +203,7 @@ pub async fn update_password(
     Path(token): Path<Uuid>,
     Json(payload): Json<UserUpdatePassword>,
     Extension(pool): Extension<Pool<MySql>>,
+    ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<StatusCode> {
     validate_request_data(&payload)?;
 
