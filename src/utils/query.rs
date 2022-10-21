@@ -28,9 +28,11 @@ pub struct PaginateSortQuery {
 #[derive(Debug, Deserialize, PartialEq, Eq)]
 pub enum Sort {
     /// Ascending sort (`'+'` prefix)
+    /// Example: ?sort=+id
     Asc,
 
     /// Descending sort (`'-'` prefix)
+    /// Example: ?sort=-name
     Desc,
 }
 
@@ -113,11 +115,36 @@ impl PaginateSort {
     }
 
     /// SQL code for sorts (ORDER BY)
-    pub fn get_sorts_sql(&self) -> String {
+    pub fn get_sorts_sql(&self, valid_fields: Option<Vec<&str>>) -> String {
+        let mut s = String::new();
+        let mut i = 0;
+
         for (field, sort) in self.sorts.iter() {
-            dbg!(&field, &sort);
+            match &valid_fields {
+                Some(valid_fields) => {
+                    if valid_fields.contains(&field.as_str()) {
+                        if i == 0 {
+                            s.push_str(" ORDER BY ");
+                        } else {
+                            s.push_str(", ");
+                        }
+                        s.push_str(&format!("{} {}", field, sort));
+
+                        i += 1;
+                    }
+                }
+                None => {
+                    if i != 0 {
+                        s.push_str(", ");
+                    }
+                    s.push_str(&format!("{} {}", field, sort));
+
+                    i += 1;
+                }
+            }
         }
-        format!(" ")
+
+        s
     }
 }
 
@@ -241,5 +268,83 @@ mod test {
             },
             data
         );
+    }
+
+    #[test]
+    fn test_get_pagination_sql() {
+        let paginate_sort = PaginateSort {
+            page: 1,
+            limit: 50,
+            offset: 0,
+            sorts: vec![],
+        };
+        assert_eq!(String::from(" LIMIT 50 OFFSET 0"), paginate_sort.get_pagination_sql());
+    }
+
+    #[test]
+    fn test_get_sorts_sql_without_sort() {
+        let paginate_sort = PaginateSort {
+            page: 1,
+            limit: 50,
+            offset: 0,
+            sorts: vec![],
+        };
+        assert_eq!(String::new(), paginate_sort.get_sorts_sql(None));
+    }
+
+    #[test]
+    fn test_get_sorts_sql_without_valid_fields() {
+        let valid_fields = Some(vec![]);
+
+        let mut paginate_sort = PaginateSort {
+            page: 1,
+            limit: 50,
+            offset: 0,
+            sorts: vec![],
+        };
+        assert_eq!(String::new(), paginate_sort.get_sorts_sql(valid_fields.clone()));
+
+        paginate_sort.sorts = vec![("id".to_owned(), Sort::Asc), ("name".to_owned(), Sort::Desc)];
+        assert_eq!(String::new(), paginate_sort.get_sorts_sql(valid_fields));
+    }
+
+    #[test]
+    fn test_get_sorts_sql_with_valid_fields() {
+        let valid_fields = Some(vec!["id", "name"]);
+
+        let mut paginate_sort = PaginateSort {
+            page: 1,
+            limit: 50,
+            offset: 0,
+            sorts: vec![],
+        };
+        assert_eq!(String::new(), paginate_sort.get_sorts_sql(valid_fields.clone()));
+
+        paginate_sort.sorts = vec![("id".to_owned(), Sort::Asc), ("name".to_owned(), Sort::Desc)];
+        assert_eq!(
+            " ORDER BY id ASC, name DESC".to_owned(),
+            paginate_sort.get_sorts_sql(valid_fields)
+        );
+
+        let valid_fields = Some(vec!["name"]);
+        assert_eq!(
+            " ORDER BY name DESC".to_owned(),
+            paginate_sort.get_sorts_sql(valid_fields)
+        );
+
+        let valid_fields = Some(vec!["id", "name"]);
+        paginate_sort.sorts = vec![("idz".to_owned(), Sort::Asc), ("name".to_owned(), Sort::Desc)];
+        assert_eq!(
+            " ORDER BY name DESC".to_owned(),
+            paginate_sort.get_sorts_sql(valid_fields)
+        );
+
+        let valid_fields = Some(vec!["id", "name"]);
+        paginate_sort.sorts = vec![("id".to_owned(), Sort::Asc), ("namee".to_owned(), Sort::Desc)];
+        assert_eq!(" ORDER BY id ASC".to_owned(), paginate_sort.get_sorts_sql(valid_fields));
+
+        let valid_fields = Some(vec!["id", "name"]);
+        paginate_sort.sorts = vec![("idz".to_owned(), Sort::Asc), ("namee".to_owned(), Sort::Desc)];
+        assert_eq!("".to_owned(), paginate_sort.get_sorts_sql(valid_fields));
     }
 }

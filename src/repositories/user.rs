@@ -84,7 +84,14 @@ impl UserRepository {
         );
 
         // Sorts and pagination
-        query.push_str(&paginate_sort.get_sorts_sql());
+        query.push_str(&paginate_sort.get_sorts_sql(Some(vec![
+            "id",
+            "lastname",
+            "firstname",
+            "created_at",
+            "updated_at",
+            "deleted_at",
+        ])));
         query.push_str(&paginate_sort.get_pagination_sql());
 
         let mut rows = sqlx::query(&query)
