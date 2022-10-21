@@ -347,4 +347,19 @@ mod test {
         paginate_sort.sorts = vec![("idz".to_owned(), Sort::Asc), ("namee".to_owned(), Sort::Desc)];
         assert_eq!("".to_owned(), paginate_sort.get_sorts_sql(valid_fields));
     }
+
+    #[test]
+    fn test_get_sorts_sql_with_valid_fields_and_table_prefix() {
+        let valid_fields = Some(vec!["user.id", "role.name"]);
+        let paginate_sort = PaginateSort {
+            page: 1,
+            limit: 50,
+            offset: 0,
+            sorts: vec![("user.id".to_owned(), Sort::Asc), ("role.name".to_owned(), Sort::Desc)],
+        };
+        assert_eq!(
+            " ORDER BY user.id ASC, role.name DESC".to_owned(),
+            paginate_sort.get_sorts_sql(valid_fields)
+        );
+    }
 }
