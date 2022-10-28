@@ -25,10 +25,6 @@ use tera::Tera;
 
 /// Application name
 pub const APP_NAME: &str = "Axum Boilerplate";
-/// Application author name (for CLI)
-pub const APP_AUTHOR: &str = "Fabien Bellanger";
-/// Application version (for CLI)
-pub const APP_VERSION: &str = "v0.1.0";
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {

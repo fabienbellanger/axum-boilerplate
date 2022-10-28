@@ -11,8 +11,8 @@ use std::io::{self, Write};
 #[derive(Parser)]
 #[clap(
     name = crate::APP_NAME,
-    version = crate::APP_VERSION,
-    author = crate::APP_AUTHOR
+    version = clap::crate_version!(),
+    author = clap::crate_authors!(),
 )]
 // #[clap(about = "A fictional versioning CLI", long_about = None)]
 struct Cli {
