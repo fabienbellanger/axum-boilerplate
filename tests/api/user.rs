@@ -261,7 +261,12 @@ async fn test_api_user_update() {
 
 #[tokio::test]
 async fn test_api_user_forgotten_password() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new()
+        .add_api_routes()
+        .await
+        .with_state()
+        .with_logger()
+        .build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     // Create a user
