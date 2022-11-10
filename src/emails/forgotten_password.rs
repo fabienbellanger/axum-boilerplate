@@ -1,8 +1,8 @@
 //! Forgotten password email module
 
 use super::{send, Message, SmtpConfig};
-use crate::errors::{AppError, AppResult};
-use crate::{APP_NAME, TEMPLATES};
+use crate::errors::{AppError, AppErrorCode, AppResult};
+use crate::{app_error, APP_NAME, TEMPLATES};
 use serde::Serialize;
 use tera::Context;
 
@@ -22,9 +22,10 @@ impl EmailContext {
                 title: format!("{} - Forgotten password", APP_NAME.to_owned()),
                 link,
             }),
-            false => Err(AppError::InternalError {
-                message: "cannot send password reset email because: invalid link".to_string(),
-            }),
+            false => Err(app_error!(
+                AppErrorCode::InternalError,
+                "cannot send password reset email because: invalid link"
+            )),
         }
     }
 }
@@ -39,24 +40,18 @@ impl ForgottenPasswordEmail {
         let html = TEMPLATES
             .render(
                 "email/forgotten_password.html",
-                &Context::from_serialize(&context).map_err(|err| AppError::InternalError {
-                    message: err.to_string(),
-                })?,
+                &Context::from_serialize(&context)
+                    .map_err(|err| app_error!(AppErrorCode::InternalError, err.to_string()))?,
             )
-            .map_err(|err| AppError::InternalError {
-                message: err.to_string(),
-            })?;
+            .map_err(|err| app_error!(AppErrorCode::InternalError, err.to_string()))?;
 
         let text = TEMPLATES
             .render(
                 "email/forgotten_password.txt",
-                &Context::from_serialize(&context).map_err(|err| AppError::InternalError {
-                    message: err.to_string(),
-                })?,
+                &Context::from_serialize(&context)
+                    .map_err(|err| app_error!(AppErrorCode::InternalError, err.to_string()))?,
             )
-            .map_err(|err| AppError::InternalError {
-                message: err.to_string(),
-            })?;
+            .map_err(|err| app_error!(AppErrorCode::InternalError, err.to_string()))?;
 
         Ok((html, text))
     }

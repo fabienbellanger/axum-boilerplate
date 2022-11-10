@@ -1,7 +1,7 @@
 //! Web handlers
 
-use crate::errors::{AppError, AppResult};
-use crate::TEMPLATES;
+use crate::errors::{AppError, AppErrorCode, AppResult};
+use crate::{app_error, TEMPLATES};
 use axum::{
     body::StreamBody,
     http::header::CONTENT_TYPE,
@@ -15,6 +15,7 @@ use tera::Context;
 use tokio::time::sleep;
 
 // Route: GET "/health-check"
+#[instrument]
 pub async fn health_check<'a>() -> &'a str {
     "OK"
 }
@@ -24,7 +25,7 @@ pub async fn hello() -> AppResult<Html<String>> {
     Ok(Html(
         TEMPLATES
             .render("hello.html", &Context::new())
-            .map_err(|_err| AppError::Timeout)?,
+            .map_err(|_err| app_error!(AppErrorCode::Timeout))?,
     ))
 }
 

@@ -20,8 +20,20 @@ pub struct AppErrorMessage {
     pub message: String,
 }
 
+#[derive(Debug)]
+pub enum AppErrorCode {
+    InternalError,
+    BadRequest,
+    NotFound,
+    UnprocessableEntity,
+    Timeout,
+    Unauthorized,
+    TooManyRequests,
+    MethodNotAllowed,
+}
+
 /// Defines available errors
-#[derive(Display, Debug, Error)]
+#[derive(Display, Debug, Error, PartialEq, Eq)]
 pub enum AppError {
     #[display(fmt = "{}", message)]
     InternalError { message: String },
@@ -48,21 +60,6 @@ pub enum AppError {
     MethodNotAllowed,
 }
 
-impl AppError {
-    pub fn name(&self) -> String {
-        match self {
-            Self::NotFound { message: m } => m.to_owned(),
-            Self::BadRequest { message: m } => m.to_owned(),
-            Self::InternalError { message: m } => m.to_owned(),
-            Self::UnprocessableEntity { message: m } => m.to_owned(),
-            Self::Unauthorized => "Unauthorized".to_owned(),
-            Self::Timeout => "Request Timeout".to_owned(),
-            Self::TooManyRequests => "Too Many Requests".to_owned(),
-            Self::MethodNotAllowed => "Method Not Allowed".to_owned(),
-        }
-    }
-}
-
 // Axum errors
 // ------------
 impl IntoResponse for AppError {
@@ -77,6 +74,10 @@ impl IntoResponse for AppError {
             AppError::MethodNotAllowed { .. } => StatusCode::METHOD_NOT_ALLOWED,
             AppError::UnprocessableEntity { .. } => StatusCode::UNPROCESSABLE_ENTITY,
         };
+
+        // if status == StatusCode::INTERNAL_SERVER_ERROR {
+        //     error!("{}", self.to_string());
+        // }
 
         let body = Json(json!(AppErrorMessage {
             code: status.as_u16(),
@@ -146,4 +147,77 @@ pub enum CliError {
 
     #[error("Server error: {0}")]
     ServerError(String),
+}
+
+/// Create an [`AppError`] and generate a log if HTTP Code is 500.
+///
+/// ```rust
+/// use axum_boilerplate::errors::{AppError, AppErrorCode, AppResult};
+/// use axum_boilerplate::app_error;
+///
+/// #[macro_use]
+/// extern crate tracing;
+///
+/// fn main() -> AppResult<()> {
+///     assert_eq!(AppError::Timeout, app_error!(AppErrorCode::Timeout));
+///     assert_eq!(
+///         AppError::InternalError{ message: "Internal Server Error".to_owned()},
+///         app_error!(AppErrorCode::InternalError)
+///     );
+///
+///     assert_eq!(AppError::Timeout, app_error!(AppErrorCode::Timeout, "Timeout"));
+///     assert_eq!(
+///         AppError::InternalError{ message: "My error".to_owned()},
+///         app_error!(AppErrorCode::InternalError, "My error")
+///     );
+///     
+///     Ok(())
+/// }
+/// ```
+#[macro_export]
+macro_rules! app_error {
+    ( $error:expr ) => {
+        match $error {
+            AppErrorCode::Timeout => AppError::Timeout,
+            AppErrorCode::Unauthorized => AppError::Unauthorized,
+            AppErrorCode::TooManyRequests => AppError::TooManyRequests,
+            AppErrorCode::MethodNotAllowed => AppError::MethodNotAllowed,
+            AppErrorCode::InternalError => AppError::InternalError {
+                message: String::from("Internal Server Error"),
+            },
+            AppErrorCode::BadRequest => AppError::BadRequest {
+                message: String::from("Bad Request"),
+            },
+            AppErrorCode::NotFound => AppError::NotFound {
+                message: String::from("Not Found"),
+            },
+            AppErrorCode::UnprocessableEntity => AppError::UnprocessableEntity {
+                message: String::from("Unprocessable Entity"),
+            },
+        }
+    };
+
+    ( $error:expr, $message:expr ) => {
+        match $error {
+            AppErrorCode::InternalError => {
+                error!("{}", $message);
+                AppError::InternalError {
+                    message: $message.to_owned(),
+                }
+            }
+            AppErrorCode::BadRequest => AppError::BadRequest {
+                message: $message.to_owned(),
+            },
+            AppErrorCode::NotFound => AppError::NotFound {
+                message: $message.to_owned(),
+            },
+            AppErrorCode::UnprocessableEntity => AppError::UnprocessableEntity {
+                message: $message.to_owned(),
+            },
+            AppErrorCode::Timeout => AppError::Timeout,
+            AppErrorCode::Unauthorized => AppError::Unauthorized,
+            AppErrorCode::TooManyRequests => AppError::TooManyRequests,
+            AppErrorCode::MethodNotAllowed => AppError::MethodNotAllowed,
+        }
+    };
 }

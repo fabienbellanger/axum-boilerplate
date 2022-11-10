@@ -1,9 +1,7 @@
 use super::helpers::user::{
     create_and_authenticate, create_user_request, delete, forgotten_password, get_all, get_one,
-    is_password_reset_token_still_in_database, login_request, update, update_password,
+    is_password_reset_token_still_in_database, login_request, update, update_password, TestPasswordReset, TestUser,
 };
-use super::helpers::TestUser;
-use crate::api::helpers::TestPasswordReset;
 use crate::helper::{TestApp, TestAppBuilder};
 use axum::http::StatusCode;
 use uuid::Uuid;

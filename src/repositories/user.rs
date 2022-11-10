@@ -1,4 +1,5 @@
-use crate::errors::AppError;
+use crate::app_error;
+use crate::errors::{AppError, AppErrorCode};
 use crate::models::user::{Login, PasswordReset, User, UserCreation};
 use crate::utils::query::PaginateSort;
 use chrono::{TimeZone, Utc};
@@ -235,9 +236,10 @@ impl UserRepository {
         let hashed_password = format!("{:x}", Sha512::digest(new_password.as_bytes()));
 
         if hashed_password == current_password {
-            return Err(AppError::BadRequest {
-                message: "new password cannot be the same as the current one".to_owned(),
-            });
+            return Err(app_error!(
+                AppErrorCode::BadRequest,
+                "new password cannot be the same as the current one"
+            ));
         }
 
         sqlx::query!(

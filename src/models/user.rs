@@ -124,7 +124,7 @@ impl Role {
             .map(|r| r.trim())
             .collect::<HashSet<&str>>()
             .iter()
-            .filter_map(|r| Self::try_from_str(*r))
+            .filter_map(|r| Self::try_from_str(r))
             .collect()
     }
 }

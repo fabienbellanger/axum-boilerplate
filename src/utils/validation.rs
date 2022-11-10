@@ -1,6 +1,9 @@
 //! HTTP request validation module
 
-use crate::errors::{AppError, AppResult};
+use crate::{
+    app_error,
+    errors::{AppError, AppErrorCode, AppResult},
+};
 use serde_json::json;
 use validator::Validate;
 
@@ -8,8 +11,6 @@ use validator::Validate;
 pub fn validate_request_data<T: Validate>(data: &T) -> AppResult<()> {
     match data.validate() {
         Ok(_) => Ok(()),
-        Err(errors) => Err(AppError::BadRequest {
-            message: json!(errors).to_string(),
-        }),
+        Err(errors) => Err(app_error!(AppErrorCode::BadRequest, json!(errors).to_string())),
     }
 }

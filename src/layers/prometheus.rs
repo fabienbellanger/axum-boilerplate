@@ -1,6 +1,10 @@
 //! Prometheus metrics layer
 
-use crate::{errors::AppError, APP_NAME};
+use crate::{
+    app_error,
+    errors::{AppError, AppErrorCode},
+    APP_NAME,
+};
 use axum::{extract::MatchedPath, middleware::Next, response::IntoResponse};
 use hyper::Request;
 use metrics::{histogram, increment_counter};
@@ -19,13 +23,9 @@ impl PrometheusMetric {
                 Matcher::Full("http_requests_duration_seconds".to_string()),
                 SECONDS_DURATION_BUCKETS,
             )
-            .map_err(|err| AppError::InternalError {
-                message: err.to_string(),
-            })?
+            .map_err(|err| app_error!(AppErrorCode::InternalError, err.to_string()))?
             .install_recorder()
-            .map_err(|err| AppError::InternalError {
-                message: err.to_string(),
-            })
+            .map_err(|err| app_error!(AppErrorCode::InternalError, err.to_string()))
     }
 
     /// Layer tracking requests

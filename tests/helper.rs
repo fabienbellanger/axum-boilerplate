@@ -1,7 +1,5 @@
 //! Test helper for unit tests
 
-use std::time::Duration;
-
 use axum::{Extension, Router};
 use axum_boilerplate::{
     layers::{self, ConfigState, MakeRequestUuid, SharedState, State},
@@ -9,6 +7,7 @@ use axum_boilerplate::{
 };
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use sqlx::{mysql::MySqlPoolOptions, Connection, MySql, MySqlConnection, MySqlPool};
+use std::time::Duration;
 use tower::ServiceBuilder;
 use tower_http::ServiceBuilderExt;
 
@@ -72,7 +71,7 @@ impl TestAppBuilder {
 
     #[allow(unused)]
     pub fn with_logger(self) -> Self {
-        logger::init("development", "", "").unwrap();
+        logger::init("test", "", "").unwrap();
         let layers = ServiceBuilder::new()
             .set_x_request_id(MakeRequestUuid)
             .layer(layers::logger::LoggerLayer)

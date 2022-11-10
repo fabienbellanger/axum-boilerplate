@@ -1,7 +1,5 @@
 //! Logger layer
 
-// TODO: Add response body to LoggerMessage if the response is an error
-
 use crate::layers::header_value_to_str;
 use axum::{body::Body, http::Request, response::Response};
 use futures::future::BoxFuture;

@@ -1,14 +1,11 @@
 pub mod user;
 
+use crate::helper::TestApp;
 use axum::http::StatusCode;
-use chrono::{DateTime, Utc};
 use hyper::{Body, Request};
-use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
 use tower::ServiceExt;
-
-use crate::helper::TestApp;
 
 /// HTTP response for test
 #[derive(Debug)]
@@ -47,35 +44,5 @@ impl TestResponse {
             body,
             headers: HashMap::new(),
         }
-    }
-}
-
-#[derive(Deserialize, Debug)]
-pub struct TestUser {
-    pub id: String,
-    pub lastname: String,
-    pub firstname: String,
-    pub username: String,
-    pub roles: Option<String>,
-    pub rate_limit: i32,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-}
-
-impl TestUser {
-    pub fn from_body(body: &str) -> Self {
-        serde_json::from_str(body).expect("error when deserializing user body")
-    }
-}
-
-#[derive(Deserialize, Debug)]
-pub struct TestPasswordReset {
-    pub token: String,
-    pub expired_at: DateTime<Utc>,
-}
-
-impl TestPasswordReset {
-    pub fn from_body(body: &str) -> Self {
-        serde_json::from_str(body).expect("error when deserializing password reset body")
     }
 }

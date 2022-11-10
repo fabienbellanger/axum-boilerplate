@@ -2,7 +2,8 @@
 
 pub mod forgotten_password;
 
-use crate::errors::{AppError, AppResult};
+use crate::app_error;
+use crate::errors::{AppError, AppErrorCode, AppResult};
 use lettre::message::{header, MultiPart, SinglePart};
 use lettre::{SmtpTransport, Transport};
 use std::time::Duration;
@@ -42,14 +43,20 @@ pub fn send(config: &SmtpConfig, message: Message) -> AppResult<()> {
 
     let mut email_builder = lettre::Message::builder()
         .subject(message.subject)
-        .from(message.from.parse().map_err(|_| AppError::InternalError {
-            message: "cannot send password reset email because: invalid from email".to_string(),
+        .from(message.from.parse().map_err(|_| {
+            app_error!(
+                AppErrorCode::InternalError,
+                "cannot send password reset email because: invalid from email".to_string()
+            )
         })?);
 
     // Add destination emails
     for to in message.to_list {
-        email_builder = email_builder.to(to.parse().map_err(|_| AppError::InternalError {
-            message: "cannot send password reset email because: invalid to email".to_string(),
+        email_builder = email_builder.to(to.parse().map_err(|_| {
+            app_error!(
+                AppErrorCode::InternalError,
+                "cannot send password reset email because: invalid to email".to_string()
+            )
         })?)
     }
 
@@ -67,12 +74,18 @@ pub fn send(config: &SmtpConfig, message: Message) -> AppResult<()> {
                         .body(message.html_body),
                 ),
         )
-        .map_err(|err| AppError::InternalError {
-            message: format!("cannot send password reset email because: {}", err),
+        .map_err(|err| {
+            app_error!(
+                AppErrorCode::InternalError,
+                format!("cannot send password reset email because: {}", err)
+            )
         })?;
 
-    mailer.send(&email).map_err(|err| AppError::InternalError {
-        message: format!("cannot send password reset email because: {}", err),
+    mailer.send(&email).map_err(|err| {
+        app_error!(
+            AppErrorCode::InternalError,
+            format!("SMTP Error when sending password reset email: {}", err)
+        )
     })?;
 
     Ok(())

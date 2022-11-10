@@ -1,6 +1,9 @@
 //! Authentification module
 
-use crate::errors::AppError;
+use crate::{
+    app_error,
+    errors::{AppError, AppErrorCode},
+};
 use axum::http::{header, HeaderMap};
 use chrono::Utc;
 use color_eyre::Result;
@@ -60,10 +63,8 @@ impl Jwt {
         };
 
         let token = encode(&header, &payload, encoding_key).map_err(|err| {
-            error!("error during JWT encoding: {err}");
-            AppError::InternalError {
-                message: "error during JWT encoding".to_string(),
-            }
+            error!("error during JWT encoding: {err}"); // TODO: Remove this log by adding a third parameter to app_error!()
+            app_error!(AppErrorCode::InternalError, "error during JWT encoding")
         })?;
 
         Ok((token, expired_at))
@@ -73,10 +74,8 @@ impl Jwt {
     pub fn parse(token: &str, decoding_key: &DecodingKey) -> Result<Claims, AppError> {
         let validation = Validation::new(Algorithm::HS512);
         let token = decode::<Claims>(token, decoding_key, &validation).map_err(|err| {
-            error!("error during JWT decoding: {err}");
-            AppError::InternalError {
-                message: "error during JWT decoding".to_string(),
-            }
+            error!("error during JWT decoding: {err}"); // TODO: Remove this log by adding a third parameter to app_error!()
+            app_error!(AppErrorCode::InternalError, "error during JWT decoding")
         })?;
 
         Ok(token.claims)

@@ -68,12 +68,9 @@ pub async fn login(
                         expires_at: expires_at.to_rfc3339_opts(SecondsFormat::Secs, true),
                     }))
                 }
-                _ => {
-                    dbg!("error during JWT generation");
-                    Err(AppError::InternalError {
-                        message: String::from("error during JWT generation"),
-                    })
-                }
+                _ => Err(AppError::InternalError {
+                    message: String::from("error during JWT generation"),
+                }),
             }
         }
     }

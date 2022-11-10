@@ -6,8 +6,39 @@ use axum_boilerplate::{
     models::user::{LoginResponse, Role, User},
     repositories::user::{PasswordResetRepository, UserRepository},
 };
-use chrono::Utc;
+use chrono::{DateTime, Utc};
+use serde::Deserialize;
 use uuid::Uuid;
+
+#[derive(Deserialize, Debug)]
+pub struct TestUser {
+    pub id: String,
+    pub lastname: String,
+    pub firstname: String,
+    pub username: String,
+    pub roles: Option<String>,
+    pub rate_limit: i32,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+impl TestUser {
+    pub fn from_body(body: &str) -> Self {
+        serde_json::from_str(body).expect("error when deserializing user body")
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct TestPasswordReset {
+    pub token: String,
+    pub expired_at: DateTime<Utc>,
+}
+
+impl TestPasswordReset {
+    pub fn from_body(body: &str) -> Self {
+        serde_json::from_str(body).expect("error when deserializing password reset body")
+    }
+}
 
 /// Create a user for authentication
 async fn create_user(db: &TestDatabase) -> User {

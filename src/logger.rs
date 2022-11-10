@@ -11,12 +11,18 @@ use tracing_subscriber::{fmt::format::JsonFields, prelude::*, EnvFilter, Registr
 ///
 /// It should only be called once!
 pub fn init(environment: &str, path: &str, filename: &str) -> CliResult<()> {
-    let (is_production, default_level) = match environment {
-        "production" => (true, "error"),
-        _ => (false, "info"),
+    let (is_production, filter) = match environment {
+        "production" => (
+            true,
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("error")),
+        ),
+        "test" => (false, EnvFilter::new("error")),
+        _ => (
+            false,
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
+        ),
     };
 
-    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(default_level));
     let format = tracing_subscriber::fmt::format()
         .with_level(true) // don't include levels in formatted output
         .with_target(true) // don't include targets
