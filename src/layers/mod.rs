@@ -6,8 +6,9 @@ pub mod logger;
 pub mod prometheus;
 pub mod rate_limiter;
 
+use crate::app_error;
 use crate::config::Config;
-use crate::errors::{AppError, AppErrorMessage};
+use crate::errors::{AppError, AppErrorCode, AppErrorMessage};
 use axum::body::Full;
 use axum::headers::HeaderName;
 use axum::http::{
@@ -174,19 +175,13 @@ pub async fn override_http_errors<B>(req: Request<B>, next: Next<B>) -> impl Int
     match to_bytes(body).await {
         Ok(body_bytes) => match String::from_utf8(body_bytes.to_vec()) {
             Ok(body) => match parts.status {
-                StatusCode::METHOD_NOT_ALLOWED => AppError::MethodNotAllowed.into_response(),
-                StatusCode::UNPROCESSABLE_ENTITY => AppError::UnprocessableEntity { message: body }.into_response(),
+                StatusCode::METHOD_NOT_ALLOWED => app_error!(AppErrorCode::MethodNotAllowed).into_response(),
+                StatusCode::UNPROCESSABLE_ENTITY => app_error!(AppErrorCode::UnprocessableEntity, body).into_response(),
                 _ => Response::from_parts(parts, axum::body::boxed(Full::from(body))),
             },
-            Err(err) => AppError::InternalError {
-                message: err.to_string(),
-            }
-            .into_response(),
+            Err(err) => app_error!(AppErrorCode::InternalError, err.to_string()).into_response(),
         },
-        Err(err) => AppError::InternalError {
-            message: err.to_string(),
-        }
-        .into_response(),
+        Err(err) => app_error!(AppErrorCode::InternalError, err.to_string()).into_response(),
     }
 }
 

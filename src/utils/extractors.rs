@@ -1,6 +1,7 @@
 //! Custom Axum extractors
 
-use crate::errors::AppError;
+use crate::app_error;
+use crate::errors::{AppError, AppErrorCode};
 use axum::http::header::HeaderValue;
 use axum::{
     async_trait,
@@ -51,55 +52,49 @@ where
 
                         let kind = inner.into_kind();
                         let body = match &kind {
-                            ErrorKind::WrongNumberOfParameters { .. } => AppError::BadRequest {
-                                message: kind.to_string(),
-                            },
+                            ErrorKind::WrongNumberOfParameters { .. } => {
+                                app_error!(AppErrorCode::BadRequest, kind.to_string())
+                            }
 
-                            ErrorKind::ParseErrorAtKey { .. } => AppError::BadRequest {
-                                message: kind.to_string(),
-                            },
+                            ErrorKind::ParseErrorAtKey { .. } => app_error!(AppErrorCode::BadRequest, kind.to_string()),
 
-                            ErrorKind::ParseErrorAtIndex { .. } => AppError::BadRequest {
-                                message: kind.to_string(),
-                            },
+                            ErrorKind::ParseErrorAtIndex { .. } => {
+                                app_error!(AppErrorCode::BadRequest, kind.to_string())
+                            }
 
-                            ErrorKind::ParseError { .. } => AppError::BadRequest {
-                                message: kind.to_string(),
-                            },
+                            ErrorKind::ParseError { .. } => app_error!(AppErrorCode::BadRequest, kind.to_string()),
 
-                            ErrorKind::InvalidUtf8InPathParam { .. } => AppError::BadRequest {
-                                message: kind.to_string(),
-                            },
+                            ErrorKind::InvalidUtf8InPathParam { .. } => {
+                                app_error!(AppErrorCode::BadRequest, kind.to_string())
+                            }
 
                             ErrorKind::UnsupportedType { .. } => {
                                 // this error is caused by the programmer using an unsupported type
                                 // (such as nested maps) so respond with `500` instead
                                 status = StatusCode::INTERNAL_SERVER_ERROR;
-                                AppError::InternalError {
-                                    message: kind.to_string(),
-                                }
+                                app_error!(AppErrorCode::InternalError, kind.to_string())
                             }
 
-                            ErrorKind::Message(msg) => AppError::BadRequest { message: msg.clone() },
+                            ErrorKind::Message(msg) => app_error!(AppErrorCode::BadRequest, msg.clone()),
 
-                            _ => AppError::BadRequest {
-                                message: format!("Unhandled deserialization error: {}", kind),
-                            },
+                            _ => app_error!(
+                                AppErrorCode::BadRequest,
+                                format!("Unhandled deserialization error: {}", kind)
+                            ),
                         };
 
                         (status, body)
                     }
                     PathRejection::MissingPathParams(error) => (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        AppError::InternalError {
-                            message: error.to_string(),
-                        },
+                        app_error!(AppErrorCode::InternalError, error.to_string()),
                     ),
                     _ => (
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        AppError::InternalError {
-                            message: format!("Unhandled path rejection: {}", rejection),
-                        },
+                        app_error!(
+                            AppErrorCode::InternalError,
+                            format!("Unhandled path rejection: {}", rejection)
+                        ),
                     ),
                 };
 

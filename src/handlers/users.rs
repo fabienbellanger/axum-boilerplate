@@ -1,8 +1,9 @@
 //! API users handlers
 
 use crate::{
+    app_error,
     emails::{forgotten_password::ForgottenPasswordEmail, SmtpConfig},
-    errors::{AppError, AppResult},
+    errors::{AppError, AppErrorCode, AppResult},
     layers::SharedState,
     models::{
         auth::Jwt,
@@ -36,7 +37,7 @@ pub async fn login(
     // Search user in database and return `LoginResponse`
     let user = UserRepository::login(&pool, payload).await?;
     match user {
-        None => Err(AppError::Unauthorized {}),
+        None => Err(app_error!(AppErrorCode::Unauthorized)),
         Some(user) => {
             // Token generation
             let encoding_key = &state.config.jwt_encoding_key.clone();
@@ -68,9 +69,7 @@ pub async fn login(
                         expires_at: expires_at.to_rfc3339_opts(SecondsFormat::Secs, true),
                     }))
                 }
-                _ => Err(AppError::InternalError {
-                    message: String::from("error during JWT generation"),
-                }),
+                _ => Err(app_error!(AppErrorCode::InternalError, "error during JWT generation")),
             }
         }
     }
@@ -115,9 +114,7 @@ pub async fn get_by_id(
     let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
     match user {
         Some(user) => Ok(Json(user)),
-        _ => Err(AppError::NotFound {
-            message: String::from("no user found"),
-        }),
+        _ => Err(app_error!(AppErrorCode::NotFound, "no user found")),
     }
 }
 
@@ -131,9 +128,10 @@ pub async fn delete(
     let result = UserRepository::delete(&pool, id.to_string()).await?;
     match result {
         1 => Ok(StatusCode::NO_CONTENT),
-        _ => Err(AppError::InternalError {
-            message: String::from("no user or user already deleted"),
-        }),
+        _ => Err(app_error!(
+            AppErrorCode::InternalError,
+            "no user or user already deleted"
+        )),
     }
 }
 
@@ -152,9 +150,7 @@ pub async fn update(
     let user = UserRepository::get_by_id(&pool, id.to_string()).await?;
     match user {
         Some(user) => Ok(Json(user)),
-        _ => Err(AppError::NotFound {
-            message: String::from("no user found"),
-        }),
+        _ => Err(app_error!(AppErrorCode::NotFound, "no user found")),
     }
 }
 
@@ -167,9 +163,7 @@ pub async fn forgotten_password(
     ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<Json<PasswordReset>> {
     match UserRepository::get_by_email(&pool, email.clone()).await? {
-        None => Err(AppError::NotFound {
-            message: String::from("no user found"),
-        }),
+        None => Err(app_error!(AppErrorCode::NotFound, "no user found")),
         Some(user) => {
             let mut password_reset = PasswordReset::new(user.id, state.config.forgotten_password_expiration_duration);
 
@@ -216,8 +210,6 @@ pub async fn update_password(
 
             Ok(StatusCode::OK)
         }
-        _ => Err(AppError::NotFound {
-            message: String::from("no user found"),
-        }),
+        _ => Err(app_error!(AppErrorCode::NotFound, "no user found")),
     }
 }
