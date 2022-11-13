@@ -75,10 +75,6 @@ impl IntoResponse for AppError {
             AppError::UnprocessableEntity { .. } => StatusCode::UNPROCESSABLE_ENTITY,
         };
 
-        // if status == StatusCode::INTERNAL_SERVER_ERROR {
-        //     error!("{}", self.to_string());
-        // }
-
         let body = Json(json!(AppErrorMessage {
             code: status.as_u16(),
             message: self.to_string(),

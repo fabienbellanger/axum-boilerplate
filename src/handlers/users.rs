@@ -55,21 +55,26 @@ pub async fn login(
             );
 
             match token {
-                Ok(token) => {
-                    let expires_at = NaiveDateTime::from_timestamp(token.1, 0);
-                    let expires_at: DateTime<Utc> = DateTime::from_utc(expires_at, Utc);
+                Ok(token) => match NaiveDateTime::from_timestamp_opt(token.1, 0) {
+                    Some(expires_at) => {
+                        let expires_at: DateTime<Utc> = DateTime::from_utc(expires_at, Utc);
 
-                    Ok(Json(LoginResponse {
-                        id: user.id.to_owned(),
-                        lastname: user.lastname.to_owned(),
-                        firstname: user.firstname.to_owned(),
-                        username: user.username,
-                        roles,
-                        token: token.0,
-                        expires_at: expires_at.to_rfc3339_opts(SecondsFormat::Secs, true),
-                    }))
-                }
-                _ => Err(app_error!(AppErrorCode::InternalError, "error during JWT generation")),
+                        Ok(Json(LoginResponse {
+                            id: user.id.to_owned(),
+                            lastname: user.lastname.to_owned(),
+                            firstname: user.firstname.to_owned(),
+                            username: user.username,
+                            roles,
+                            token: token.0,
+                            expires_at: expires_at.to_rfc3339_opts(SecondsFormat::Secs, true),
+                        }))
+                    }
+                    None => Err(app_error!(
+                        AppErrorCode::InternalError,
+                        "error during JWT generation: invalid "
+                    )), // TODO: Remove this log by adding a third parameter to app_error!()
+                },
+                _ => Err(app_error!(AppErrorCode::InternalError, "error during JWT generation")), // TODO: Remove this log by adding a third parameter to app_error!()
             }
         }
     }
