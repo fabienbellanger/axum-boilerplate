@@ -16,8 +16,10 @@ use crate::{
         validation::validate_request_data,
     },
 };
-use axum::extract::{Extension, Json, Query};
-use axum::http::StatusCode;
+use axum::{
+    extract::{Extension, Json, Query},
+    http::StatusCode,
+};
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
 use sqlx::{MySql, Pool};
 use uuid::Uuid;
@@ -73,7 +75,7 @@ pub async fn login(
                         AppErrorCode::InternalError,
                         "error during JWT generation",
                         format!(
-                            "error during JWT generation: invalid expired_at in claims token ({})",
+                            "error during JWT generation: invalid 'expired_at' field in JWT claims ({})",
                             token.1
                         )
                     )),

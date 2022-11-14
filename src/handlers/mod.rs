@@ -6,9 +6,9 @@ pub mod ws;
 
 use crate::{
     app_error,
-    errors::{AppError, AppErrorCode},
+    errors::{AppError, AppErrorCode, AppResult},
 };
-use axum::{http::StatusCode, response::IntoResponse, BoxError};
+use axum::BoxError;
 use std::io;
 use tower::timeout::error::Elapsed;
 
@@ -22,9 +22,10 @@ pub async fn timeout_error(err: BoxError) -> AppError {
 }
 
 /// Static file error
-pub async fn static_file_error(err: io::Error) -> impl IntoResponse {
-    (
-        StatusCode::INTERNAL_SERVER_ERROR,
-        format!("Unhandled internal error: {}", err),
-    )
+pub async fn static_file_error(err: io::Error) -> AppResult<()> {
+    Err(app_error!(
+        AppErrorCode::InternalError,
+        "error when serving static file",
+        format!("Unhandled internal error: {err}")
+    ))
 }

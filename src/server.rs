@@ -75,12 +75,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
 
     // Routing - API
     // -------------
-    let mut app = Router::new()
-        .fallback(
-            get_service(ServeDir::new("assets").append_index_html_on_directories(true))
-                .handle_error(handlers::static_file_error),
-        )
-        .nest("/api/v1", routes::api().layer(cors));
+    let mut app = Router::new().nest("/api/v1", routes::api().layer(cors));
 
     // Routing - WebSocket
     // -------------------
@@ -124,6 +119,10 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     }
 
     app = app
+        .fallback(
+            get_service(ServeDir::new("assets").append_index_html_on_directories(true))
+                .handle_error(handlers::static_file_error),
+        )
         .layer(middleware::from_fn(layers::override_http_errors))
         .layer(Extension(pool))
         .layer(layers)

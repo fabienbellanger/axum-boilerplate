@@ -170,8 +170,20 @@ pub fn cors(config: &Config) -> CorsLayer {
 /// Layer which override some HTTP errors by using `AppError`
 pub async fn override_http_errors<B>(req: Request<B>, next: Next<B>) -> impl IntoResponse {
     let response = next.run(req).await;
-    let (parts, body) = response.into_parts();
 
+    // If it is an image, audio or video, we return response
+    let headers = response.headers();
+    if let Some(content_type) = headers.get("content-type") {
+        let content_type = content_type.to_str().unwrap_or_default();
+        if content_type.starts_with("image/")
+            || content_type.starts_with("audio/")
+            || content_type.starts_with("video/")
+        {
+            return response;
+        }
+    }
+
+    let (parts, body) = response.into_parts();
     match to_bytes(body).await {
         Ok(body_bytes) => match String::from_utf8(body_bytes.to_vec()) {
             Ok(body) => match parts.status {

@@ -40,18 +40,40 @@ impl ForgottenPasswordEmail {
         let html = TEMPLATES
             .render(
                 "email/forgotten_password.html",
-                &Context::from_serialize(&context)
-                    .map_err(|err| app_error!(AppErrorCode::InternalError, err.to_string()))?,
+                &Context::from_serialize(&context).map_err(|err| {
+                    app_error!(
+                        AppErrorCode::InternalError,
+                        "error when sending reset password email",
+                        format!("error when sending reset password email: {err}")
+                    )
+                })?,
             )
-            .map_err(|err| app_error!(AppErrorCode::InternalError, err.to_string()))?;
+            .map_err(|err| {
+                app_error!(
+                    AppErrorCode::InternalError,
+                    "error when sending reset password email",
+                    format!("error when sending reset password email: {err}")
+                )
+            })?;
 
         let text = TEMPLATES
             .render(
                 "email/forgotten_password.txt",
-                &Context::from_serialize(&context)
-                    .map_err(|err| app_error!(AppErrorCode::InternalError, err.to_string()))?,
+                &Context::from_serialize(&context).map_err(|err| {
+                    app_error!(
+                        AppErrorCode::InternalError,
+                        "error when sending reset password email",
+                        format!("error when sending reset password email: {err}")
+                    )
+                })?,
             )
-            .map_err(|err| app_error!(AppErrorCode::InternalError, err.to_string()))?;
+            .map_err(|err| {
+                app_error!(
+                    AppErrorCode::InternalError,
+                    "error when sending reset password email",
+                    format!("error when sending reset password email: {err}")
+                )
+            })?;
 
         Ok((html, text))
     }
