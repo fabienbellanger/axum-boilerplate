@@ -71,10 +71,18 @@ pub async fn login(
                     }
                     None => Err(app_error!(
                         AppErrorCode::InternalError,
-                        "error during JWT generation: invalid "
-                    )), // TODO: Remove this log by adding a third parameter to app_error!()
+                        "error during JWT generation",
+                        format!(
+                            "error during JWT generation: invalid expired_at in claims token ({})",
+                            token.1
+                        )
+                    )),
                 },
-                _ => Err(app_error!(AppErrorCode::InternalError, "error during JWT generation")), // TODO: Remove this log by adding a third parameter to app_error!()
+                Err(err) => Err(app_error!(
+                    AppErrorCode::InternalError,
+                    "error during JWT generation",
+                    format!("error during JWT generation: {err}")
+                )),
             }
         }
     }

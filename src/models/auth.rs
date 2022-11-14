@@ -63,8 +63,11 @@ impl Jwt {
         };
 
         let token = encode(&header, &payload, encoding_key).map_err(|err| {
-            error!("error during JWT encoding: {err}"); // TODO: Remove this log by adding a third parameter to app_error!()
-            app_error!(AppErrorCode::InternalError, "error during JWT encoding")
+            app_error!(
+                AppErrorCode::InternalError,
+                "error during JWT encoding",
+                format!("error during JWT encoding: {err}")
+            )
         })?;
 
         Ok((token, expired_at))
@@ -74,8 +77,11 @@ impl Jwt {
     pub fn parse(token: &str, decoding_key: &DecodingKey) -> Result<Claims, AppError> {
         let validation = Validation::new(Algorithm::HS512);
         let token = decode::<Claims>(token, decoding_key, &validation).map_err(|err| {
-            error!("error during JWT decoding: {err}"); // TODO: Remove this log by adding a third parameter to app_error!()
-            app_error!(AppErrorCode::InternalError, "error during JWT decoding")
+            app_error!(
+                AppErrorCode::InternalError,
+                "error during JWT decoding",
+                format!("error during JWT decoding: {err}")
+            )
         })?;
 
         Ok(token.claims)

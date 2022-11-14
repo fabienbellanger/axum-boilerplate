@@ -166,6 +166,11 @@ pub enum CliError {
 ///         AppError::InternalError{ message: "My error".to_owned()},
 ///         app_error!(AppErrorCode::InternalError, "My error")
 ///     );
+///
+///     assert_eq!(
+///         AppError::InternalError{ message: "My error".to_owned()},
+///         app_error!(AppErrorCode::InternalError, "My error", "Details of my error")
+///     );
 ///     
 ///     Ok(())
 /// }
@@ -197,6 +202,30 @@ macro_rules! app_error {
         match $error {
             AppErrorCode::InternalError => {
                 error!("{}", $message);
+                AppError::InternalError {
+                    message: $message.to_owned(),
+                }
+            }
+            AppErrorCode::BadRequest => AppError::BadRequest {
+                message: $message.to_owned(),
+            },
+            AppErrorCode::NotFound => AppError::NotFound {
+                message: $message.to_owned(),
+            },
+            AppErrorCode::UnprocessableEntity => AppError::UnprocessableEntity {
+                message: $message.to_owned(),
+            },
+            AppErrorCode::Timeout => AppError::Timeout,
+            AppErrorCode::Unauthorized => AppError::Unauthorized,
+            AppErrorCode::TooManyRequests => AppError::TooManyRequests,
+            AppErrorCode::MethodNotAllowed => AppError::MethodNotAllowed,
+        }
+    };
+
+    ( $error:expr, $message:expr, $details:expr ) => {
+        match $error {
+            AppErrorCode::InternalError => {
+                error!("{}", $details);
                 AppError::InternalError {
                     message: $message.to_owned(),
                 }
