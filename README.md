@@ -150,6 +150,7 @@ make docker-cli-register
   - [x] Chat WebSocket example
 - [x] Add Tera
 - [x] Add Basic Auth middleware (use [http-auth-basic](https://crates.io/crates/http-auth-basic))
+- [ ] Use `State` instead of `Extension`: added: Added new type safe State extractor. This can be used with Router::with_state and gives compile errors for missing states, whereas Extension would result in runtime errors ([Changelog 0.6.0](https://github.com/tokio-rs/axum/blob/main/axum/CHANGELOG.md))
 - [ ] Rate limiter middleware
   - [ ] Add documentation
   - [ ] Optimize code
