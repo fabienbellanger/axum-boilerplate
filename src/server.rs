@@ -92,7 +92,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
             .nest(
                 "/metrics",
                 Router::new().route(
-                    "",
+                    "/",
                     get(move || ready(handle.render())).layer(BasicAuthLayer::new(
                         &settings.basic_auth_username,
                         &settings.basic_auth_password,
