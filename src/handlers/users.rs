@@ -27,10 +27,10 @@ use uuid::Uuid;
 // Route: POST /api/v1/login
 #[instrument(name = "Login", skip(pool, state), level = "warn")]
 pub async fn login(
-    Json(payload): Json<Login>,
     Extension(pool): Extension<Pool<MySql>>,
     Extension(state): Extension<SharedState>,
     ExtractRequestId(request_id): ExtractRequestId,
+    Json(payload): Json<Login>,
 ) -> AppResult<Json<LoginResponse>> {
     warn!("LOGIN handler");
 
@@ -93,9 +93,9 @@ pub async fn login(
 // Route: POST /api/v1/users
 #[instrument(skip(pool))]
 pub async fn create(
-    Json(payload): Json<UserCreation>,
     Extension(pool): Extension<Pool<MySql>>,
     ExtractRequestId(request_id): ExtractRequestId,
+    Json(payload): Json<UserCreation>,
 ) -> AppResult<Json<User>> {
     validate_request_data(&payload)?;
 
@@ -109,8 +109,8 @@ pub async fn create(
 // TODO: Add pagination, sort and filter
 #[instrument(skip(pool))]
 pub async fn get_all(
-    Extension(pool): Extension<Pool<MySql>>,
     Query(pagination): Query<PaginateSortQuery>,
+    Extension(pool): Extension<Pool<MySql>>,
     ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<Json<Vec<User>>> {
     let paginate_sort = PaginateSort::from(pagination);
@@ -154,9 +154,9 @@ pub async fn delete(
 #[instrument(skip(pool))]
 pub async fn update(
     Path(id): Path<Uuid>,
-    Json(payload): Json<UserCreation>,
     Extension(pool): Extension<Pool<MySql>>,
     ExtractRequestId(request_id): ExtractRequestId,
+    Json(payload): Json<UserCreation>,
 ) -> AppResult<Json<User>> {
     validate_request_data(&payload)?;
 
@@ -207,9 +207,9 @@ pub async fn forgotten_password(
 #[instrument(skip(pool))]
 pub async fn update_password(
     Path(token): Path<Uuid>,
-    Json(payload): Json<UserUpdatePassword>,
     Extension(pool): Extension<Pool<MySql>>,
     ExtractRequestId(request_id): ExtractRequestId,
+    Json(payload): Json<UserUpdatePassword>,
 ) -> AppResult<StatusCode> {
     validate_request_data(&payload)?;
 

@@ -64,8 +64,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
         .layer(layers::logger::LoggerLayer)
         .layer(HandleErrorLayer::new(handlers::timeout_error))
         .timeout(Duration::from_secs(settings.request_timeout))
-        .propagate_x_request_id()
-        .into_inner();
+        .propagate_x_request_id();
 
     // Chat app state
     // --------------
@@ -92,10 +91,13 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
         app = app
             .nest(
                 "/metrics",
-                get(move || ready(handle.render())).layer(BasicAuthLayer::new(
-                    &settings.basic_auth_username,
-                    &settings.basic_auth_password,
-                )),
+                Router::new().route(
+                    "",
+                    get(move || ready(handle.render())).layer(BasicAuthLayer::new(
+                        &settings.basic_auth_username,
+                        &settings.basic_auth_password,
+                    )),
+                ),
             )
             .route_layer(middleware::from_fn(PrometheusMetric::get_layer));
     }
@@ -109,7 +111,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
 
         app = app
             .layer(RateLimiterLayer::new(
-                &redis_pool,
+                redis_pool.clone(),
                 settings.redis_prefix.clone(),
                 settings.limiter_requests_by_second,
                 settings.limiter_expire_in_seconds,
@@ -119,7 +121,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     }
 
     app = app
-        .fallback(
+        .fallback_service(
             get_service(ServeDir::new("assets").append_index_html_on_directories(true))
                 .handle_error(handlers::static_file_error),
         )

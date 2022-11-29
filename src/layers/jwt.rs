@@ -11,6 +11,7 @@ use futures::future::BoxFuture;
 use std::task::{Context, Poll};
 use tower::{Layer, Service};
 
+#[derive(Clone)]
 pub struct JwtLayer;
 
 impl<S> Layer<S> for JwtLayer {

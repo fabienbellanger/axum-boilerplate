@@ -37,6 +37,7 @@ impl Display for LoggerMessage {
     }
 }
 
+#[derive(Clone)]
 pub struct LoggerLayer;
 
 impl<S> Layer<S> for LoggerLayer {

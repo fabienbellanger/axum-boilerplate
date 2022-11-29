@@ -12,6 +12,7 @@ use hyper::StatusCode;
 use std::task::{Context, Poll};
 use tower::{Layer, Service};
 
+#[derive(Clone)]
 pub struct BasicAuthLayer {
     pub username: String,
     pub password: String,

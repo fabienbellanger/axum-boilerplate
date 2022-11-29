@@ -4,10 +4,10 @@ use crate::{
     app_error,
     errors::{AppError, AppErrorCode},
 };
-use axum::http::header::HeaderValue;
+use axum::http::{header::HeaderValue, request::Parts};
 use axum::{
     async_trait,
-    extract::{path::ErrorKind, rejection::PathRejection, FromRequest, RequestParts},
+    extract::{path::ErrorKind, rejection::PathRejection, FromRequestParts},
 };
 use hyper::StatusCode;
 use serde::de::DeserializeOwned;
@@ -16,14 +16,14 @@ use serde::de::DeserializeOwned;
 pub struct ExtractRequestId(pub HeaderValue);
 
 #[async_trait]
-impl<B> FromRequest<B> for ExtractRequestId
+impl<S> FromRequestParts<S> for ExtractRequestId
 where
-    B: Send,
+    S: Send + Sync,
 {
     type Rejection = ();
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        match req.headers().get("x-request-id") {
+    async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
+        match parts.headers.get("x-request-id") {
             Some(id) => Ok(ExtractRequestId(id.clone())),
             _ => Ok(ExtractRequestId(HeaderValue::from_static(""))),
         }
@@ -33,19 +33,17 @@ where
 // We define our own `Path` extractor that customizes the error from `axum::extract::Path`
 pub struct Path<T>(pub T);
 
-// TODO: Change when axum 0.6 will release
-// https://github.com/tokio-rs/axum/blob/main/examples/customize-path-rejection/src/main.rs
 #[async_trait]
-impl<B, T> FromRequest<B> for Path<T>
+impl<S, T> FromRequestParts<S> for Path<T>
 where
     // these trait bounds are copied from `impl FromRequest for axum::extract::path::Path`
     T: DeserializeOwned + Send,
-    B: Send,
+    S: Send + Sync,
 {
     type Rejection = (StatusCode, AppError);
 
-    async fn from_request(req: &mut RequestParts<B>) -> Result<Self, Self::Rejection> {
-        match axum::extract::Path::<T>::from_request(req).await {
+    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
+        match axum::extract::Path::<T>::from_request_parts(parts, state).await {
             Ok(value) => Ok(Self(value.0)),
             Err(rejection) => {
                 let (status, body) = match rejection {

@@ -29,17 +29,18 @@ const REMAINING_HEADER: &str = "x-ratelimit-remaining";
 const RESET_HEADER: &str = "x-ratelimit-reset";
 const RETRY_AFTER_HEADER: &str = "retry-after";
 
-pub struct RateLimiterLayer<'a> {
-    pub pool: &'a Pool<Client>,
+#[derive(Clone)]
+pub struct RateLimiterLayer {
+    pub pool: Pool<Client>,
     pub redis_prefix: String,
     pub requests_by_second: i32,
     pub expire_in_seconds: i64,
     pub white_list: String,
 }
 
-impl<'a> RateLimiterLayer<'a> {
+impl RateLimiterLayer {
     pub fn new(
-        pool: &'a Pool<Client>,
+        pool: Pool<Client>,
         redis_prefix: String,
         requests_by_second: i32,
         expire_in_seconds: i64,
@@ -58,7 +59,7 @@ impl<'a> RateLimiterLayer<'a> {
     }
 }
 
-impl<'a, S> Layer<S> for RateLimiterLayer<'a> {
+impl<S> Layer<S> for RateLimiterLayer {
     type Service = RateLimiterMiddleware<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
