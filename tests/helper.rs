@@ -42,8 +42,8 @@ impl TestAppBuilder {
         let state = Self::get_state();
         let db = TestDatabase::new().await;
 
-        let router = Router::new().nest("/api/v1", routes::api(state.clone()));
-        let mut router = router.nest("/", routes::web());
+        let mut router = Router::new().nest("/api/v1", routes::api(state.clone()));
+        router = router.nest("/", routes::web());
         router = router.layer(Extension(db.database().await));
 
         let router = router.with_state(state);

@@ -72,19 +72,18 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
 
     // Routing - API
     // -------------
-    let app = Router::new().nest("/api/v1", routes::api(global_state.clone()).layer(cors));
+    let mut app = Router::new().nest("/api/v1", routes::api(global_state.clone()).layer(cors));
 
     // Routing - WS
     // ------------
     let user_set = Mutex::new(HashSet::new());
     let (tx, _rx) = broadcast::channel(100);
     let chat_state = SharedChatState::new(ChatState { user_set, tx });
-
-    let app = app.nest("/ws", routes::ws(chat_state));
+    app = app.nest("/ws", routes::ws(chat_state));
 
     // Routing - Web
     // -------------
-    let mut app = app.nest("/", routes::web());
+    app = app.nest("/", routes::web());
 
     // Prometheus metrics
     // ------------------
