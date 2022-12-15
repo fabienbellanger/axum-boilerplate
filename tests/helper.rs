@@ -17,7 +17,6 @@ use tower_http::ServiceBuilderExt;
 // - https://github.com/tokio-rs/axum/blob/main/examples/testing/src/main.rs
 // - https://github.com/wolf4ood/realworld-axum/blob/main/src/web/src/app.rs
 
-#[derive(Debug)]
 pub struct TestApp {
     pub router: Router,
     pub database: Option<TestDatabase>,
@@ -58,11 +57,11 @@ impl TestAppBuilder {
 
     pub async fn add_api_routes(self) -> Self {
         let db = TestDatabase::new().await;
+        let state = Self::get_state();
 
-        let router = self
-            .router
-            .nest("/api/v1", routes::api())
-            .layer(Extension(db.database().await));
+        let router = self.router.nest("/api/v1", routes::api(state));
+        let router = router.layer(Extension(db.database().await));
+
         Self {
             router,
             database: Some(db),
@@ -83,7 +82,7 @@ impl TestAppBuilder {
         }
     }
 
-    pub fn with_state(self) -> Self {
+    fn get_state() -> SharedState {
         let jwt_secret_key = "mysecretjwtkey";
         let state = State {
             config: ConfigState {
@@ -99,15 +98,13 @@ impl TestAppBuilder {
             },
         };
 
-        Self {
-            router: self.router.layer(Extension(SharedState::new(state))),
-            database: self.database,
-        }
+        SharedState::new(state)
     }
 
     pub fn build(self) -> TestApp {
+        let router = self.router;
         TestApp {
-            router: self.router,
+            router,
             database: self.database,
         }
     }

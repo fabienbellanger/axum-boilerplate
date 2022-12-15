@@ -66,22 +66,20 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
         .timeout(Duration::from_secs(settings.request_timeout))
         .propagate_x_request_id();
 
-    // Chat app state
-    // --------------
-    let user_set = Mutex::new(HashSet::new());
-    let (tx, _rx) = broadcast::channel(100);
-    let chat_state = SharedChatState::new(ChatState { user_set, tx });
-
     // Global state
     // ------------
     let global_state = SharedState::new(State::init(settings));
 
     // Routing - API
     // -------------
-    let app = Router::new().nest("/api/v1", routes::api().layer(cors));
+    let app = Router::new().nest("/api/v1", routes::api(global_state.clone()).layer(cors));
 
-    // Routing - WebSocket
-    // -------------------
+    // Routing - WS
+    // ------------
+    let user_set = Mutex::new(HashSet::new());
+    let (tx, _rx) = broadcast::channel(100);
+    let chat_state = SharedChatState::new(ChatState { user_set, tx });
+
     let app = app.nest("/ws", routes::ws(chat_state));
 
     // Routing - Web
@@ -115,6 +113,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
 
         app = app
             .layer(RateLimiterLayer::new(
+                global_state.clone(),
                 redis_pool.clone(),
                 settings.redis_prefix.clone(),
                 settings.limiter_requests_by_second,
@@ -123,6 +122,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
             ))
             .layer(Extension(redis_pool));
     }
+
     app = app
         .fallback_service(
             get_service(ServeDir::new("assets").append_index_html_on_directories(true))
