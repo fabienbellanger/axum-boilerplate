@@ -72,17 +72,21 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     let (tx, _rx) = broadcast::channel(100);
     let chat_state = SharedChatState::new(ChatState { user_set, tx });
 
+    // Global state
+    // ------------
+    let global_state = SharedState::new(State::init(settings));
+
     // Routing - API
     // -------------
-    let mut app = Router::new().nest("/api/v1", routes::api().layer(cors));
+    let app = Router::new().nest("/api/v1", routes::api().layer(cors));
 
     // Routing - WebSocket
     // -------------------
-    app = app.nest("/ws", routes::ws()).layer(Extension(chat_state));
+    let app = app.nest("/ws", routes::ws(chat_state));
 
     // Routing - Web
     // -------------
-    app = app.nest("/", routes::web());
+    let mut app = app.nest("/", routes::web());
 
     // Prometheus metrics
     // ------------------
@@ -119,7 +123,6 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
             ))
             .layer(Extension(redis_pool));
     }
-
     app = app
         .fallback_service(
             get_service(ServeDir::new("assets").append_index_html_on_directories(true))
@@ -127,8 +130,9 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
         )
         .layer(middleware::from_fn(layers::override_http_errors))
         .layer(Extension(pool))
-        .layer(layers)
-        .layer(Extension(SharedState::new(State::init(settings))));
+        .layer(layers);
+
+    let app = app.with_state(global_state);
 
     Ok(app)
 }

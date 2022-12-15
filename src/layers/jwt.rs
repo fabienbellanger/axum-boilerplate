@@ -44,13 +44,17 @@ where
     fn call(&mut self, request: Request<Body>) -> Self::Future {
         let is_authorized = match request.extensions().get::<layers::SharedState>() {
             Some(state) => {
+                debug!("State");
                 let state = state.clone();
                 match Claims::extract_from_request(request.headers(), &state.config.jwt_decoding_key.clone()) {
                     Some(claims) => claims.is_ok(),
                     _ => false,
                 }
             }
-            _ => false,
+            _ => {
+                debug!("No state");
+                false
+            }
         };
 
         let future = self.inner.call(request);

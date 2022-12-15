@@ -2,11 +2,13 @@
 
 use crate::handlers;
 use crate::layers;
+use crate::layers::SharedChatState;
+use crate::layers::SharedState;
 use axum::routing::{delete, get, patch, post, put};
 use axum::Router;
 
 /// Return web routes list
-pub fn web() -> Router {
+pub fn web() -> Router<SharedState> {
     Router::new()
         .route("/health-check", get(handlers::web::health_check))
         .route("/hello", get(handlers::web::hello))
@@ -18,14 +20,15 @@ pub fn web() -> Router {
 }
 
 /// Return WebSocket routes list
-pub fn ws() -> Router {
+pub fn ws(state: SharedChatState) -> Router<SharedState> {
     Router::new()
         .route("/", get(handlers::ws::simple_ws_handler))
         .route("/chat", get(handlers::ws::chat_ws_handler))
+        .with_state(state)
 }
 
 /// Return API routes list
-pub fn api() -> Router {
+pub fn api() -> Router<SharedState> {
     Router::new()
         // Public routes
         .route("/login", post(handlers::users::login))
@@ -36,12 +39,12 @@ pub fn api() -> Router {
 }
 
 /// Protected API routes
-fn api_protected() -> Router {
+fn api_protected() -> Router<SharedState> {
     Router::new().nest("/users", api_users())
 }
 
 /// Users API routes
-fn api_users() -> Router {
+fn api_users() -> Router<SharedState> {
     Router::new()
         .route("/", post(handlers::users::create))
         .route("/", get(handlers::users::get_all))
