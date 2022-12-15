@@ -5,7 +5,7 @@ use tower::ServiceExt;
 
 #[tokio::test]
 async fn test_health_check() {
-    let app = TestAppBuilder::new().add_web_routes().build().router;
+    let app = TestAppBuilder::new().await.build().router;
     let response = app
         .oneshot(Request::builder().uri("/health-check").body(Body::empty()).unwrap())
         .await

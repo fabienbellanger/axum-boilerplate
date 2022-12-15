@@ -19,53 +19,36 @@ use tower_http::ServiceBuilderExt;
 
 pub struct TestApp {
     pub router: Router,
-    pub database: Option<TestDatabase>,
+    pub database: TestDatabase,
 }
 
 impl TestApp {
     pub fn database(&self) -> &TestDatabase {
-        self.database.as_ref().expect("database error")
+        &self.database
     }
 
     pub async fn drop_database(&self) {
-        if let Some(database) = &self.database {
-            database.drop_database().await;
-        }
+        self.database.drop_database().await;
     }
 }
 
 pub struct TestAppBuilder {
     router: Router,
-    database: Option<TestDatabase>,
+    database: TestDatabase,
 }
 
 impl TestAppBuilder {
-    pub fn new() -> Self {
-        Self {
-            router: Router::new(),
-            database: None,
-        }
-    }
-
-    pub fn add_web_routes(self) -> Self {
-        let router = self.router.nest("/", routes::web());
-        Self {
-            router,
-            database: self.database,
-        }
-    }
-
-    pub async fn add_api_routes(self) -> Self {
-        let db = TestDatabase::new().await;
+    pub async fn new() -> Self {
         let state = Self::get_state();
+        let db = TestDatabase::new().await;
 
-        let router = self.router.nest("/api/v1", routes::api(state));
-        let router = router.layer(Extension(db.database().await));
+        let router = Router::new().nest("/api/v1", routes::api(state.clone()));
+        let mut router = router.nest("/", routes::web());
+        router = router.layer(Extension(db.database().await));
 
-        Self {
-            router,
-            database: Some(db),
-        }
+        let router = router.with_state(state);
+
+        Self { router, database: db }
     }
 
     #[allow(unused)]
@@ -102,9 +85,8 @@ impl TestAppBuilder {
     }
 
     pub fn build(self) -> TestApp {
-        let router = self.router;
         TestApp {
-            router,
+            router: self.router,
             database: self.database,
         }
     }
