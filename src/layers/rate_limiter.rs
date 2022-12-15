@@ -31,6 +31,7 @@ const RETRY_AFTER_HEADER: &str = "retry-after";
 
 #[derive(Clone)]
 pub struct RateLimiterLayer {
+    pub state: SharedState,
     pub pool: Pool<Client>,
     pub redis_prefix: String,
     pub requests_by_second: i32,
@@ -40,6 +41,7 @@ pub struct RateLimiterLayer {
 
 impl RateLimiterLayer {
     pub fn new(
+        state: SharedState,
         pool: Pool<Client>,
         redis_prefix: String,
         requests_by_second: i32,
@@ -50,6 +52,7 @@ impl RateLimiterLayer {
         redis_prefix.push_str(RATE_LIMITER_PREFIX);
 
         Self {
+            state,
             pool,
             redis_prefix,
             requests_by_second,
@@ -67,6 +70,7 @@ impl<S> Layer<S> for RateLimiterLayer {
 
         RateLimiterMiddleware {
             inner,
+            state: self.state.clone(),
             pool: self.pool.clone(),
             redis_prefix: self.redis_prefix.clone(),
             requests_by_second: self.requests_by_second,
@@ -79,6 +83,7 @@ impl<S> Layer<S> for RateLimiterLayer {
 #[derive(Clone)]
 pub struct RateLimiterMiddleware<S> {
     inner: S,
+    state: SharedState,
     pool: Pool<Client>,
     redis_prefix: String,
     requests_by_second: i32,
@@ -105,13 +110,7 @@ where
         let pool = self.pool.clone();
 
         // Check JWT claims
-        let state = request.extensions().get::<SharedState>();
-        let claims = match state {
-            Some(state) => {
-                auth::Claims::extract_from_request(request.headers(), &state.config.jwt_decoding_key.clone())
-            }
-            None => None,
-        };
+        let claims = auth::Claims::extract_from_request(request.headers(), &self.state.config.jwt_decoding_key.clone());
 
         // Get socket address
         let addr = request.extensions().get::<ConnectInfo<SocketAddr>>();
@@ -274,7 +273,6 @@ impl RateLimiterCheck {
                         None => Self::new(Some(RateLimiterError::Ip), None, 0),
                         Some(remote_address) => {
                             let mut key = remote_address.0.ip().to_string();
-
                             // Check if IP address is in white list
                             if white_list.contains(&key) {
                                 // No limit

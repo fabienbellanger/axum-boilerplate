@@ -17,7 +17,7 @@ use crate::{
     },
 };
 use axum::{
-    extract::{Extension, Json, Query},
+    extract::{Extension, Json, Query, State},
     http::StatusCode,
 };
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
@@ -28,7 +28,7 @@ use uuid::Uuid;
 #[instrument(name = "Login", skip(pool, state), level = "warn")]
 pub async fn login(
     Extension(pool): Extension<Pool<MySql>>,
-    Extension(state): Extension<SharedState>,
+    State(state): State<SharedState>,
     ExtractRequestId(request_id): ExtractRequestId,
     Json(payload): Json<Login>,
 ) -> AppResult<Json<LoginResponse>> {
@@ -173,7 +173,7 @@ pub async fn update(
 #[instrument(skip(pool, state))]
 pub async fn forgotten_password(
     Path(email): Path<String>,
-    Extension(state): Extension<SharedState>,
+    State(state): State<SharedState>,
     Extension(pool): Extension<Pool<MySql>>,
     ExtractRequestId(request_id): ExtractRequestId,
 ) -> AppResult<Json<PasswordReset>> {

@@ -1,7 +1,7 @@
 //! JWT layer
 
-use super::body_from_parts;
-use crate::{layers, models::auth::Claims};
+use super::{body_from_parts, SharedState};
+use crate::models::auth::Claims;
 use axum::{
     body::{boxed, Body, Full},
     http::{Request, StatusCode},
@@ -12,19 +12,25 @@ use std::task::{Context, Poll};
 use tower::{Layer, Service};
 
 #[derive(Clone)]
-pub struct JwtLayer;
+pub struct JwtLayer {
+    pub state: SharedState,
+}
 
 impl<S> Layer<S> for JwtLayer {
     type Service = JwtMiddleware<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        JwtMiddleware { inner }
+        JwtMiddleware {
+            inner,
+            state: self.state.clone(),
+        }
     }
 }
 
 #[derive(Clone)]
 pub struct JwtMiddleware<S> {
     inner: S,
+    state: SharedState,
 }
 
 impl<S> Service<Request<Body>> for JwtMiddleware<S>
@@ -42,16 +48,11 @@ where
     }
 
     fn call(&mut self, request: Request<Body>) -> Self::Future {
-        let is_authorized = match request.extensions().get::<layers::SharedState>() {
-            Some(state) => {
-                let state = state.clone();
-                match Claims::extract_from_request(request.headers(), &state.config.jwt_decoding_key.clone()) {
-                    Some(claims) => claims.is_ok(),
-                    _ => false,
-                }
-            }
-            _ => false,
-        };
+        let is_authorized =
+            match Claims::extract_from_request(request.headers(), &self.state.config.jwt_decoding_key.clone()) {
+                Some(claims) => claims.is_ok(),
+                _ => false,
+            };
 
         let future = self.inner.call(request);
         Box::pin(async move {

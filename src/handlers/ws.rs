@@ -2,9 +2,11 @@
 
 use crate::layers::{ChatState, SharedChatState};
 use axum::{
-    extract::ws::{Message, WebSocket, WebSocketUpgrade},
+    extract::{
+        ws::{Message, WebSocket, WebSocketUpgrade},
+        State,
+    },
     response::IntoResponse,
-    Extension,
 };
 use futures::{sink::SinkExt, stream::StreamExt};
 
@@ -60,7 +62,7 @@ async fn handle_simple_socket(mut socket: WebSocket) {
 }
 
 /// Chat WebSocket handler
-pub async fn chat_ws_handler(ws: WebSocketUpgrade, Extension(state): Extension<SharedChatState>) -> impl IntoResponse {
+pub async fn chat_ws_handler(ws: WebSocketUpgrade, State(state): State<SharedChatState>) -> impl IntoResponse {
     ws.on_upgrade(|socket| websocket(socket, state))
 }
 

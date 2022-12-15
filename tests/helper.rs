@@ -17,56 +17,38 @@ use tower_http::ServiceBuilderExt;
 // - https://github.com/tokio-rs/axum/blob/main/examples/testing/src/main.rs
 // - https://github.com/wolf4ood/realworld-axum/blob/main/src/web/src/app.rs
 
-#[derive(Debug)]
 pub struct TestApp {
     pub router: Router,
-    pub database: Option<TestDatabase>,
+    pub database: TestDatabase,
 }
 
 impl TestApp {
     pub fn database(&self) -> &TestDatabase {
-        self.database.as_ref().expect("database error")
+        &self.database
     }
 
     pub async fn drop_database(&self) {
-        if let Some(database) = &self.database {
-            database.drop_database().await;
-        }
+        self.database.drop_database().await;
     }
 }
 
 pub struct TestAppBuilder {
     router: Router,
-    database: Option<TestDatabase>,
+    database: TestDatabase,
 }
 
 impl TestAppBuilder {
-    pub fn new() -> Self {
-        Self {
-            router: Router::new(),
-            database: None,
-        }
-    }
-
-    pub fn add_web_routes(self) -> Self {
-        let router = self.router.nest("/", routes::web());
-        Self {
-            router,
-            database: self.database,
-        }
-    }
-
-    pub async fn add_api_routes(self) -> Self {
+    pub async fn new() -> Self {
+        let state = Self::get_state();
         let db = TestDatabase::new().await;
 
-        let router = self
-            .router
-            .nest("/api/v1", routes::api())
-            .layer(Extension(db.database().await));
-        Self {
-            router,
-            database: Some(db),
-        }
+        let mut router = Router::new().nest("/api/v1", routes::api(state.clone()));
+        router = router.nest("/", routes::web());
+        router = router.layer(Extension(db.database().await));
+
+        let router = router.with_state(state);
+
+        Self { router, database: db }
     }
 
     #[allow(unused)]
@@ -83,7 +65,7 @@ impl TestAppBuilder {
         }
     }
 
-    pub fn with_state(self) -> Self {
+    fn get_state() -> SharedState {
         let jwt_secret_key = "mysecretjwtkey";
         let state = State {
             config: ConfigState {
@@ -99,10 +81,7 @@ impl TestAppBuilder {
             },
         };
 
-        Self {
-            router: self.router.layer(Extension(SharedState::new(state))),
-            database: self.database,
-        }
+        SharedState::new(state)
     }
 
     pub fn build(self) -> TestApp {

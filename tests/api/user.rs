@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 #[tokio::test]
 async fn test_api_login_unauthorized_user() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
 
     let response = login_request(
         &app,
@@ -33,7 +33,7 @@ async fn test_api_login_unauthorized_user() {
 
 #[tokio::test]
 async fn test_api_login_authorized_user() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (response, _token) = create_and_authenticate(&app).await;
     app.drop_database().await;
 
@@ -42,7 +42,7 @@ async fn test_api_login_authorized_user() {
 
 #[tokio::test]
 async fn test_api_user_creation_success() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     let response = create_user_request(
@@ -65,7 +65,7 @@ async fn test_api_user_creation_success() {
 
 #[tokio::test]
 async fn test_api_user_creation_invalid_password() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     let response = create_user_request(
@@ -88,7 +88,7 @@ async fn test_api_user_creation_invalid_password() {
 
 #[tokio::test]
 async fn test_api_user_list_all() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     // Create 2 users
@@ -119,7 +119,7 @@ async fn test_api_user_list_all() {
 
 #[tokio::test]
 async fn test_api_user_list_one() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     // Create a user
@@ -150,7 +150,7 @@ async fn test_api_user_list_one() {
 
 #[tokio::test]
 async fn test_api_user_get_one_bad_parameter() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     // Create a user
@@ -180,7 +180,7 @@ async fn test_api_user_get_one_bad_parameter() {
 
 #[tokio::test]
 async fn test_api_user_delete() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     // Create a user
@@ -210,7 +210,7 @@ async fn test_api_user_delete() {
 
 #[tokio::test]
 async fn test_api_user_update() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     // Create a user
@@ -259,12 +259,7 @@ async fn test_api_user_update() {
 
 #[tokio::test]
 async fn test_api_user_forgotten_password() {
-    let app: TestApp = TestAppBuilder::new()
-        .add_api_routes()
-        .await
-        .with_state()
-        .with_logger()
-        .build();
+    let app: TestApp = TestAppBuilder::new().await.with_logger().build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     // Create a user
@@ -297,7 +292,7 @@ async fn test_api_user_forgotten_password() {
 
 #[tokio::test]
 async fn test_api_user_forgotten_password_email_not_found() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     // Create a user
@@ -323,7 +318,7 @@ async fn test_api_user_forgotten_password_email_not_found() {
 
 #[tokio::test]
 async fn test_api_user_update_password() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     // Create a user
@@ -379,7 +374,7 @@ async fn test_api_user_update_password() {
 
 #[tokio::test]
 async fn test_api_user_update_password_with_old_password() {
-    let app: TestApp = TestAppBuilder::new().add_api_routes().await.with_state().build();
+    let app: TestApp = TestAppBuilder::new().await.build();
     let (_response, token) = create_and_authenticate(&app).await;
 
     // Create a user
