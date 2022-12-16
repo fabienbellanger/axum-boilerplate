@@ -160,4 +160,4 @@ make docker-cli-register
   - [rust-web-server-template](https://github.com/nullren/rust-web-server-template)
   - [axum-demo](https://github.com/linux-china/axum-demo)
   - [x] Create a first user to use API
-  - [ ] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs)) or ([Example](https://github.com/stefanprodan/dockprom))
+  - [x] Add Prometheus metrics ([Example](https://github.com/tokio-rs/axum/blob/main/examples/prometheus-metrics/src/main.rs)) or ([Example](https://github.com/stefanprodan/dockprom))

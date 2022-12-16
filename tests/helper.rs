@@ -16,6 +16,7 @@ use tower_http::ServiceBuilderExt;
 // - https://github.com/davidpdrsn/witter/blob/master/backend/src/tests/test_helpers/test_db.rs
 // - https://github.com/tokio-rs/axum/blob/main/examples/testing/src/main.rs
 // - https://github.com/wolf4ood/realworld-axum/blob/main/src/web/src/app.rs
+// - https://stackoverflow.com/questions/73013414/drop-database-on-drop-using-sqlx-and-rust
 
 pub struct TestApp {
     pub router: Router,
@@ -25,10 +26,6 @@ pub struct TestApp {
 impl TestApp {
     pub fn database(&self) -> &TestDatabase {
         &self.database
-    }
-
-    pub async fn drop_database(&self) {
-        self.database.drop_database().await;
     }
 }
 
@@ -95,7 +92,7 @@ impl TestAppBuilder {
 #[derive(Debug)]
 pub struct TestDatabase {
     url: String,
-    pool: Option<MySqlPool>,
+    pool: MySqlPool,
 }
 
 /// Sets up a new DB for running tests with.
@@ -110,12 +107,12 @@ impl TestDatabase {
 
         Self {
             url: db_url,
-            pool: Some(pool),
+            pool: pool,
         }
     }
 
     pub async fn database(&self) -> MySqlPool {
-        self.pool.clone().unwrap()
+        self.pool.clone()
     }
 
     /// Drop database after the test
@@ -154,12 +151,18 @@ impl TestDatabase {
     }
 }
 
-// TODO: Not Work!
 impl Drop for TestDatabase {
     fn drop(&mut self) {
         // Drop the DB Pool
-        // let _ = self.pool.take();
-        // println!("DROP TestDatabase");
+        std::thread::scope(|s| {
+            s.spawn(|| {
+                let runtime = tokio::runtime::Builder::new_multi_thread()
+                    .enable_all()
+                    .build()
+                    .unwrap();
+                runtime.block_on(self.drop_database());
+            });
+        });
     }
 }
 

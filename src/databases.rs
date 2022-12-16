@@ -7,7 +7,7 @@ use sqlx::{MySql, Pool};
 use std::time::Duration;
 
 /// Initialize MySQL connection pool
-pub async fn init(settings: &Config) -> CliResult<Pool<MySql>> {
+pub async fn init_mysql(settings: &Config) -> CliResult<Pool<MySql>> {
     let url = &settings.database_url;
     let max_connections = settings.database_max_connections;
     let min_connections = settings.database_min_connections;

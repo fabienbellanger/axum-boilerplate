@@ -99,7 +99,7 @@ async fn register(lastname: &str, firstname: &str, username: &str, password: &st
 
     // MySQL pool creation
     // -------------------
-    let pool = databases::init(&config).await?;
+    let pool = databases::init_mysql(&config).await?;
 
     let lastname = lastname.trim();
     let firstname = firstname.trim();

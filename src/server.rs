@@ -49,9 +49,9 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     // -------
     logger::init(&settings.environment, &settings.logs_path, &settings.logs_file)?;
 
-    // Database
-    // --------
-    let pool = databases::init(settings).await?;
+    // MySQL database
+    // --------------
+    let pool = databases::init_mysql(settings).await?;
 
     // CORS
     // ----

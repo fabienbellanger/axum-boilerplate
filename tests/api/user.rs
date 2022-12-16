@@ -19,7 +19,6 @@ async fn test_api_login_unauthorized_user() {
         .to_string(),
     )
     .await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::UNAUTHORIZED);
     assert_eq!(
@@ -35,7 +34,6 @@ async fn test_api_login_unauthorized_user() {
 async fn test_api_login_authorized_user() {
     let app: TestApp = TestAppBuilder::new().await.build();
     let (response, _token) = create_and_authenticate(&app).await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::OK);
 }
@@ -58,7 +56,6 @@ async fn test_api_user_creation_success() {
         &token,
     )
     .await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::OK);
 }
@@ -81,7 +78,6 @@ async fn test_api_user_creation_invalid_password() {
         &token,
     )
     .await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::BAD_REQUEST);
 }
@@ -109,7 +105,6 @@ async fn test_api_user_list_all() {
     }
 
     let response = get_all(&app, &token).await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::OK);
 
@@ -142,7 +137,6 @@ async fn test_api_user_list_one() {
 
     // Get one user by its ID
     let response = get_one(&app, &token, &user_id).await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::OK);
     assert_eq!(TestUser::from_body(&response.body.to_string()).id, user_id);
@@ -173,7 +167,6 @@ async fn test_api_user_get_one_bad_parameter() {
 
     // Get one user by its ID
     let response = get_one(&app, &token, "bad_id").await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::BAD_REQUEST);
 }
@@ -203,7 +196,6 @@ async fn test_api_user_delete() {
 
     // Get one user by its ID
     let response = delete(&app, &token, &user_id).await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::NO_CONTENT);
 }
@@ -246,7 +238,6 @@ async fn test_api_user_update() {
         &user_id,
     )
     .await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::OK);
 
@@ -278,7 +269,6 @@ async fn test_api_user_forgotten_password() {
     .await;
 
     let response = forgotten_password(&app, "test-user-creation@test.com").await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::OK);
 
@@ -311,7 +301,6 @@ async fn test_api_user_forgotten_password_email_not_found() {
     .await;
 
     let response = forgotten_password(&app, "test-user-creation_1@test.com").await;
-    app.drop_database().await;
 
     assert_eq!(response.status_code, StatusCode::NOT_FOUND);
 }
@@ -367,7 +356,6 @@ async fn test_api_user_update_password() {
 
     // Is token still in database?
     let still_in_db = is_password_reset_token_still_in_database(app.database(), &token).await;
-    app.drop_database().await;
 
     assert!(!still_in_db);
 }
@@ -410,7 +398,6 @@ async fn test_api_user_update_password_with_old_password() {
 
     // Is token still in database?
     let still_in_db = is_password_reset_token_still_in_database(app.database(), &token).await;
-    app.drop_database().await;
 
     assert!(still_in_db);
 }
