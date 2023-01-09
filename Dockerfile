@@ -18,7 +18,7 @@ COPY ./migrations migrations
 COPY ./src src
 COPY ./templates templates
 COPY ./tests tests
-COPY ./.env.docker .env.docker
+COPY ./.env.docker .env
 COPY ./Cargo.toml Cargo.toml
 COPY ./sqlx-data.json sqlx-data.json
 
@@ -31,6 +31,7 @@ ENV SQLX_OFFLINE true
 # Build
 # -----
 ENV PKG_CONFIG_ALLOW_CROSS=1
+
 # RUN cargo build
 RUN cargo build --release
 
@@ -40,10 +41,9 @@ FROM gcr.io/distroless/cc AS runtime
 
 WORKDIR /app
 
-COPY --from=builder /app/.env.docker .env
+COPY --from=builder /app/.env .
 COPY --from=builder /app/assets assets
 COPY --from=builder /app/templates templates
-# COPY --from=builder /app/target/debug/axum-boilerplate-bin axum-boilerplate-bin
 COPY --from=builder /app/target/release/axum-boilerplate-bin .
 
 EXPOSE 8087

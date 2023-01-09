@@ -134,7 +134,7 @@ services:
       - ./docker/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin # Puis 00000000
       - GF_USERS_ALLOW_SIGN_UP=false
     restart: "no"
     # expose:

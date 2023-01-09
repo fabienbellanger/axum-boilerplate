@@ -76,19 +76,19 @@
           }
         },
         {
-          "name": "created_at",
+          "name": "rate_limit",
           "ordinal": 6,
           "type_info": {
             "char_set": 63,
             "flags": {
-              "bits": 4225
+              "bits": 1
             },
-            "max_size": 23,
-            "type": "Datetime"
+            "max_size": 11,
+            "type": "Long"
           }
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 7,
           "type_info": {
             "char_set": 63,
@@ -100,8 +100,20 @@
           }
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 8,
+          "type_info": {
+            "char_set": 63,
+            "flags": {
+              "bits": 4225
+            },
+            "max_size": 23,
+            "type": "Datetime"
+          }
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 9,
           "type_info": {
             "char_set": 63,
             "flags": {
@@ -119,6 +131,7 @@
         false,
         false,
         true,
+        false,
         false,
         false,
         true
@@ -215,19 +228,19 @@
           }
         },
         {
-          "name": "created_at",
+          "name": "rate_limit",
           "ordinal": 6,
           "type_info": {
             "char_set": 63,
             "flags": {
-              "bits": 4225
+              "bits": 1
             },
-            "max_size": 23,
-            "type": "Datetime"
+            "max_size": 11,
+            "type": "Long"
           }
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 7,
           "type_info": {
             "char_set": 63,
@@ -239,8 +252,20 @@
           }
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 8,
+          "type_info": {
+            "char_set": 63,
+            "flags": {
+              "bits": 4225
+            },
+            "max_size": 23,
+            "type": "Datetime"
+          }
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 9,
           "type_info": {
             "char_set": 63,
             "flags": {
@@ -258,6 +283,7 @@
         false,
         false,
         true,
+        false,
         false,
         false,
         true
@@ -316,6 +342,16 @@
     },
     "query": "\n                SELECT u.id AS user_id, u.password AS password\n                FROM password_resets pr\n                    INNER JOIN users u ON u.id = pr.user_id AND u.deleted_at IS NULL\n                WHERE pr.token = ?\n                    AND pr.expired_at >= ?\n            "
   },
+  "b33bd0e16d5b6a9fc1f88e8450ebc29a46a707bfd9189dae7cacdbc17f85722d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Right": 10
+      }
+    },
+    "query": "\n                INSERT INTO `users` (`id`, `lastname`, `firstname`, `username`, `password`, `roles`, `rate_limit`, `created_at`, `updated_at`, `deleted_at`)\n                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\n            "
+  },
   "b8f74399794cd3329eee0f99300d09b26778e42131d8fd256c4ff820e77d49a4": {
     "describe": {
       "columns": [],
@@ -335,16 +371,6 @@
       }
     },
     "query": "\n                UPDATE users\n                SET password = ?, updated_at = ?\n                WHERE id = ?\n            "
-  },
-  "de2e6e9584a105437b67117b20416eb07f41f6d644f77189fd036927528cb268": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Right": 6
-      }
-    },
-    "query": "\n                UPDATE users\n                SET lastname = ?, firstname = ?, username = ?, password = ?, updated_at = ?\n                WHERE id = ?\n            "
   },
   "e51a2769f7bd499c076d2172ff2bd4ef7c7ad4dcd0c5eda635751d5587ba6a44": {
     "describe": {
@@ -422,19 +448,19 @@
           }
         },
         {
-          "name": "created_at",
+          "name": "rate_limit",
           "ordinal": 6,
           "type_info": {
             "char_set": 63,
             "flags": {
-              "bits": 4225
+              "bits": 1
             },
-            "max_size": 23,
-            "type": "Datetime"
+            "max_size": 11,
+            "type": "Long"
           }
         },
         {
-          "name": "updated_at",
+          "name": "created_at",
           "ordinal": 7,
           "type_info": {
             "char_set": 63,
@@ -446,8 +472,20 @@
           }
         },
         {
-          "name": "deleted_at",
+          "name": "updated_at",
           "ordinal": 8,
+          "type_info": {
+            "char_set": 63,
+            "flags": {
+              "bits": 4225
+            },
+            "max_size": 23,
+            "type": "Datetime"
+          }
+        },
+        {
+          "name": "deleted_at",
+          "ordinal": 9,
           "type_info": {
             "char_set": 63,
             "flags": {
@@ -467,6 +505,7 @@
         true,
         false,
         false,
+        false,
         true
       ],
       "parameters": {
@@ -475,14 +514,14 @@
     },
     "query": "\n                SELECT * \n                FROM users \n                WHERE username = ?\n                    AND password = ?\n                    AND deleted_at IS NULL\n            "
   },
-  "f923e62711d580c5c8890c61ae44ec903a0f7b6c3817d930be41f69982b09adb": {
+  "f6d46edd94c0b368c64efcf85c149d3f1c1c10865caa2602d1160494c3318bd8": {
     "describe": {
       "columns": [],
       "nullable": [],
       "parameters": {
-        "Right": 9
+        "Right": 8
       }
     },
-    "query": "\n                INSERT INTO users (id, lastname, firstname, username, password, roles, created_at, updated_at, deleted_at)\n                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)\n            "
+    "query": "\n                UPDATE users\n                SET lastname = ?, firstname = ?, username = ?, password = ?, roles = ?, rate_limit = ?, updated_at = ?\n                WHERE id = ?\n            "
   }
 }
