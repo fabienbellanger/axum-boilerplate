@@ -3,7 +3,7 @@
 use super::{body_from_parts, SharedState};
 use crate::{
     models::auth::{self, Claims},
-    utils::errors::AppError,
+    utils::errors::AppResult,
 };
 use axum::{
     body::{Body, Full},
@@ -255,7 +255,7 @@ impl RateLimiterCheck {
 
     /// Initialize `RateLimiterCheck`
     fn init(
-        claims: Option<Result<Claims, AppError>>,
+        claims: Option<AppResult<Claims>>,
         addr: Option<&ConnectInfo<SocketAddr>>,
         white_list: &[String],
         redis_prefix: &str,
@@ -352,7 +352,10 @@ impl RateLimiterCheck {
 
 #[cfg(test)]
 mod tests {
-    use crate::{app_error, utils::errors::AppErrorCode};
+    use crate::{
+        app_error,
+        utils::errors::{AppError, AppErrorCode},
+    };
 
     use super::*;
     use std::net::{IpAddr, Ipv4Addr};

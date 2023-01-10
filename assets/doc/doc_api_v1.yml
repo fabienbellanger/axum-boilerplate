@@ -19,8 +19,6 @@ servers:
         default: "8087"
   - url: https://localhost/api/v1
     description: Production server
-security:
-  - bearerAuth: []
 paths:
   /login:
     post:

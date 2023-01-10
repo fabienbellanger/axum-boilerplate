@@ -25,14 +25,14 @@ use sqlx::{MySql, Pool};
 use uuid::Uuid;
 
 // Route: POST /api/v1/login
-#[instrument(name = "Login", skip(pool, state), level = "warn")]
+#[instrument(name = "Login handler", skip(pool, state), level = "warn")]
 pub async fn login(
     Extension(pool): Extension<Pool<MySql>>,
     State(state): State<SharedState>,
     ExtractRequestId(request_id): ExtractRequestId,
     Json(payload): Json<Login>,
 ) -> AppResult<Json<LoginResponse>> {
-    warn!("LOGIN handler");
+    warn!("In Login handler");
 
     validate_request_data(&payload)?;
 

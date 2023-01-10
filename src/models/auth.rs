@@ -2,11 +2,10 @@
 
 use crate::{
     app_error,
-    utils::errors::{AppError, AppErrorCode},
+    utils::errors::{AppError, AppErrorCode, AppResult},
 };
 use axum::http::{header, HeaderMap};
 use chrono::Utc;
-use color_eyre::Result;
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
@@ -25,7 +24,7 @@ pub struct Claims {
 
 impl Claims {
     /// Extract claims from request headers
-    pub fn extract_from_request(headers: &HeaderMap, decoding_key: &DecodingKey) -> Option<Result<Self, AppError>> {
+    pub fn extract_from_request(headers: &HeaderMap, decoding_key: &DecodingKey) -> Option<AppResult<Self>> {
         headers
             .get(header::AUTHORIZATION)
             .and_then(|h| h.to_str().ok())
@@ -47,7 +46,7 @@ impl Jwt {
         roles: String,
         encoding_key: &EncodingKey,
         jwt_lifetime: i64,
-    ) -> Result<(String, i64), AppError> {
+    ) -> AppResult<(String, i64)> {
         let header = Header::new(Algorithm::HS512);
         let now = Utc::now().timestamp_nanos() / 1_000_000_000; // nanosecond -> second
         let expired_at = now + (jwt_lifetime * 3600);
@@ -74,7 +73,7 @@ impl Jwt {
     }
 
     /// Parse JWT
-    pub fn parse(token: &str, decoding_key: &DecodingKey) -> Result<Claims, AppError> {
+    pub fn parse(token: &str, decoding_key: &DecodingKey) -> AppResult<Claims> {
         let validation = Validation::new(Algorithm::HS512);
         let token = decode::<Claims>(token, decoding_key, &validation).map_err(|err| {
             app_error!(

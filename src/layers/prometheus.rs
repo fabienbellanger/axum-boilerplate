@@ -2,7 +2,7 @@
 
 use crate::{
     app_error,
-    utils::errors::{AppError, AppErrorCode},
+    utils::errors::{AppError, AppErrorCode, AppResult},
     APP_NAME,
 };
 use axum::{extract::MatchedPath, middleware::Next, response::IntoResponse};
@@ -17,7 +17,7 @@ pub struct PrometheusMetric {}
 
 impl PrometheusMetric {
     /// Return a new `PrometheusHandle`
-    pub fn get_handle() -> Result<PrometheusHandle, AppError> {
+    pub fn get_handle() -> AppResult<PrometheusHandle> {
         PrometheusBuilder::new()
             .set_buckets_for_metric(
                 Matcher::Full("http_requests_duration_seconds".to_string()),

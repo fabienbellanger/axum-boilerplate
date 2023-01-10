@@ -1,7 +1,7 @@
 use crate::app_error;
 use crate::models::user::{Login, PasswordReset, User, UserCreation};
 use crate::utils::{
-    errors::{AppError, AppErrorCode},
+    errors::{AppError, AppErrorCode, AppResult},
     query::PaginateSort,
 };
 use chrono::{TimeZone, Utc};
@@ -13,9 +13,9 @@ pub struct UserRepository;
 
 impl UserRepository {
     /// Returns a User if credentials are right
-    #[instrument(skip_all, level = "warn")]
-    pub async fn login(pool: &MySqlPool, input: Login) -> Result<Option<User>, AppError> {
-        warn!("LOGIN repo");
+    #[instrument(name = "Login repository", skip_all, level = "warn")]
+    pub async fn login(pool: &MySqlPool, input: Login) -> AppResult<Option<User>> {
+        warn!("In Login repo");
         let hashed_password = format!("{:x}", Sha512::digest(input.password.as_bytes()));
         let result = sqlx::query!(
             r#"
@@ -50,7 +50,7 @@ impl UserRepository {
 
     /// Add a new user
     #[tracing::instrument(skip(pool))]
-    pub async fn create(pool: &MySqlPool, user: &mut User) -> Result<(), AppError> {
+    pub async fn create(pool: &MySqlPool, user: &mut User) -> AppResult<()> {
         user.password = format!("{:x}", Sha512::digest(user.password.as_bytes()));
 
         sqlx::query!(
@@ -77,7 +77,7 @@ impl UserRepository {
 
     /// Returns all not deleted users
     #[instrument(skip(pool))]
-    pub async fn get_all<'a>(pool: &'a MySqlPool, paginate_sort: &'a PaginateSort) -> Result<Vec<User>, AppError> {
+    pub async fn get_all<'a>(pool: &'a MySqlPool, paginate_sort: &'a PaginateSort) -> AppResult<Vec<User>> {
         let mut query = String::from(
             "
             SELECT id, username, password, lastname, firstname, roles, rate_limit, created_at, updated_at, deleted_at 
@@ -122,7 +122,7 @@ impl UserRepository {
 
     /// Returns a user by its ID
     #[instrument(skip(pool))]
-    pub async fn get_by_id(pool: &MySqlPool, id: String) -> Result<Option<User>, AppError> {
+    pub async fn get_by_id(pool: &MySqlPool, id: String) -> AppResult<Option<User>> {
         let result = sqlx::query!(
             r#"
                 SELECT * 
@@ -154,7 +154,7 @@ impl UserRepository {
 
     /// Returns a user by its email
     #[instrument(skip(pool))]
-    pub async fn get_by_email(pool: &MySqlPool, email: String) -> Result<Option<User>, AppError> {
+    pub async fn get_by_email(pool: &MySqlPool, email: String) -> AppResult<Option<User>> {
         let result = sqlx::query!(
             r#"
                 SELECT * 
@@ -186,7 +186,7 @@ impl UserRepository {
 
     /// Delete a user
     #[instrument(skip(pool))]
-    pub async fn delete(pool: &MySqlPool, id: String) -> Result<u64, AppError> {
+    pub async fn delete(pool: &MySqlPool, id: String) -> AppResult<u64> {
         let result = sqlx::query!(
             r#"
                 UPDATE users
@@ -205,7 +205,7 @@ impl UserRepository {
     /// Update a user
     // TODO: Check if roles, rate_limit, etc. are valid
     #[instrument(skip(pool))]
-    pub async fn update(pool: &MySqlPool, id: String, user: &UserCreation) -> Result<(), AppError> {
+    pub async fn update(pool: &MySqlPool, id: String, user: &UserCreation) -> AppResult<()> {
         let hashed_password = format!("{:x}", Sha512::digest(user.password.as_bytes()));
         sqlx::query!(
             r#"
@@ -234,7 +234,7 @@ impl UserRepository {
         id: String,
         current_password: String,
         new_password: String,
-    ) -> Result<(), AppError> {
+    ) -> AppResult<()> {
         let hashed_password = format!("{:x}", Sha512::digest(new_password.as_bytes()));
 
         if hashed_password == current_password {
@@ -266,7 +266,7 @@ pub struct PasswordResetRepository;
 impl PasswordResetRepository {
     /// Add a new password reset
     #[tracing::instrument(skip(pool))]
-    pub async fn create_or_update(pool: &MySqlPool, password_reset: &mut PasswordReset) -> Result<(), AppError> {
+    pub async fn create_or_update(pool: &MySqlPool, password_reset: &mut PasswordReset) -> AppResult<()> {
         sqlx::query!(
             r#"
                 INSERT INTO password_resets (user_id, token, expired_at)
@@ -287,7 +287,7 @@ impl PasswordResetRepository {
 
     /// Get user ID from token
     #[tracing::instrument(skip(pool))]
-    pub async fn get_user_id_from_token(pool: &MySqlPool, token: String) -> Result<Option<(String, String)>, AppError> {
+    pub async fn get_user_id_from_token(pool: &MySqlPool, token: String) -> AppResult<Option<(String, String)>> {
         let result = sqlx::query!(
             r#"
                 SELECT u.id AS user_id, u.password AS password
@@ -310,7 +310,7 @@ impl PasswordResetRepository {
 
     /// Delete password reset after successfull update
     #[tracing::instrument(skip(pool))]
-    pub async fn delete(pool: &MySqlPool, user_id: String) -> Result<u64, AppError> {
+    pub async fn delete(pool: &MySqlPool, user_id: String) -> AppResult<u64> {
         let result = sqlx::query!(
             r#"
                 DELETE FROM password_resets

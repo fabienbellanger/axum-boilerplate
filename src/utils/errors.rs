@@ -200,6 +200,10 @@ macro_rules! app_error {
 
     ( $error:expr, $message:expr ) => {
         match $error {
+            AppErrorCode::Timeout => AppError::Timeout,
+            AppErrorCode::Unauthorized => AppError::Unauthorized,
+            AppErrorCode::TooManyRequests => AppError::TooManyRequests,
+            AppErrorCode::MethodNotAllowed => AppError::MethodNotAllowed,
             AppErrorCode::InternalError => {
                 error!("{}", $message);
                 AppError::InternalError {
@@ -215,15 +219,15 @@ macro_rules! app_error {
             AppErrorCode::UnprocessableEntity => AppError::UnprocessableEntity {
                 message: $message.to_owned(),
             },
-            AppErrorCode::Timeout => AppError::Timeout,
-            AppErrorCode::Unauthorized => AppError::Unauthorized,
-            AppErrorCode::TooManyRequests => AppError::TooManyRequests,
-            AppErrorCode::MethodNotAllowed => AppError::MethodNotAllowed,
         }
     };
 
     ( $error:expr, $message:expr, $details:expr ) => {
         match $error {
+            AppErrorCode::Timeout => AppError::Timeout,
+            AppErrorCode::Unauthorized => AppError::Unauthorized,
+            AppErrorCode::TooManyRequests => AppError::TooManyRequests,
+            AppErrorCode::MethodNotAllowed => AppError::MethodNotAllowed,
             AppErrorCode::InternalError => {
                 error!("{}", $details);
                 AppError::InternalError {
@@ -239,10 +243,6 @@ macro_rules! app_error {
             AppErrorCode::UnprocessableEntity => AppError::UnprocessableEntity {
                 message: $message.to_owned(),
             },
-            AppErrorCode::Timeout => AppError::Timeout,
-            AppErrorCode::Unauthorized => AppError::Unauthorized,
-            AppErrorCode::TooManyRequests => AppError::TooManyRequests,
-            AppErrorCode::MethodNotAllowed => AppError::MethodNotAllowed,
         }
     };
 }

@@ -30,7 +30,7 @@ CARGO_BIN_NAME=axum-boilerplate-bin
 serve:
 	$(CARGO) run -- serve
 
-## serve: Start web server with hot reload
+## watch: Start web server with hot reload
 watch:
 	$(CARGO) watch -x "run -- serve"
 

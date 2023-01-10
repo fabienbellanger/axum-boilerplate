@@ -37,11 +37,16 @@ pub async fn start_server() -> Result<()> {
     // Start server
     // ------------
     let addr = format!("{}:{}", settings.server_url, settings.server_port);
-    info!("Starting server on {}", &addr);
-    Ok(axum::Server::bind(&addr.parse()?)
-        .serve(app.into_make_service_with_connect_info::<SocketAddr>())
-        .with_graceful_shutdown(shutdown_signal())
-        .await?)
+    info!("Starting server on {}...", &addr);
+
+    let server = axum::Server::bind(&addr.parse()?).serve(app.into_make_service_with_connect_info::<SocketAddr>());
+
+    // No graceful shutdown in development environment
+    if &settings.environment == "development" {
+        Ok(server.await?)
+    } else {
+        Ok(server.with_graceful_shutdown(shutdown_signal()).await?)
+    }
 }
 
 pub async fn get_app(settings: &Config) -> Result<Router> {
