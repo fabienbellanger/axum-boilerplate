@@ -1,9 +1,7 @@
 //! Custom Axum extractors
 
-use crate::{
-    app_error,
-    errors::{AppError, AppErrorCode},
-};
+use super::errors::{AppError, AppErrorCode};
+use crate::app_error;
 use axum::http::{header::HeaderValue, request::Parts};
 use axum::{
     async_trait,

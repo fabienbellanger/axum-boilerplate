@@ -8,7 +8,7 @@ pub mod rate_limiter;
 
 use crate::app_error;
 use crate::config::Config;
-use crate::errors::{AppError, AppErrorCode, AppErrorMessage};
+use crate::utils::errors::{AppError, AppErrorCode, AppErrorMessage};
 use axum::body::Full;
 use axum::headers::HeaderName;
 use axum::http::{

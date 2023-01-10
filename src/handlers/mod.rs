@@ -6,7 +6,7 @@ pub mod ws;
 
 use crate::{
     app_error,
-    errors::{AppError, AppErrorCode, AppResult},
+    utils::errors::{AppError, AppErrorCode, AppResult},
 };
 use axum::http::StatusCode;
 use axum::BoxError;

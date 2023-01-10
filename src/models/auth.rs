@@ -2,7 +2,7 @@
 
 use crate::{
     app_error,
-    errors::{AppError, AppErrorCode},
+    utils::errors::{AppError, AppErrorCode},
 };
 use axum::http::{header, HeaderMap};
 use chrono::Utc;

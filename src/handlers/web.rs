@@ -1,6 +1,6 @@
 //! Web handlers
 
-use crate::errors::{AppError, AppErrorCode, AppResult};
+use crate::utils::errors::{AppError, AppErrorCode, AppResult};
 use crate::{app_error, TEMPLATES};
 use axum::{
     body::StreamBody,

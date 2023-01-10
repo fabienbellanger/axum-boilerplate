@@ -1,7 +1,7 @@
 //! Database module
 
 use crate::config::Config;
-use crate::errors::{CliError, CliResult};
+use crate::utils::errors::{CliError, CliResult};
 use sqlx::mysql::MySqlPoolOptions;
 use sqlx::{MySql, Pool};
 use std::time::Duration;

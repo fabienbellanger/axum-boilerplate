@@ -2,8 +2,8 @@
 
 use super::{body_from_parts, SharedState};
 use crate::{
-    errors::AppError,
     models::auth::{self, Claims},
+    utils::errors::AppError,
 };
 use axum::{
     body::{Body, Full},
@@ -352,7 +352,7 @@ impl RateLimiterCheck {
 
 #[cfg(test)]
 mod tests {
-    use crate::{app_error, errors::AppErrorCode};
+    use crate::{app_error, utils::errors::AppErrorCode};
 
     use super::*;
     use std::net::{IpAddr, Ipv4Addr};

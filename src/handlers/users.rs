@@ -3,7 +3,6 @@
 use crate::{
     app_error,
     emails::{forgotten_password::ForgottenPasswordEmail, SmtpConfig},
-    errors::{AppError, AppErrorCode, AppResult},
     layers::SharedState,
     models::{
         auth::Jwt,
@@ -11,6 +10,7 @@ use crate::{
     },
     repositories::user::{PasswordResetRepository, UserRepository},
     utils::{
+        errors::{AppError, AppErrorCode, AppResult},
         extractors::{ExtractRequestId, Path},
         query::{PaginateSort, PaginateSortQuery},
         validation::validate_request_data,

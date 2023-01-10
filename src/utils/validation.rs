@@ -1,9 +1,7 @@
 //! HTTP request validation module
 
-use crate::{
-    app_error,
-    errors::{AppError, AppErrorCode, AppResult},
-};
+use super::errors::{AppError, AppErrorCode, AppResult};
+use crate::app_error;
 use serde_json::json;
 use validator::Validate;
 

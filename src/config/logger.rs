@@ -1,6 +1,6 @@
 //! Logger module for customize `Tracing` logs
 
-use crate::errors::{CliError, CliResult};
+use crate::utils::errors::{CliError, CliResult};
 use tracing_subscriber::{fmt::format::JsonFields, prelude::*, EnvFilter, Registry};
 
 // Examples:

@@ -1,11 +1,11 @@
 use crate::{
-    config::Config,
-    databases, handlers,
+    config::{databases, logger, Config},
+    handlers,
     layers::{
         self, basic_auth::BasicAuthLayer, prometheus::PrometheusMetric, rate_limiter::RateLimiterLayer, ChatState,
         MakeRequestUuid, SharedChatState, SharedState, State,
     },
-    logger, routes,
+    routes,
 };
 use axum::{
     error_handling::HandleErrorLayer,

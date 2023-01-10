@@ -1,7 +1,7 @@
 //! Forgotten password email module
 
 use super::{send, Message, SmtpConfig};
-use crate::errors::{AppError, AppErrorCode, AppResult};
+use crate::utils::errors::{AppError, AppErrorCode, AppResult};
 use crate::{app_error, APP_NAME, TEMPLATES};
 use serde::Serialize;
 use tera::Context;

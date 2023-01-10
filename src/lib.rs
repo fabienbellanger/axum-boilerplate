@@ -1,11 +1,7 @@
-pub mod cli;
 pub mod config;
-pub mod databases;
 pub mod emails;
-pub mod errors;
 pub mod handlers;
 pub mod layers;
-pub mod logger;
 pub mod models;
 pub mod repositories;
 pub mod routes;

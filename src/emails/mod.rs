@@ -3,7 +3,7 @@
 pub mod forgotten_password;
 
 use crate::app_error;
-use crate::errors::{AppError, AppErrorCode, AppResult};
+use crate::utils::errors::{AppError, AppErrorCode, AppResult};
 use lettre::message::{header, MultiPart, SinglePart};
 use lettre::{SmtpTransport, Transport};
 use std::time::Duration;

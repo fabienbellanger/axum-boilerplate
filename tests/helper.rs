@@ -2,8 +2,9 @@
 
 use axum::{Extension, Router};
 use axum_boilerplate::{
+    config::logger,
     layers::{self, ConfigState, MakeRequestUuid, SharedState, State},
-    logger, routes,
+    routes,
 };
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use sqlx::{mysql::MySqlPoolOptions, Connection, MySql, MySqlConnection, MySqlPool};

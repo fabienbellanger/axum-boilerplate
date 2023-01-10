@@ -1,5 +1,9 @@
 //! Configuration module
 
+pub mod cli;
+pub mod databases;
+pub mod logger;
+
 use color_eyre::Result;
 use serde::Deserialize;
 

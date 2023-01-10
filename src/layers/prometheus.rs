@@ -2,7 +2,7 @@
 
 use crate::{
     app_error,
-    errors::{AppError, AppErrorCode},
+    utils::errors::{AppError, AppErrorCode},
     APP_NAME,
 };
 use axum::{extract::MatchedPath, middleware::Next, response::IntoResponse};

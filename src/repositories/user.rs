@@ -1,7 +1,9 @@
 use crate::app_error;
-use crate::errors::{AppError, AppErrorCode};
 use crate::models::user::{Login, PasswordReset, User, UserCreation};
-use crate::utils::query::PaginateSort;
+use crate::utils::{
+    errors::{AppError, AppErrorCode},
+    query::PaginateSort,
+};
 use chrono::{TimeZone, Utc};
 use futures::TryStreamExt;
 use sha2::{Digest, Sha512};

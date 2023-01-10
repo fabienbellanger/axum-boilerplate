@@ -148,7 +148,7 @@ pub enum CliError {
 /// Create an [`AppError`] and generate a log if HTTP Code is 500.
 ///
 /// ```rust
-/// use axum_boilerplate::errors::{AppError, AppErrorCode, AppResult};
+/// use axum_boilerplate::utils::errors::{AppError, AppErrorCode, AppResult};
 /// use axum_boilerplate::app_error;
 ///
 /// #[macro_use]

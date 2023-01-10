@@ -1,10 +1,10 @@
 //! CLI module
 
+use super::databases;
 use crate::config::Config;
-use crate::databases;
-use crate::errors::{CliError, CliResult};
 use crate::models::user::{PasswordScorer, PasswordStrength, User, UserCreation};
 use crate::repositories::user::UserRepository;
+use crate::utils::errors::{CliError, CliResult};
 use clap::{Parser, Subcommand};
 use std::io::{self, Write};
 
