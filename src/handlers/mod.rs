@@ -8,27 +8,16 @@ use crate::{
     app_error,
     utils::errors::{AppError, AppErrorCode, AppResult},
 };
-use axum::http::StatusCode;
 use axum::BoxError;
 use std::io;
 use tower::timeout::error::Elapsed;
 
 /// Timeout error
-// pub async fn timeout_error(err: BoxError) -> AppResult<()> {
-//     if err.is::<Elapsed>() {
-//         Err(app_error!(AppErrorCode::Timeout))
-//     } else {
-//         Err(app_error!(AppErrorCode::InternalError, err.to_string()))
-//     }
-// }
-pub async fn timeout_error(err: BoxError) -> (StatusCode, String) {
+pub async fn timeout_error(err: BoxError) -> AppResult<()> {
     if err.is::<Elapsed>() {
-        (StatusCode::REQUEST_TIMEOUT, "Request took too long".to_string())
+        Err(app_error!(AppErrorCode::Timeout))
     } else {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Unhandled internal error: {}", err),
-        )
+        Err(app_error!(AppErrorCode::InternalError, err.to_string()))
     }
 }
 

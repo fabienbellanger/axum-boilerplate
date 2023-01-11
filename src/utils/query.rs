@@ -6,9 +6,8 @@
 // - sort (Ex.: ?sort=+lastname,-firstname) {+: ASC, -: DESC}
 // - filter (Ex.: ?lastname=eq:toto&first=ne:tutu&age=lt:18,gt:5) => {eq, ne, gt, ge, lt, le}
 
-use std::fmt::Display;
-
 use serde::Deserialize;
+use std::fmt::Display;
 
 const PAGINATION_MAX_LIMIT: u32 = 500;
 
