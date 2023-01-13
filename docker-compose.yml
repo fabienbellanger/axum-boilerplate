@@ -109,21 +109,21 @@ services:
     networks:
       - monitoring
 
-  alertmanager:
-    image: prom/alertmanager:latest
-    container_name: alertmanager
-    volumes:
-      - ./docker/alertmanager:/etc/alertmanager
-    command:
-      - '--config.file=/etc/alertmanager/config.yml'
-      - '--storage.path=/alertmanager'
-    restart: "no"
-    ports:
-      - "9093:9093"
-    expose:
-      - 9093
-    networks:
-      - monitoring
+  # alertmanager:
+  #   image: prom/alertmanager:latest
+  #   container_name: alertmanager
+  #   volumes:
+  #     - ./docker/alertmanager:/etc/alertmanager
+  #   command:
+  #     - '--config.file=/etc/alertmanager/alertmanager.yml'
+  #     - '--storage.path=/alertmanager'
+  #   restart: "no"
+  #   ports:
+  #     - "9093:9093"
+  #   expose:
+  #     - 9093
+  #   networks:
+  #     - monitoring
 
   grafana:
     image: grafana/grafana:latest
