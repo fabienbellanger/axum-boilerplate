@@ -9,6 +9,7 @@
 	doc \
 	doc-deps \
 	docker \
+	docker-pull \
 	docker-up \
 	docker-up-no-daemon \
 	docker-down \
@@ -65,12 +66,16 @@ doc-deps:
 ## docker: Stop running containers, build docker-compose.yml file and run containers
 docker: docker-down sqlx-prepare docker-up
 
+## docker-pull: Pull images
+docker-pull:
+	$(DOCKER_COMPOSE) pull
+
 ## docker-up: Build docker-compose.yml file and run containers
-docker-up:
+docker-up: docker-pull
 	$(DOCKER_COMPOSE) up --build --force-recreate -d
 
 ## docker-up-no-daemon: Build docker-compose.yml file and run containers in non daemon mode
-docker-up-no-daemon:
+docker-up-no-daemon: docker-pull
 	$(DOCKER_COMPOSE) up --build --force-recreate
 
 ## docker-down: Stop running containers
@@ -82,7 +87,7 @@ docker-down-rm:
 	$(DOCKER_COMPOSE) down --remove-orphans --volumes
 
 ## docker-cli-build: Build project for CLI
-docker-cli-build:
+docker-cli-build: docker-pull
 	$(DOCKER) build -f Dockerfile.cli -t axum-boilerplate-cli .
 
 ## docker-cli-register: Run CLI container to register an admin user
