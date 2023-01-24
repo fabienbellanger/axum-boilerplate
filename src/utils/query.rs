@@ -2,14 +2,20 @@
 
 // https://www.moesif.com/blog/technical/api-design/REST-API-Design-Filtering-Sorting-and-Pagination/
 
-// TODO: Add:
-// - sort (Ex.: ?sort=+lastname,-firstname) {+: ASC, -: DESC}
-// - filter (Ex.: ?lastname=eq:toto&first=ne:tutu&age=lt:18,gt:5) => {eq, ne, gt, ge, lt, le}
+// Filter
+//   - (Ex.: ?lastname=eq:toto&first=ne:tutu&age=lt:18,gt:5) => {eq, ne, gt, ge, lt, le}
+//   - (Ex.: ?filter=lastname=eq:toto;firstname=ne:tutu;age=lt:18,gt:5) => {eq, ne, gt, ge, lt, le}
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 
 const PAGINATION_MAX_LIMIT: u32 = 500;
+
+#[derive(Serialize)]
+pub struct PaginateResponse<T: Serialize> {
+    pub data: T,
+    pub total: i64,
+}
 
 /// Query parameters used to paginate API
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -114,7 +120,7 @@ impl PaginateSort {
     }
 
     /// SQL code for sorts (ORDER BY)
-    pub fn get_sorts_sql(&self, valid_fields: Option<Vec<&str>>) -> String {
+    pub fn get_sorts_sql(&self, valid_fields: Option<&[&str]>) -> String {
         let mut s = String::new();
         let mut i = 0;
 
@@ -293,7 +299,7 @@ mod test {
 
     #[test]
     fn test_get_sorts_sql_without_valid_fields() {
-        let valid_fields = Some(vec![]);
+        let valid_fields: Option<&[&str]> = Some(&[]);
 
         let mut paginate_sort = PaginateSort {
             page: 1,
@@ -301,7 +307,7 @@ mod test {
             offset: 0,
             sorts: vec![],
         };
-        assert_eq!(String::new(), paginate_sort.get_sorts_sql(valid_fields.clone()));
+        assert_eq!(String::new(), paginate_sort.get_sorts_sql(valid_fields));
 
         paginate_sort.sorts = vec![("id".to_owned(), Sort::Asc), ("name".to_owned(), Sort::Desc)];
         assert_eq!(String::new(), paginate_sort.get_sorts_sql(valid_fields));
@@ -309,7 +315,7 @@ mod test {
 
     #[test]
     fn test_get_sorts_sql_with_valid_fields() {
-        let valid_fields = Some(vec!["id", "name"]);
+        let valid_fields: Option<&[&str]> = Some(&["id", "name"]);
 
         let mut paginate_sort = PaginateSort {
             page: 1,
@@ -317,7 +323,7 @@ mod test {
             offset: 0,
             sorts: vec![],
         };
-        assert_eq!(String::new(), paginate_sort.get_sorts_sql(valid_fields.clone()));
+        assert_eq!(String::new(), paginate_sort.get_sorts_sql(valid_fields));
 
         paginate_sort.sorts = vec![("id".to_owned(), Sort::Asc), ("name".to_owned(), Sort::Desc)];
         assert_eq!(
@@ -325,31 +331,31 @@ mod test {
             paginate_sort.get_sorts_sql(valid_fields)
         );
 
-        let valid_fields = Some(vec!["name"]);
+        let valid_fields: Option<&[&str]> = Some(&["name"]);
         assert_eq!(
             " ORDER BY name DESC".to_owned(),
             paginate_sort.get_sorts_sql(valid_fields)
         );
 
-        let valid_fields = Some(vec!["id", "name"]);
+        let valid_fields: Option<&[&str]> = Some(&["id", "name"]);
         paginate_sort.sorts = vec![("idz".to_owned(), Sort::Asc), ("name".to_owned(), Sort::Desc)];
         assert_eq!(
             " ORDER BY name DESC".to_owned(),
             paginate_sort.get_sorts_sql(valid_fields)
         );
 
-        let valid_fields = Some(vec!["id", "name"]);
+        let valid_fields: Option<&[&str]> = Some(&["id", "name"]);
         paginate_sort.sorts = vec![("id".to_owned(), Sort::Asc), ("namee".to_owned(), Sort::Desc)];
         assert_eq!(" ORDER BY id ASC".to_owned(), paginate_sort.get_sorts_sql(valid_fields));
 
-        let valid_fields = Some(vec!["id", "name"]);
+        let valid_fields: Option<&[&str]> = Some(&["id", "name"]);
         paginate_sort.sorts = vec![("idz".to_owned(), Sort::Asc), ("namee".to_owned(), Sort::Desc)];
         assert_eq!("".to_owned(), paginate_sort.get_sorts_sql(valid_fields));
     }
 
     #[test]
     fn test_get_sorts_sql_with_valid_fields_and_table_prefix() {
-        let valid_fields = Some(vec!["user.id", "role.name"]);
+        let valid_fields: Option<&[&str]> = Some(&["user.id", "role.name"]);
         let paginate_sort = PaginateSort {
             page: 1,
             limit: 50,

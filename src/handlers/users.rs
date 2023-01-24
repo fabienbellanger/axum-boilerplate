@@ -12,7 +12,7 @@ use crate::{
     utils::{
         errors::{AppError, AppErrorCode, AppResult},
         extractors::{ExtractRequestId, Path},
-        query::{PaginateSort, PaginateSortQuery},
+        query::{PaginateResponse, PaginateSort, PaginateSortQuery},
         validation::validate_request_data,
     },
 };
@@ -106,13 +106,13 @@ pub async fn create(
 }
 
 // Route: GET /api/v1/users
-// TODO: Add pagination, sort and filter
+// TODO: Add filter
 #[instrument(skip(pool))]
 pub async fn get_all(
     Query(pagination): Query<PaginateSortQuery>,
     Extension(pool): Extension<Pool<MySql>>,
     ExtractRequestId(request_id): ExtractRequestId,
-) -> AppResult<Json<Vec<User>>> {
+) -> AppResult<Json<PaginateResponse<Vec<User>>>> {
     let paginate_sort = PaginateSort::from(pagination);
     let users = UserRepository::get_all(&pool, &paginate_sort).await?;
 

@@ -2,7 +2,9 @@ pub mod user;
 
 use crate::helper::TestApp;
 use axum::http::StatusCode;
+use axum_boilerplate::utils::errors::AppErrorMessage;
 use hyper::{Body, Request};
+use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
 use tower::ServiceExt;
@@ -45,4 +47,18 @@ impl TestResponse {
             headers: HashMap::new(),
         }
     }
+}
+
+impl TryInto<AppErrorMessage> for TestResponse {
+    type Error = serde_json::Error;
+
+    fn try_into(self) -> Result<AppErrorMessage, Self::Error> {
+        serde_json::from_str(&self.body.to_string())
+    }
+}
+
+#[derive(Deserialize)]
+pub struct TestPaginateResponse<T> {
+    pub data: T,
+    pub total: i64,
 }

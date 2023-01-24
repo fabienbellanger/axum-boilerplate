@@ -32,8 +32,8 @@ paths:
             schema:
               $ref: '#/components/schemas/Login'
             example:
-              username: test@gmail.com
-              password: "00000000"
+              username: test@apitic.com
+              password: "K-qy,Kgf<AB*XX;V3}_=x19u>1BBl!dfdf"
       responses:
         '200':
           description: OK
@@ -150,9 +150,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items: 
-                  $ref: '#/components/schemas/User'
+                $ref: "#/components/schemas/UserResponse"
         '400':
             $ref: "#/components/responses/BadRequest"
         '401':
@@ -327,6 +325,13 @@ components:
           schema:
             $ref: '#/components/schemas/ResponseError'
   schemas:
+    PaginateTotal:
+      type: object
+      properties:
+        total:
+          type: integer
+      required:
+        - total
     ResponseError:
       type: object
       properties:
@@ -413,6 +418,17 @@ components:
         - rate_limit
         - created_at
         - updated_at
+    UserResponse:
+      allOf:
+        - $ref: "#/components/schemas/PaginateTotal"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/User"
+          required:
+            - data
     UserCreation:
       type: object
       properties:

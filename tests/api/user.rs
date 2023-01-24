@@ -2,7 +2,10 @@ use super::helpers::user::{
     create_and_authenticate, create_user_request, delete, forgotten_password, get_all, get_one,
     is_password_reset_token_still_in_database, login_request, update, update_password, TestPasswordReset, TestUser,
 };
-use crate::helper::{TestApp, TestAppBuilder};
+use crate::{
+    api::helpers::TestPaginateResponse,
+    helper::{TestApp, TestAppBuilder},
+};
 use axum::http::StatusCode;
 use uuid::Uuid;
 
@@ -108,8 +111,10 @@ async fn test_api_user_list_all() {
 
     assert_eq!(response.status_code, StatusCode::OK);
 
-    let users: Vec<TestUser> = serde_json::from_str(&response.body.to_string()).expect("error when deserializing body");
-    assert_eq!(users.len(), 3);
+    let users: TestPaginateResponse<Vec<TestUser>> =
+        serde_json::from_str(&response.body.to_string()).expect("error when deserializing body");
+    assert_eq!(users.data.len(), 3);
+    assert_eq!(users.total, 3);
 }
 
 #[tokio::test]

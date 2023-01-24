@@ -1,5 +1,6 @@
 use crate::app_error;
 use crate::models::user::{Login, PasswordReset, User, UserCreation};
+use crate::utils::query::PaginateResponse;
 use crate::utils::{
     errors::{AppError, AppErrorCode, AppResult},
     query::PaginateSort,
@@ -77,7 +78,12 @@ impl UserRepository {
 
     /// Returns all not deleted users
     #[instrument(skip(pool))]
-    pub async fn get_all<'a>(pool: &'a MySqlPool, paginate_sort: &'a PaginateSort) -> AppResult<Vec<User>> {
+    pub async fn get_all<'a>(
+        pool: &'a MySqlPool,
+        paginate_sort: &'a PaginateSort,
+    ) -> AppResult<PaginateResponse<Vec<User>>> {
+        let total = Self::get_total(pool).await?;
+
         let mut query = String::from(
             "
             SELECT id, username, password, lastname, firstname, roles, rate_limit, created_at, updated_at, deleted_at 
@@ -87,7 +93,7 @@ impl UserRepository {
         );
 
         // Sorts and pagination
-        query.push_str(&paginate_sort.get_sorts_sql(Some(vec![
+        query.push_str(&paginate_sort.get_sorts_sql(Some(&[
             "id",
             "lastname",
             "firstname",
@@ -117,7 +123,7 @@ impl UserRepository {
                 deleted_at: row.try_get("deleted_at")?,
             });
         }
-        Ok(users)
+        Ok(PaginateResponse { data: users, total })
     }
 
     /// Returns a user by its ID
@@ -258,6 +264,17 @@ impl UserRepository {
         .await?;
 
         Ok(())
+    }
+
+    // Get total lines number with pagination
+    #[instrument(skip(pool))]
+    async fn get_total(pool: &MySqlPool) -> Result<i64, sqlx::Error> {
+        let query = r#"
+            SELECT COUNT(id) AS n
+            FROM users
+        "#;
+
+        Ok(sqlx::query(query).fetch_one(pool).await?.get("n"))
     }
 }
 

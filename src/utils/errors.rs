@@ -7,14 +7,14 @@ use axum::{
 };
 use color_eyre::eyre::Result as EyreResult;
 use derive_more::{Display, Error};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 
 /// Custom Result type for `AppError`
 pub type AppResult<T> = EyreResult<T, AppError>;
 
 /// Represents the custom error message
-#[derive(Serialize)]
+#[derive(Deserialize, Serialize)]
 pub struct AppErrorMessage {
     pub code: u16,
     pub message: String,
