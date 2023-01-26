@@ -58,7 +58,7 @@ impl Task {
     fn new(i: usize) -> Self {
         Self {
             id: i,
-            name: format!("My task with number: {}", i),
+            name: format!("My task with number: {i}"),
             created_at: chrono::Utc::now(),
         }
     }

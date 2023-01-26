@@ -133,7 +133,7 @@ impl PaginateSort {
                         } else {
                             s.push_str(", ");
                         }
-                        s.push_str(&format!("{} {}", field, sort));
+                        s.push_str(&format!("{field} {sort}"));
 
                         i += 1;
                     }
@@ -142,7 +142,7 @@ impl PaginateSort {
                     if i != 0 {
                         s.push_str(", ");
                     }
-                    s.push_str(&format!("{} {}", field, sort));
+                    s.push_str(&format!("{field} {sort}"));
 
                     i += 1;
                 }

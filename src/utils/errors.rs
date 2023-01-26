@@ -35,16 +35,16 @@ pub enum AppErrorCode {
 /// Defines available errors
 #[derive(Display, Debug, Error, PartialEq, Eq)]
 pub enum AppError {
-    #[display(fmt = "{}", message)]
+    #[display(fmt = "{message}")]
     InternalError { message: String },
 
-    #[display(fmt = "{}", message)]
+    #[display(fmt = "{message}")]
     BadRequest { message: String },
 
-    #[display(fmt = "{}", message)]
+    #[display(fmt = "{message}")]
     NotFound { message: String },
 
-    #[display(fmt = "{}", message)]
+    #[display(fmt = "{message}")]
     UnprocessableEntity { message: String },
 
     #[display(fmt = "Request Timeout")]
@@ -88,7 +88,7 @@ impl IntoResponse for AppError {
 // -----------
 impl From<sqlx::Error> for AppError {
     fn from(error: sqlx::Error) -> Self {
-        error!("Database error: {:?}", error);
+        error!("Database error: {error:?}");
 
         Self::InternalError {
             message: "Database Error".to_owned(),
@@ -100,7 +100,7 @@ impl From<sqlx::Error> for AppError {
 // ------------
 impl From<redis::RedisError> for AppError {
     fn from(error: redis::RedisError) -> Self {
-        error!("Redis database error: {:?}", error);
+        error!("Redis database error: {error:?}");
 
         Self::InternalError {
             message: "Redis Database Error".to_owned(),
@@ -112,7 +112,7 @@ impl From<redis::RedisError> for AppError {
 // -----------
 impl From<r2d2::Error> for AppError {
     fn from(error: r2d2::Error) -> Self {
-        error!("Redis r2d2 pool error: {:?}", error);
+        error!("Redis r2d2 pool error: {error:?}");
 
         Self::InternalError {
             message: "Redis Database Error".to_owned(),

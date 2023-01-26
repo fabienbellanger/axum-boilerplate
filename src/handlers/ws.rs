@@ -21,7 +21,7 @@ async fn handle_simple_socket(mut socket: WebSocket) {
         if let Ok(msg) = msg {
             match msg {
                 Message::Text(t) => {
-                    println!("client sent str: {:?}", t);
+                    println!("client sent str: {t:?}");
                 }
                 Message::Binary(_) => {
                     println!("client sent binary data");
@@ -47,7 +47,7 @@ async fn handle_simple_socket(mut socket: WebSocket) {
     loop {
         i += 1;
 
-        if socket.send(Message::Text(format!("Hi! - {}", i))).await.is_err() {
+        if socket.send(Message::Text(format!("Hi! - {i}"))).await.is_err() {
             println!("client disconnected");
             return;
         }
@@ -97,7 +97,7 @@ async fn websocket(stream: WebSocket, state: SharedChatState) {
     let mut rx = state.tx.subscribe();
 
     // Send joined message to all subscribers
-    let msg = format!("{} joined.", username);
+    let msg = format!("{username} joined.");
     tracing::debug!("{}", msg);
     let _ = state.tx.send(msg);
 
@@ -119,7 +119,7 @@ async fn websocket(stream: WebSocket, state: SharedChatState) {
     let mut recv_task = tokio::spawn(async move {
         while let Some(Ok(Message::Text(text))) = receiver.next().await {
             // Add username before message
-            let _ = tx.send(format!("{}: {}", name, text));
+            let _ = tx.send(format!("{name}: {text}"));
         }
     });
 
@@ -130,7 +130,7 @@ async fn websocket(stream: WebSocket, state: SharedChatState) {
     };
 
     // Send user left message
-    let msg = format!("{} left.", username);
+    let msg = format!("{username} left.");
     tracing::debug!("{}", msg);
     let _ = state.tx.send(msg);
 

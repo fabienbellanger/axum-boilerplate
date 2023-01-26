@@ -199,7 +199,7 @@ enum RateLimiterError {
     Ip,
     JwtDecoding,
 
-    #[display(fmt = "{}", message)]
+    #[display(fmt = "{message}")]
     Redis {
         message: String,
     },

@@ -77,7 +77,7 @@ where
 
                             _ => app_error!(
                                 AppErrorCode::BadRequest,
-                                format!("Unhandled deserialization error: {}", kind)
+                                format!("Unhandled deserialization error: {kind}")
                             ),
                         };
 
@@ -91,7 +91,7 @@ where
                         StatusCode::INTERNAL_SERVER_ERROR,
                         app_error!(
                             AppErrorCode::InternalError,
-                            format!("Unhandled path rejection: {}", rejection)
+                            format!("Unhandled path rejection: {rejection}")
                         ),
                     ),
                 };

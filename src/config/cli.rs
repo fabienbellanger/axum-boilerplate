@@ -125,10 +125,7 @@ async fn register(lastname: &str, firstname: &str, username: &str, password: &st
 
     // User validation
     // ---------------
-    print!(
-        "\nFirstname: {}\nLastname:  {}\nUsername:  {}\nPassword:  {}\n\nAre you sure that user information are correct? (Y/n) ",
-        firstname, lastname, username, password
-    );
+    print!("\nFirstname: {firstname}\nLastname:  {lastname}\nUsername:  {username}\nPassword:  {password}\n\nAre you sure that user information are correct? (Y/n) ");
     io::stdout().flush().map_err(|err| CliError::Error(err.to_string()))?;
     let mut input = String::new();
     io::stdin()

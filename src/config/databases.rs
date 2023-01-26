@@ -31,7 +31,7 @@ pub async fn init_mysql(settings: &Config) -> CliResult<Pool<MySql>> {
         sqlx::migrate!("./migrations")
             .run(&pool)
             .await
-            .map_err(|err| CliError::DatabaseError(format!("failed to run database migrations: {}", err)))?
+            .map_err(|err| CliError::DatabaseError(format!("failed to run database migrations: {err}")))?
     }
 
     Ok(pool)

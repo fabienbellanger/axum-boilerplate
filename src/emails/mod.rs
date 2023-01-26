@@ -77,14 +77,14 @@ pub fn send(config: &SmtpConfig, message: Message) -> AppResult<()> {
         .map_err(|err| {
             app_error!(
                 AppErrorCode::InternalError,
-                format!("cannot send password reset email because: {}", err)
+                format!("cannot send password reset email because: {err}")
             )
         })?;
 
     mailer.send(&email).map_err(|err| {
         app_error!(
             AppErrorCode::InternalError,
-            format!("SMTP Error when sending password reset email: {}", err)
+            format!("SMTP Error when sending password reset email: {err}")
         )
     })?;
 

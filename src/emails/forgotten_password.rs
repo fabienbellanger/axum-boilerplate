@@ -15,7 +15,7 @@ pub struct EmailContext {
 impl EmailContext {
     /// New `EmailContext`
     pub fn new(base_url: String, token: String) -> AppResult<Self> {
-        let link = format!("{}/{token}", base_url);
+        let link = format!("{base_url}/{token}");
 
         match validator::validate_url(&link) {
             true => Ok(Self {
