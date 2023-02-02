@@ -140,7 +140,9 @@ impl PaginateSort {
                     }
                 }
                 None => {
-                    if i != 0 {
+                    if i == 0 {
+                        s.push_str(" ORDER BY ");
+                    } else {
                         s.push_str(", ");
                     }
                     s.push_str(&format!("{field} {sort}"));
@@ -159,7 +161,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_from_paginate_sort_qurey_paginate() {
+    fn test_from_paginate_sort_query_paginate() {
         let data = PaginateSortQuery {
             page: None,
             limit: None,
@@ -226,7 +228,7 @@ mod test {
     }
 
     #[test]
-    fn test_from_paginate_sort_qurey_sort() {
+    fn test_from_paginate_sort_query_sort() {
         let data = PaginateSortQuery {
             page: None,
             limit: None,
@@ -300,7 +302,7 @@ mod test {
 
     #[test]
     fn test_get_sorts_sql_without_valid_fields() {
-        let valid_fields: Option<&[&str]> = Some(&[]);
+        let mut valid_fields: Option<&[&str]> = Some(&[]);
 
         let mut paginate_sort = PaginateSort {
             page: 1,
@@ -312,6 +314,12 @@ mod test {
 
         paginate_sort.sorts = vec![("id".to_owned(), Sort::Asc), ("name".to_owned(), Sort::Desc)];
         assert_eq!(String::new(), paginate_sort.get_sorts_sql(valid_fields));
+
+        valid_fields = None;
+        assert_eq!(
+            String::from(" ORDER BY id ASC, name DESC"),
+            paginate_sort.get_sorts_sql(valid_fields)
+        );
     }
 
     #[test]

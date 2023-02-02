@@ -142,8 +142,8 @@ paths:
           schema:
             type: string
           required: false
-          description: "Sort (Ex.: s=+lastname,-firstname) {+: ASC, -: DESC}"
-          example: +lastname,+firstname
+          description: "Sort with available fields: id | lastname | firstname | created_at | updated_at | deleted_at {+: ASC, -: DESC}."
+          example: +lastname,-firstname
       responses:
         '200':
           description: OK
