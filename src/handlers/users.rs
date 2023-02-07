@@ -11,13 +11,13 @@ use crate::{
     repositories::user::{PasswordResetRepository, UserRepository},
     utils::{
         errors::{AppError, AppErrorCode, AppResult},
-        extractors::{ExtractRequestId, Path},
+        extractors::{ExtractRequestId, Path, Query},
         query::{PaginateResponse, PaginateSort, PaginateSortQuery},
         validation::validate_request_data,
     },
 };
 use axum::{
-    extract::{Extension, Json, Query, State},
+    extract::{Extension, Json, State},
     http::StatusCode,
 };
 use chrono::{DateTime, NaiveDateTime, SecondsFormat, Utc};
