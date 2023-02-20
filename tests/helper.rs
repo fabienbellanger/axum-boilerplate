@@ -2,7 +2,7 @@
 
 use axum::{Extension, Router};
 use axum_boilerplate::{
-    config::logger,
+    config::{logger, Config},
     layers::{self, ConfigState, MakeRequestUuid, SharedState, State},
     routes,
 };
@@ -39,9 +39,10 @@ impl TestAppBuilder {
     pub async fn new() -> Self {
         let state = Self::get_state();
         let db = TestDatabase::new().await;
+        let settings = Config::default();
 
         let mut router = Router::new().nest("/api/v1", routes::api(state.clone()));
-        router = router.nest("/", routes::web());
+        router = router.nest("/", routes::web(&settings));
         router = router.layer(Extension(db.database().await));
 
         let router = router.with_state(state);

@@ -2,10 +2,6 @@
 
 // https://www.moesif.com/blog/technical/api-design/REST-API-Design-Filtering-Sorting-and-Pagination/
 
-// Filter
-//   - (Ex.: ?lastname=eq:toto&first=ne:tutu&age=lt:18,gt:5) => {eq, ne, gt, ge, lt, le}
-//   - (Ex.: ?filter=lastname=eq:toto;firstname=ne:tutu;age=lt:18,gt:5) => {eq, ne, gt, ge, lt, le}
-
 use serde::{Deserialize, Serialize};
 use std::fmt::Display;
 

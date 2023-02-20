@@ -1,22 +1,30 @@
 //! Routes list
 
+use crate::config::Config;
 use crate::handlers;
-use crate::layers;
-use crate::layers::SharedChatState;
-use crate::layers::SharedState;
+use crate::layers::{self, basic_auth::BasicAuthLayer, SharedChatState, SharedState};
 use axum::routing::{delete, get, patch, post, put};
 use axum::Router;
 
 /// Return web routes list
-pub fn web() -> Router<SharedState> {
+pub fn web(settings: &Config) -> Router<SharedState> {
     Router::new()
         .route("/health-check", get(handlers::web::health_check))
-        .route("/hello", get(handlers::web::hello))
         .route("/timeout", get(handlers::web::timeout))
         .route("/spawn", get(handlers::web::spawn))
         // Test of streams and large data
         .route("/big-json", get(handlers::web::big_json))
         .route("/stream", get(handlers::web::stream))
+        // API documentation
+        .nest(
+            "/doc",
+            Router::new()
+                .route("/api-v1", get(handlers::web::doc_api_v1))
+                .layer(BasicAuthLayer::new(
+                    &settings.basic_auth_username,
+                    &settings.basic_auth_password,
+                )),
+        )
 }
 
 /// Return WebSocket routes list

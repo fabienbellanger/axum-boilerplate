@@ -131,7 +131,7 @@ make docker-cli-register
 
 ## TODO:
 
-- [ ] Add pagination, sort and filter mecanisms
+- [x] Add pagination, sort and filter mecanisms
 - [ ] Improve global documentation
 - [ ] Improve README.md to explain the boilerplate
 - [ ] Add scopes (currently roles) to routes

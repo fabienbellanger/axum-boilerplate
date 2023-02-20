@@ -8,7 +8,7 @@ use color_eyre::Result;
 use serde::Deserialize;
 
 /// Represents configuration structure
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, Default)]
 pub struct Config {
     /// Environment: `developement` or `production`
     pub environment: String,

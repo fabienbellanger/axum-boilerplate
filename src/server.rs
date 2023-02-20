@@ -88,7 +88,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
 
     // Routing - Web
     // -------------
-    app = app.nest("/", routes::web());
+    app = app.nest("/", routes::web(settings));
 
     // Prometheus metrics
     // ------------------

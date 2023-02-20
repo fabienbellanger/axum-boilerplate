@@ -15,16 +15,15 @@ use tera::Context;
 use tokio::time::sleep;
 
 // Route: GET "/health-check"
-#[instrument]
 pub async fn health_check<'a>() -> &'a str {
     "OK"
 }
 
-// Route: GET "hello"
-pub async fn hello() -> AppResult<Html<String>> {
+// Route: GET "/doc/api-v1"
+pub async fn doc_api_v1() -> AppResult<Html<String>> {
     Ok(Html(
         TEMPLATES
-            .render("hello.html", &Context::new())
+            .render("doc/api_v1.html", &Context::new())
             .map_err(|_err| app_error!(AppErrorCode::Timeout))?,
     ))
 }
