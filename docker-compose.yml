@@ -15,7 +15,7 @@ services:
       MYSQL_PASSWORD: axum
     networks:
       - backend
-    restart: "no"
+    restart: on-failure
 
   adminer:
     container_name: axum_boilerplate_adminer
@@ -26,7 +26,7 @@ services:
       - mariadb:db
     networks:
       - backend
-    restart: "no"
+    restart: on-failure
 
   maildev:
     container_name: axum_boilerplate_maildev
@@ -36,7 +36,7 @@ services:
         - "1026:25"
     networks:
         - backend
-    restart: "no"
+    restart: on-failure
   
   redis:
     container_name: axum_boilerplate_redis
@@ -49,7 +49,7 @@ services:
       REDIS_REPLICATION_MODE: master
     networks:
       - backend
-    restart: "no"
+    restart: on-failure
 
   server:
     container_name: axum_boilerplate_server
@@ -63,7 +63,7 @@ services:
       - redis
     networks:
       - backend
-    restart: "no"
+    restart: on-failure
 
   prometheus:
     image: prom/prometheus:latest
@@ -78,7 +78,7 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       # - '--storage.tsdb.retention.time=200h'
       - '--web.enable-lifecycle'
-    restart: "no"
+    restart: on-failure
     expose:
       - 9090
     ports:
@@ -101,7 +101,7 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    restart: "no"
+    restart: on-failure
     expose:
       - 9100
     ports:
@@ -117,7 +117,7 @@ services:
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'
-    restart: "no"
+    restart: on-failure
     # expose:
     #   - 9093
     ports:
@@ -136,7 +136,7 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin # Puis 00000000
       - GF_USERS_ALLOW_SIGN_UP=false
-    restart: "no"
+    restart: on-failure
     expose:
       - 3000
     ports:
