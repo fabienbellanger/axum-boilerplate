@@ -7,12 +7,7 @@ use crate::{
     },
     routes,
 };
-use axum::{
-    error_handling::HandleErrorLayer,
-    middleware,
-    routing::{get, get_service},
-    Extension, Router,
-};
+use axum::{error_handling::HandleErrorLayer, middleware, routing::get, Extension, Router};
 use color_eyre::Result;
 use std::collections::HashSet;
 use std::{future::ready, sync::Mutex};
@@ -128,10 +123,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     }
 
     app = app
-        .fallback_service(
-            get_service(ServeDir::new("assets").append_index_html_on_directories(true))
-                .handle_error(handlers::static_file_error),
-        )
+        .fallback_service(ServeDir::new("assets").append_index_html_on_directories(true)) // FIXME: static_file_error not work this Axum 0.6.9!
         .layer(middleware::from_fn(layers::override_http_errors))
         .layer(Extension(pool))
         .layer(layers);
