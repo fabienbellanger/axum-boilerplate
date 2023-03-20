@@ -181,7 +181,7 @@ fn parse_url(url: &str) -> (&str, &str) {
 fn url() -> String {
     use rand::distributions::{Alphanumeric, DistString};
 
-    dotenv::dotenv().ok();
+    dotenvy::dotenv().ok();
 
     // Set up the database per tests
     let suffix: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);

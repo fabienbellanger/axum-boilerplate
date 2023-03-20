@@ -97,7 +97,7 @@ pub struct Config {
 impl Config {
     /// from_env loads configuration from environment variables
     pub fn from_env() -> Result<Config> {
-        dotenv::dotenv().ok();
+        dotenvy::dotenv().ok();
 
         Ok(config::Config::builder()
             .add_source(config::Environment::default())
