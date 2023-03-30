@@ -23,15 +23,9 @@ use tera::Tera;
 pub const APP_NAME: &str = "Axum Boilerplate";
 
 lazy_static! {
-    pub static ref TEMPLATES: Tera = {
-        let mut tera = match Tera::new("templates/**/*") {
-            Ok(t) => t,
-            Err(e) => {
-                println!("Parsing error(s): {e}");
-                ::std::process::exit(1);
-            }
-        };
+    pub static ref TEMPLATES: Result<Tera, tera::Error> = {
+        let mut tera = Tera::new("templates/**/*")?;
         tera.autoescape_on(vec![".html", ".txt"]);
-        tera
+        Ok(tera)
     };
 }

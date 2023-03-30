@@ -207,17 +207,17 @@ macro_rules! app_error {
             AppErrorCode::InternalError => {
                 error!("{}", $message);
                 AppError::InternalError {
-                    message: $message.to_owned(),
+                    message: $message.to_string(),
                 }
             }
             AppErrorCode::BadRequest => AppError::BadRequest {
-                message: $message.to_owned(),
+                message: $message.to_string(),
             },
             AppErrorCode::NotFound => AppError::NotFound {
-                message: $message.to_owned(),
+                message: $message.to_string(),
             },
             AppErrorCode::UnprocessableEntity => AppError::UnprocessableEntity {
-                message: $message.to_owned(),
+                message: $message.to_string(),
             },
         }
     };
@@ -231,17 +231,17 @@ macro_rules! app_error {
             AppErrorCode::InternalError => {
                 error!("{}", $details);
                 AppError::InternalError {
-                    message: $message.to_owned(),
+                    message: $message.to_string(),
                 }
             }
             AppErrorCode::BadRequest => AppError::BadRequest {
-                message: $message.to_owned(),
+                message: $message.to_string(),
             },
             AppErrorCode::NotFound => AppError::NotFound {
-                message: $message.to_owned(),
+                message: $message.to_string(),
             },
             AppErrorCode::UnprocessableEntity => AppError::UnprocessableEntity {
-                message: $message.to_owned(),
+                message: $message.to_string(),
             },
         }
     };

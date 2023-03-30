@@ -23,8 +23,10 @@ pub async fn health_check<'a>() -> &'a str {
 pub async fn doc_api_v1() -> AppResult<Html<String>> {
     Ok(Html(
         TEMPLATES
+            .as_ref()
+            .map_err(|err| app_error!(AppErrorCode::InternalError, err, "error during template render"))?
             .render("doc/api_v1.html", &Context::new())
-            .map_err(|_err| app_error!(AppErrorCode::Timeout))?,
+            .map_err(|err| app_error!(AppErrorCode::InternalError, err))?,
     ))
 }
 

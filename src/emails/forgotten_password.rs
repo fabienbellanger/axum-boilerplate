@@ -38,6 +38,8 @@ impl ForgottenPasswordEmail {
         let context = EmailContext::new(base_url, token)?;
 
         let html = TEMPLATES
+            .as_ref()
+            .map_err(|err| app_error!(AppErrorCode::InternalError, err, "error during template render"))?
             .render(
                 "email/forgotten_password.html",
                 &Context::from_serialize(&context).map_err(|err| {
@@ -57,6 +59,8 @@ impl ForgottenPasswordEmail {
             })?;
 
         let text = TEMPLATES
+            .as_ref()
+            .map_err(|err| app_error!(AppErrorCode::InternalError, err, "error during template render"))?
             .render(
                 "email/forgotten_password.txt",
                 &Context::from_serialize(&context).map_err(|err| {
