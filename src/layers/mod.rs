@@ -20,7 +20,7 @@ use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use bytes::Bytes;
 use hyper::body::to_bytes;
-use hyper::{header, StatusCode};
+use hyper::StatusCode;
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use std::collections::HashSet;
 use std::str::from_utf8;
@@ -30,7 +30,7 @@ use tower_http::cors::{AllowOrigin, Any, CorsLayer};
 use tower_http::request_id::{MakeRequestId, RequestId};
 use uuid::Uuid;
 
-/// Contruct response body from `Parts`, status code, message and headers
+/// Construct response body from `Parts`, status code, message and headers
 pub fn body_from_parts(
     parts: &mut Parts,
     status_code: StatusCode,
@@ -41,10 +41,9 @@ pub fn body_from_parts(
     parts.status = status_code;
 
     // Headers
-    parts.headers.insert(
-        header::CONTENT_TYPE,
-        HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
-    );
+    parts
+        .headers
+        .insert(CONTENT_TYPE, HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()));
     if let Some(headers) = headers {
         for header in headers {
             parts.headers.insert(header.0, header.1);
@@ -148,7 +147,6 @@ pub fn cors(config: &Config) -> CorsLayer {
     } else {
         let origins = allow_origin
             .split(',')
-            .into_iter()
             .filter(|url| *url != "*" && !url.is_empty())
             .filter_map(|url| url.parse().ok())
             .collect::<Vec<HeaderValue>>();
