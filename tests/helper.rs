@@ -7,6 +7,7 @@ use axum_boilerplate::{
     routes,
 };
 use jsonwebtoken::{DecodingKey, EncodingKey};
+use rand::distributions::{Alphanumeric, DistString};
 use sqlx::{mysql::MySqlPoolOptions, Connection, MySql, MySqlConnection, MySqlPool};
 use std::time::Duration;
 use tower::ServiceBuilder;
@@ -100,17 +101,14 @@ pub struct TestDatabase {
 /// Sets up a new DB for running tests with.
 impl TestDatabase {
     pub async fn new() -> Self {
-        let db_url = url();
+        let db_url = Self::url();
 
-        create_database(&db_url).await;
-        run_migrations(&db_url).await;
+        Self::create_database(&db_url).await;
+        Self::run_migrations(&db_url).await;
 
         let pool = MySqlPool::connect(&db_url).await.unwrap();
 
-        Self {
-            url: db_url,
-            pool: pool,
-        }
+        Self { url: db_url, pool }
     }
 
     pub async fn database(&self) -> MySqlPool {
@@ -119,7 +117,7 @@ impl TestDatabase {
 
     /// Drop database after the test
     pub async fn drop_database(&self) {
-        let (_conn, db_name) = parse_url(&self.url);
+        let (_conn, db_name) = Self::parse_url(&self.url);
 
         let pool = MySqlPoolOptions::new()
             .max_connections(1)
@@ -151,6 +149,50 @@ impl TestDatabase {
             .await
             .expect("error when dropping database");
     }
+
+    /// Generate url with a random database name
+    fn url() -> String {
+        dotenvy::dotenv().ok();
+
+        // Set up the database per tests
+        let suffix: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
+        let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL missing from environment.");
+
+        format!("{}_{}", db_url, suffix)
+    }
+
+    /// Parse database URL and return the database name in a separate variable
+    fn parse_url(url: &str) -> (&str, &str) {
+        let separator_pos = url.rfind('/').unwrap();
+        let conn = &url[..=separator_pos];
+        let name = &url[separator_pos + 1..];
+
+        (conn, name)
+    }
+
+    /// Create the test database
+    async fn create_database(url: &str) {
+        let (conn, db_name) = Self::parse_url(url);
+
+        let mut pool = MySqlConnection::connect(conn).await.unwrap();
+
+        let sql = format!(r#"CREATE DATABASE `{}`"#, &db_name);
+        sqlx::query::<MySql>(&sql).execute(&mut pool).await.unwrap();
+    }
+
+    /// Launch migrations
+    async fn run_migrations(url: &str) {
+        let (conn, db_name) = Self::parse_url(url);
+        let mut pool = MySqlConnection::connect(&format!("{}/{}", conn, db_name))
+            .await
+            .unwrap();
+
+        // Run the migrations
+        sqlx::migrate!("./migrations")
+            .run(&mut pool)
+            .await
+            .expect("Failed to migrate the database");
+    }
 }
 
 impl Drop for TestDatabase {
@@ -166,50 +208,4 @@ impl Drop for TestDatabase {
             });
         });
     }
-}
-
-/// Parse database URL and return the database name in a separate variable
-fn parse_url(url: &str) -> (&str, &str) {
-    let separator_pos = url.rfind("/").unwrap();
-    let conn = &url[..=separator_pos];
-    let name = &url[separator_pos + 1..];
-
-    (conn, name)
-}
-
-/// Generate url with a random database name
-fn url() -> String {
-    use rand::distributions::{Alphanumeric, DistString};
-
-    dotenvy::dotenv().ok();
-
-    // Set up the database per tests
-    let suffix: String = Alphanumeric.sample_string(&mut rand::thread_rng(), 16);
-    let db_url = std::env::var("DATABASE_URL").expect("DATABASE_URL missing from environment.");
-
-    format!("{}_{}", db_url, suffix)
-}
-
-/// Create the test database
-async fn create_database(url: &str) {
-    let (conn, db_name) = parse_url(url);
-
-    let mut pool = MySqlConnection::connect(conn).await.unwrap();
-
-    let sql = format!(r#"CREATE DATABASE `{}`"#, &db_name);
-    sqlx::query::<MySql>(&sql).execute(&mut pool).await.unwrap();
-}
-
-/// Launch migrations
-async fn run_migrations(url: &str) {
-    let (conn, db_name) = parse_url(url);
-    let mut pool = MySqlConnection::connect(&format!("{}/{}", conn, db_name))
-        .await
-        .unwrap();
-
-    // Run the migrations
-    sqlx::migrate!("./migrations")
-        .run(&mut pool)
-        .await
-        .expect("Failed to migrate the database");
 }

@@ -71,7 +71,7 @@ mime = "0.3.17"
 passwords = { version = "3.1.13", features = ["common-password"] }
 rand = "0.8.5"
 serde = { version = "1.0.160", features = ["derive"] }
-serde_json = "1.0.95"
+serde_json = "1.0.96"
 serde_urlencoded = "0.7.1"
 sha2 = "0.10.6"
 tokio = { version = "1.27.0", features = ["full"] }
