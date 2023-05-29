@@ -1,6 +1,6 @@
 concurrency: 1024
-base: "http://localhost:8087"
-iterations: 100000
+base: "http://localhost:8086"
+iterations: 10000
 rampup: 0
 
 plan:
@@ -8,14 +8,10 @@ plan:
     request:
       url: /health-check
 
-  # - name: Spawn
-  #   request:
-  #     url: /spawn
-
   - name: Login
     request:
       url: /api/v1/login
       method: POST
-      body: '{"username": "test@gmail.com", "password": "00000000"}'
+      body: '{"username": "test@apitic.com", "password": "K-qy,Kgf<AB*XX;V3}_=x19u>1BBl!dfdf"}'
       headers:
         Content-Type: "application/json"

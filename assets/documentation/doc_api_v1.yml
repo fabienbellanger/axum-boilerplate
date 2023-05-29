@@ -16,7 +16,8 @@ servers:
       port:
         enum:
           - "8087"
-        default: "8087"
+          - "8086"
+        default: "8086"
   - url: https://localhost/api/v1
     description: Production server
 paths:

@@ -32,7 +32,7 @@ pub async fn login(
     ExtractRequestId(request_id): ExtractRequestId,
     Json(payload): Json<Login>,
 ) -> AppResult<Json<LoginResponse>> {
-    warn!("In Login handler");
+    // warn!("In Login handler");
 
     validate_request_data(&payload)?;
 

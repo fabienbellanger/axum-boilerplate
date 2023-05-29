@@ -16,7 +16,7 @@ impl UserRepository {
     /// Returns a User if credentials are right
     #[instrument(name = "Login repository", skip_all, level = "warn")]
     pub async fn login(pool: &MySqlPool, input: Login) -> AppResult<Option<User>> {
-        warn!("In Login repo");
+        // warn!("In Login repo");
         let hashed_password = format!("{:x}", Sha512::digest(input.password.as_bytes()));
         let result = sqlx::query!(
             r#"
