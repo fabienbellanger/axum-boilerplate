@@ -26,7 +26,7 @@ jobs:
         image: djfarrelly/maildev
         ports:
           - 1081:80
-          - 1026:25
+          - 1025:25
     steps:
     - uses: actions/checkout@v3
     - name: Fmt
