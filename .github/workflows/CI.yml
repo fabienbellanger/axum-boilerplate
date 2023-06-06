@@ -22,6 +22,11 @@ jobs:
           MYSQL_DATABASE: axum
         ports:
           - 3306:3306
+      maildev:
+        image: djfarrelly/maildev
+        ports:
+          - 1081:80
+          - 1026:25
     steps:
     - uses: actions/checkout@v3
     - name: Fmt
