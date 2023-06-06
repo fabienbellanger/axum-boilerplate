@@ -9,6 +9,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   SQLX_OFFLINE: true
+  DATABASE_URL: mysql://root:root@127.0.0.1:3306/axum
 
 jobs:
   build:
@@ -20,6 +21,6 @@ jobs:
     - name: Clippy
       run: cargo clippy
     - name: Run tests
-      run: SQLX_OFFLINE=true cargo test --verbose -- --test-threads 1
+      run: cargo test --verbose -- --test-threads 1
     - name: Build
       run: cargo build --verbose
