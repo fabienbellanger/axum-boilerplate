@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n                INSERT INTO password_resets (user_id, token, expired_at)\n                VALUES (?, ?, ?)\n                ON DUPLICATE KEY UPDATE token = ?, expired_at = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "b8f74399794cd3329eee0f99300d09b26778e42131d8fd256c4ff820e77d49a4"
+}

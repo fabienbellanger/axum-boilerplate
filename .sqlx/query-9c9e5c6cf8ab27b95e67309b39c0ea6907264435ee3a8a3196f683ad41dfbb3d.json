@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "\n                UPDATE users\n                SET deleted_at = ?\n                WHERE id = ? AND deleted_at IS NULL\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "9c9e5c6cf8ab27b95e67309b39c0ea6907264435ee3a8a3196f683ad41dfbb3d"
+}
