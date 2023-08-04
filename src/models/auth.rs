@@ -6,7 +6,9 @@ use crate::{
 };
 use axum::http::{header, HeaderMap};
 use chrono::Utc;
-use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{
+    decode, encode, errors::ErrorKind::ExpiredSignature, Algorithm, DecodingKey, EncodingKey, Header, Validation,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -75,12 +77,13 @@ impl Jwt {
     /// Parse JWT
     pub fn parse(token: &str, decoding_key: &DecodingKey) -> AppResult<Claims> {
         let validation = Validation::new(Algorithm::HS512);
-        let token = decode::<Claims>(token, decoding_key, &validation).map_err(|err| {
-            app_error!(
+        let token = decode::<Claims>(token, decoding_key, &validation).map_err(|err| match err.kind() {
+            ExpiredSignature => app_error!(
                 AppErrorCode::InternalError,
                 "error during JWT decoding",
                 format!("error during JWT decoding: {err}")
-            )
+            ),
+            _ => app_error!(AppErrorCode::InternalError),
         })?;
 
         Ok(token.claims)

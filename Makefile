@@ -1,6 +1,7 @@
 .PHONY: help \
 	serve \
 	watch \
+	upgrade \
 	lint \
 	lint-audit \
 	test \
@@ -34,6 +35,10 @@ serve:
 ## watch: Start web server with hot reload
 watch:
 	$(CARGO) watch -x "run -- serve"
+
+## upgrade: Upgrade workspace crates
+upgrade:
+	$(CARGO) upgrade --workspace
 
 ## lint: Run clippy and rustfmt
 lint:
