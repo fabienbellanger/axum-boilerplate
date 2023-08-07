@@ -4,6 +4,7 @@
 	upgrade \
 	lint \
 	lint-audit \
+	audit-fix \
 	test \
 	clean \
 	sqlx-prepare \
@@ -47,6 +48,10 @@ lint:
 ## lint-audit: Run clippy, rustfmt and audit
 lint-audit: lint
 	$(CARGO) audit
+
+## audit-fix: Fix audit
+audit-fix:
+	$(CARGO) audit fix
 
 ## test: Launch unit tests in a single thread
 test:
