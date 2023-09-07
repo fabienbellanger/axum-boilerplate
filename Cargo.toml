@@ -23,7 +23,7 @@ axum = { version = "0.6.20", features = ["headers", "ws"] }
 
 # Tower
 tower = { version = "0.4.13", features = ["timeout"] }
-tower-http = { version = "0.4.3", features = ["cors", "fs", "request-id", "util"] }
+tower-http = { version = "0.4.4", features = ["cors", "fs", "request-id", "util"] }
 
 # Hyper
 hyper = "0.14.27"
@@ -38,17 +38,17 @@ tracing-subscriber = { version = "0.3.17", features = ["registry", "env-filter",
 # Error
 color-eyre = "0.6.2"
 eyre = "0.6.8"
-thiserror = "1.0.46"
+thiserror = "1.0.48"
 
 # sqlx
 sqlx = { version = "0.7.1", features = ["runtime-tokio-native-tls", "chrono", "mysql", "macros", "bigdecimal", "migrate"] }
 
 # Redis
 r2d2 = "0.8.10"
-redis = { version = "0.23.2", features = ["r2d2"] }
+redis = { version = "0.23.3", features = ["r2d2"] }
 
 # Tera
-tera = "1.19.0"
+tera = "1.19.1"
 
 # Metrics
 metrics = "0.21.1"
@@ -56,8 +56,8 @@ metrics-exporter-prometheus = "0.12.1"
 
 async-stream = "0.3.5"
 bytes = "1.4.0"
-chrono = { version = "0.4.26", features = ["clock", "std", "serde"], default-features = false }
-clap = { version = "4.3.21", features = ["derive", "cargo"] }
+chrono = { version = "0.4.29", features = ["clock", "std", "serde"], default-features = false }
+clap = { version = "4.4.2", features = ["derive", "cargo"] }
 config = "0.13.3"
 derive_more = "0.99.17"
 dotenvy = "0.15.7"
@@ -70,10 +70,10 @@ mailchecker = "5.0.9"
 mime = "0.3.17"
 passwords = { version = "3.1.13", features = ["common-password"] }
 rand = "0.8.5"
-serde = { version = "1.0.183", features = ["derive"] }
+serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.105"
 serde_urlencoded = "0.7.1"
 sha2 = "0.10.7"
-tokio = { version = "1.31.0", features = ["full"] }
+tokio = { version = "1.32.0", features = ["full"] }
 uuid = { version = "1.4.1", features = ["serde", "v4"] }
 validator = { version = "0.16.1", features = ["derive"] }

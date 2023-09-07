@@ -59,7 +59,7 @@ pub async fn login(
             match token {
                 Ok(token) => match NaiveDateTime::from_timestamp_opt(token.1, 0) {
                     Some(expires_at) => {
-                        let expires_at: DateTime<Utc> = DateTime::from_utc(expires_at, Utc);
+                        let expires_at: DateTime<Utc> = DateTime::from_naive_utc_and_offset(expires_at, Utc);
 
                         Ok(Json(LoginResponse {
                             id: user.id.to_owned(),
