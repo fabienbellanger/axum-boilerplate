@@ -55,9 +55,9 @@ metrics = "0.21.1"
 metrics-exporter-prometheus = "0.12.1"
 
 async-stream = "0.3.5"
-bytes = "1.4.0"
-chrono = { version = "0.4.29", features = ["clock", "std", "serde"], default-features = false }
-clap = { version = "4.4.2", features = ["derive", "cargo"] }
+bytes = "1.5.0"
+chrono = { version = "0.4.31", features = ["clock", "std", "serde"], default-features = false }
+clap = { version = "4.4.4", features = ["derive", "cargo"] }
 config = "0.13.3"
 derive_more = "0.99.17"
 dotenvy = "0.15.7"
@@ -68,10 +68,10 @@ lazy_static = "1.4.0"
 lettre = "0.10.4"
 mailchecker = "5.0.9"
 mime = "0.3.17"
-passwords = { version = "3.1.13", features = ["common-password"] }
+passwords = { version = "3.1.16", features = ["common-password"] }
 rand = "0.8.5"
 serde = { version = "1.0.188", features = ["derive"] }
-serde_json = "1.0.105"
+serde_json = "1.0.107"
 serde_urlencoded = "0.7.1"
 sha2 = "0.10.7"
 tokio = { version = "1.32.0", features = ["full"] }
