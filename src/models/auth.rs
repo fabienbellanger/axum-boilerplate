@@ -50,7 +50,7 @@ impl Jwt {
         jwt_lifetime: i64,
     ) -> AppResult<(String, i64)> {
         let header = Header::new(Algorithm::HS512);
-        let now = Utc::now().timestamp(); // nanosecond -> second
+        let now = Utc::now().timestamp();
         let expired_at = now + (jwt_lifetime * 3600);
 
         let payload = Claims {
