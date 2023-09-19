@@ -50,13 +50,7 @@ impl Jwt {
         jwt_lifetime: i64,
     ) -> AppResult<(String, i64)> {
         let header = Header::new(Algorithm::HS512);
-        let now = Utc::now().timestamp_nanos_opt().ok_or_else(|| {
-            app_error!(
-                AppErrorCode::InternalError,
-                "error during JWT encoding",
-                "'Utc::now()' failed when encoding JWT"
-            )
-        })? / 1_000_000_000; // nanosecond -> second
+        let now = Utc::now().timestamp(); // nanosecond -> second
         let expired_at = now + (jwt_lifetime * 3600);
 
         let payload = Claims {
