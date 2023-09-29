@@ -43,7 +43,8 @@ upgrade:
 
 ## lint: Run clippy and rustfmt
 lint:
-	$(CARGO) clippy && $(CARGO) fmt
+	$(CARGO) fmt
+	$(CARGO) clippy -- -D warnings
 
 ## lint-audit: Run clippy, rustfmt and audit
 lint-audit: lint
