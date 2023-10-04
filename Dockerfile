@@ -18,15 +18,13 @@ COPY ./migrations migrations
 COPY ./src src
 COPY ./templates templates
 COPY ./tests tests
+COPY ./.sqlx .sqlx
 COPY ./.env.docker .env
 COPY ./Cargo.toml Cargo.toml
-COPY ./sqlx-data.json sqlx-data.json
 
 # sqlx
 # ----
-# RUN cargo install sqlx-cli
-# RUN cargo sqlx prepare -- --bin axum-boilerplate-bin
-ENV SQLX_OFFLINE true
+ENV SQLX_OFFLINE=true
 
 # Build
 # -----
