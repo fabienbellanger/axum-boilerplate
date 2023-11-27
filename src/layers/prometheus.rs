@@ -5,12 +5,12 @@ use crate::{
     utils::errors::{AppError, AppErrorCode, AppResult},
     APP_NAME,
 };
+use axum::body::Body;
 use axum::{extract::MatchedPath, middleware::Next, response::IntoResponse};
 use hyper::Request;
 use metrics::{histogram, increment_counter};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
 use std::time::Instant;
-use axum::body::Body;
 
 pub const SECONDS_DURATION_BUCKETS: &[f64; 11] = &[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0];
 

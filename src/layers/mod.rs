@@ -190,9 +190,7 @@ pub async fn override_http_errors(req: Request<Body>, next: Next) -> impl IntoRe
             },
             Err(err) => app_error!(AppErrorCode::InternalError, err.to_string()).into_response(),
         },
-        Err(err) => {
-            return app_error!(AppErrorCode::InternalError, err.to_string()).into_response();
-        }
+        Err(err) => app_error!(AppErrorCode::InternalError, err.to_string()).into_response(),
     }
 }
 
