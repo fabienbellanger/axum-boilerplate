@@ -9,17 +9,16 @@ pub mod rate_limiter;
 use crate::app_error;
 use crate::config::Config;
 use crate::utils::errors::{AppError, AppErrorCode, AppErrorMessage};
-use axum::body::Full;
-use axum::headers::HeaderName;
+use axum::body::Body;
 use axum::http::{
     header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE, ORIGIN},
     response::Parts,
-    HeaderValue, Method, Request,
+    HeaderName, HeaderValue, Method, Request,
 };
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use bytes::Bytes;
-use hyper::body::to_bytes;
+use http_body_util::BodyExt;
 use hyper::StatusCode;
 use jsonwebtoken::{DecodingKey, EncodingKey};
 use std::collections::HashSet;
@@ -166,7 +165,7 @@ pub fn cors(config: &Config) -> CorsLayer {
 // =============== Override some HTTP errors ================
 
 /// Layer which override some HTTP errors by using `AppError`
-pub async fn override_http_errors<B>(req: Request<B>, next: Next<B>) -> impl IntoResponse {
+pub async fn override_http_errors(req: Request<Body>, next: Next) -> impl IntoResponse {
     let response = next.run(req).await;
 
     // If it is an image, audio or video, we return response
@@ -182,16 +181,18 @@ pub async fn override_http_errors<B>(req: Request<B>, next: Next<B>) -> impl Int
     }
 
     let (parts, body) = response.into_parts();
-    match to_bytes(body).await {
-        Ok(body_bytes) => match String::from_utf8(body_bytes.to_vec()) {
+    match body.collect().await {
+        Ok(body_bytes) => match String::from_utf8(body_bytes.to_bytes().to_vec()) {
             Ok(body) => match parts.status {
                 StatusCode::METHOD_NOT_ALLOWED => app_error!(AppErrorCode::MethodNotAllowed).into_response(),
                 StatusCode::UNPROCESSABLE_ENTITY => app_error!(AppErrorCode::UnprocessableEntity, body).into_response(),
-                _ => Response::from_parts(parts, axum::body::boxed(Full::from(body))),
+                _ => Response::from_parts(parts, Body::from(body)),
             },
             Err(err) => app_error!(AppErrorCode::InternalError, err.to_string()).into_response(),
         },
-        Err(err) => app_error!(AppErrorCode::InternalError, err.to_string()).into_response(),
+        Err(err) => {
+            return app_error!(AppErrorCode::InternalError, err.to_string()).into_response();
+        }
     }
 }
 

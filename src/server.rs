@@ -10,8 +10,8 @@ use crate::{
 use axum::{error_handling::HandleErrorLayer, middleware, routing::get, Extension, Router};
 use color_eyre::Result;
 use std::collections::HashSet;
+use std::time::Duration;
 use std::{future::ready, sync::Mutex};
-use std::{net::SocketAddr, time::Duration};
 use tokio::signal;
 use tokio::sync::broadcast;
 use tower::ServiceBuilder;
@@ -32,15 +32,19 @@ pub async fn start_server() -> Result<()> {
     // Start server
     // ------------
     let addr = format!("{}:{}", settings.server_url, settings.server_port);
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     info!("Starting server on {}...", &addr);
 
-    let server = axum::Server::bind(&addr.parse()?).serve(app.into_make_service_with_connect_info::<SocketAddr>());
+    let server = axum::serve(listener, app);
 
     // No graceful shutdown in development environment
     if &settings.environment == "development" {
         Ok(server.await?)
     } else {
-        Ok(server.with_graceful_shutdown(shutdown_signal()).await?)
+        Ok(server.await?)
+        // TODO:
+        // https://github.com/tokio-rs/axum/blob/main/examples/graceful-shutdown/src/main.rs
+        // Ok(server.with_graceful_shutdown(shutdown_signal()).await?)
     }
 }
 
@@ -133,7 +137,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     Ok(app)
 }
 
-async fn shutdown_signal() {
+async fn _shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
     };

@@ -2,7 +2,7 @@
 
 use super::body_from_parts;
 use axum::{
-    body::{boxed, Body, Full},
+    body::Body,
     http::{header, HeaderValue, Request},
     response::Response,
 };
@@ -95,7 +95,7 @@ where
                             HeaderValue::from_static("basic realm=RESTRICTED"),
                         )]),
                     );
-                    Response::from_parts(parts, boxed(Full::from(msg)))
+                    Response::from_parts(parts, Body::from(msg))
                 }
             };
 

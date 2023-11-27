@@ -10,6 +10,7 @@ use hyper::Request;
 use metrics::{histogram, increment_counter};
 use metrics_exporter_prometheus::{Matcher, PrometheusBuilder, PrometheusHandle};
 use std::time::Instant;
+use axum::body::Body;
 
 pub const SECONDS_DURATION_BUCKETS: &[f64; 11] = &[0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0];
 
@@ -29,7 +30,7 @@ impl PrometheusMetric {
     }
 
     /// Layer tracking requests
-    pub async fn get_layer<B>(req: Request<B>, next: Next<B>) -> impl IntoResponse {
+    pub async fn get_layer(req: Request<Body>, next: Next) -> impl IntoResponse {
         let start = Instant::now();
         let path = if let Some(matched_path) = req.extensions().get::<MatchedPath>() {
             matched_path.as_str().to_owned()

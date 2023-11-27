@@ -6,7 +6,7 @@ use crate::{
     utils::errors::AppResult,
 };
 use axum::{
-    body::{Body, Full},
+    body::Body,
     extract::ConnectInfo,
     http::{response::Parts, HeaderValue, Request, StatusCode},
     response::Response,
@@ -149,19 +149,19 @@ where
                     set_headers(&mut parts, limit, remaining, reset);
 
                     let msg = body_from_parts(&mut parts, StatusCode::TOO_MANY_REQUESTS, "Too Many Requests", None);
-                    Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
+                    Response::from_parts(parts, Body::from(msg))
                 }
                 Err(err) => match err {
                     RateLimiterError::JwtDecoding => {
                         let (mut parts, _body) = response.into_parts();
                         let msg = body_from_parts(&mut parts, StatusCode::UNAUTHORIZED, "Unauthorized", None);
-                        Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
+                        Response::from_parts(parts, Body::from(msg))
                     }
                     _ => {
                         let (mut parts, _body) = response.into_parts();
                         let msg =
                             body_from_parts(&mut parts, StatusCode::INTERNAL_SERVER_ERROR, &err.to_string(), None);
-                        Response::from_parts(parts, axum::body::boxed(Full::from(msg)))
+                        Response::from_parts(parts, Body::from(msg))
                     }
                 },
             };

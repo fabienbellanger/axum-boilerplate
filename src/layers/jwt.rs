@@ -3,7 +3,7 @@
 use super::{body_from_parts, SharedState};
 use crate::models::auth::Claims;
 use axum::{
-    body::{boxed, Body, Full},
+    body::Body,
     http::{Request, StatusCode},
     response::Response,
 };
@@ -63,7 +63,7 @@ where
                 false => {
                     let (mut parts, _body) = response.into_parts();
                     let msg = body_from_parts(&mut parts, StatusCode::UNAUTHORIZED, "Unauthorized", None);
-                    Response::from_parts(parts, boxed(Full::from(msg)))
+                    Response::from_parts(parts, Body::from(msg))
                 }
             };
 

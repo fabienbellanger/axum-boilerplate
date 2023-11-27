@@ -3,7 +3,7 @@
 use crate::utils::errors::{AppError, AppErrorCode, AppResult};
 use crate::{app_error, TEMPLATES};
 use axum::{
-    body::StreamBody,
+    body::Body,
     http::header::CONTENT_TYPE,
     response::{AppendHeaders, Html, IntoResponse},
     Json,
@@ -129,6 +129,6 @@ pub async fn stream() -> impl IntoResponse {
 
     (
         AppendHeaders([(CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())]),
-        StreamBody::new(stream_tasks),
+        Body::from_stream(stream_tasks),
     )
 }
