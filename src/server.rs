@@ -12,6 +12,7 @@ use color_eyre::Result;
 use std::collections::HashSet;
 use std::time::Duration;
 use std::{future::ready, sync::Mutex};
+use tokio::net::TcpListener;
 use tokio::signal;
 use tokio::sync::broadcast;
 use tower::ServiceBuilder;
@@ -32,7 +33,7 @@ pub async fn start_server() -> Result<()> {
     // Start server
     // ------------
     let addr = format!("{}:{}", settings.server_url, settings.server_port);
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    let listener = TcpListener::bind(&addr).await.unwrap();
     info!("Starting server on {}...", &addr);
 
     let server = axum::serve(listener, app);
