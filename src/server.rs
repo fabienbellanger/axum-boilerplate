@@ -42,10 +42,7 @@ pub async fn start_server() -> Result<()> {
     if &settings.environment == "development" {
         Ok(server.await?)
     } else {
-        Ok(server.await?)
-        // TODO:
-        // https://github.com/tokio-rs/axum/blob/main/examples/graceful-shutdown/src/main.rs
-        // Ok(server.with_graceful_shutdown(shutdown_signal()).await?)
+        Ok(server.with_graceful_shutdown(shutdown_signal()).await?)
     }
 }
 
@@ -138,7 +135,7 @@ pub async fn get_app(settings: &Config) -> Result<Router> {
     Ok(app)
 }
 
-async fn _shutdown_signal() {
+async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c().await.expect("failed to install Ctrl+C handler");
     };
