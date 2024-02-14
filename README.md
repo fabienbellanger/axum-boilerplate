@@ -131,31 +131,19 @@ make docker-cli-register
 
 ## TODO:
 
-- [x] Add pagination, sort and filter mecanisms
 - [ ] Improve global documentation
 - [ ] Improve README.md to explain the boilerplate
 - [ ] Add scopes (currently roles) to routes
 - [ ] Add password scorer [passwords](https://docs.rs/passwords/latest/passwords/) (parameter in .env?)
 - [ ] Add more .env parameters in `SharedState`?
 - [ ] Replace config file .env by config.toml or add config.toml?
-- [x] Add user rate limit in database
-- [x] Improve AppState by using a struct
-- [x] Custom errors
-- [x] Add CLI
-- [x] Add JWT ([Example](https://github.com/tokio-rs/axum/blob/main/examples/jwt/src/main.rs))
-- [x] Add Sqlx / MySQL ([Example](https://github.com/tokio-rs/axum/blob/main/examples/sqlx-postgres/src/main.rs))
-- [x] Add multiple writers to logger
 - [x] Add WebSocket examples
   - [x] Simple WebSocket example
   - [x] Chat WebSocket example
-- [x] Add Tera
-- [x] Add Basic Auth middleware (use [http-auth-basic](https://crates.io/crates/http-auth-basic))
-- [x] Use `State` instead of `Extension`: Added: Added new type safe State extractor. This can be used with Router::with_state and gives compile errors for missing states, whereas Extension would result in runtime errors ([Changelog 0.6.0](https://github.com/tokio-rs/axum/blob/main/axum/CHANGELOG.md))
 - [ ] Rate limiter middleware
   - [ ] Add documentation
   - [ ] Optimize code
   - [x] Add white list from `.env`
-- [x] Add OpenAPI documentation [RapiDoc](https://rapidocweb.com/examples.html)
 - [x] Add Docker support
   - [rust-web-server-template](https://github.com/nullren/rust-web-server-template)
   - [axum-demo](https://github.com/linux-china/axum-demo)

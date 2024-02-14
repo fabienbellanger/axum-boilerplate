@@ -40,6 +40,7 @@ watch:
 ## upgrade: Upgrade workspace crates
 upgrade:
 	$(CARGO) upgrade --workspace
+	$(CARGO) update
 
 ## lint: Run clippy and rustfmt
 lint:
